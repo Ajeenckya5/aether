@@ -228,7 +228,7 @@ export function WorkoutBuilder() {
           type="button"
           onClick={() => {
             const workout = save();
-            router.push(`/coach/custom/${workout.id}`);
+            router.push(`/coach/custom?id=${encodeURIComponent(workout.id)}`);
           }}
           className="rounded-full bg-lime py-3 text-sm font-medium text-ink"
         >

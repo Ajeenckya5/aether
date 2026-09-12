@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeHrSupport, gpsLabel, probeNavigator } from "./device";
+import { describeHrSupport, gpsLabel, preferPhoneShell, probeNavigator } from "./device";
 
 describe("device copy for phone and laptop", () => {
   it("tells iPhone users to use practice pulse, not Web Bluetooth", () => {
@@ -35,5 +35,11 @@ describe("device copy for phone and laptop", () => {
   it("labels GPS for touch vs pointer", () => {
     expect(gpsLabel(true)).toBe("Phone GPS distance");
     expect(gpsLabel(false)).toBe("Device GPS distance");
+  });
+
+  it("uses the phone app shell after install, not a laptop dashboard", () => {
+    expect(preferPhoneShell({ standalone: true, coarse: false })).toBe(true);
+    expect(preferPhoneShell({ standalone: false, coarse: true })).toBe(true);
+    expect(preferPhoneShell({ standalone: false, coarse: false })).toBe(false);
   });
 });

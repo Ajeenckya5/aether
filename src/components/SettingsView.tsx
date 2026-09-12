@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import type { Athlete } from "@/lib/athlete";
 import { useDashboard } from "./DataProvider";
 import { LocationFields } from "./LocationFields";
 import { publicDownloadUrls } from "@/lib/downloads";
+import { eraseLocalPrivateData } from "@/lib/privacy";
+import { appPath, isStaticSite, PUBLIC_SITE } from "@/lib/site";
 import { DeviceStrip, InstallBanner } from "./DeviceChrome";
+import { BluetoothPanel } from "./LiveHeartRate";
 import { useLab } from "./useLab";
 
 const ERRORS: Record<string, string> = {
@@ -18,9 +22,11 @@ const ERRORS: Record<string, string> = {
 export function SettingsView() {
   const { data, refresh } = useDashboard();
   const [busy, setBusy] = useState(false);
+  const [erasing, setErasing] = useState(false);
   const params = useSearchParams();
   const [oauthError, setOauthError] = useState<string | null>(null);
   const downloads = publicDownloadUrls();
+  const staticSite = isStaticSite();
 
   useEffect(() => {
     setOauthError(ERRORS[params.get("error") ?? ""] ?? null);
@@ -29,10 +35,30 @@ export function SettingsView() {
   async function disconnect() {
     setBusy(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch(appPath("/api/auth/logout"), { method: "POST" });
       await refresh();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function eraseEverything() {
+    if (
+      !window.confirm(
+        "Erase journal, workouts, live recordings, and location on this phone?",
+      )
+    ) {
+      return;
+    }
+    setErasing(true);
+    try {
+      if (!staticSite) {
+        await fetch(appPath("/api/auth/logout"), { method: "POST" });
+      }
+      eraseLocalPrivateData();
+      window.location.assign(appPath("/") || "/");
+    } finally {
+      setErasing(false);
     }
   }
 
@@ -45,36 +71,61 @@ export function SettingsView() {
       </div>
 
       <section className="mt-6 rounded-[28px] border border-lime/25 bg-lime/8 p-5">
-        <h2 className="font-display text-xl text-paper">Get Aether</h2>
+        <h2 className="font-display text-xl text-paper">On this phone</h2>
         <p className="mt-2 text-sm text-muted">
-          Download from GitHub, then install on iPhone and Android. Play Store
-          and App Store listings go live only after you publish with those
-          developer accounts — until then GitHub is the download.
+          Install Aether to the home screen so it is a phone app, not a laptop
+          dashboard. Then pair live Bluetooth. GitHub is only the source files.
         </p>
         <div className="mt-4 flex flex-col gap-2">
-          <a
+          <Link
             href="/download"
             className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
           >
-            iPhone, Android, and GitHub
-          </a>
-          <a
-            href={downloads.repoUrl}
-            target="_blank"
-            rel="noreferrer"
+            Step-by-step install
+          </Link>
+          <Link
+            href="/download#bluetooth"
             className="rounded-full border border-white/15 px-4 py-3 text-center text-sm"
           >
-            Open GitHub
-          </a>
+            Live Bluetooth
+          </Link>
         </div>
       </section>
 
-      {oauthError && (
+      <div className="mt-4">
+        <BluetoothPanel />
+      </div>
+
+      {oauthError && !staticSite && (
         <p className="mt-4 rounded-2xl bg-ember/15 px-4 py-3 text-sm text-ember">
           {oauthError}
         </p>
       )}
 
+      {staticSite ? (
+        <section className="mt-6 rounded-[28px] border border-white/8 bg-panel p-5">
+          <h2 className="font-display text-xl">Your copy stays on this phone</h2>
+          <p className="mt-2 text-sm text-muted">
+            This public site is a static app. There is no Aether account and no
+            shared database, so another person’s journal cannot mix with yours.
+            Recovery numbers here are demo. Live workouts, GPS, and notes live
+            only in this browser’s storage.
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            Connecting a WHOOP band needs a private server you run (the GitHub
+            source). The band still syncs through the official WHOOP app.
+          </p>
+          <a
+            className="mt-4 inline-block text-sm text-lime"
+            href={downloads.repoUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Run your own copy
+          </a>
+        </section>
+      ) : (
+        <>
       <section className="mt-6 rounded-[28px] border border-white/8 bg-panel p-5">
         <h2 className="font-display text-xl">How your WHOOP data gets here</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-paper/80">
@@ -99,14 +150,14 @@ export function SettingsView() {
         </p>
         <p className="mt-2 text-sm text-muted">
           {data.connected
-            ? `${data.profile.first_name} ${data.profile.last_name} · ${data.profile.email}`
+            ? `${data.profile.first_name || "Connected"} · WHOOP tokens stay in httpOnly cookies`
             : data.configured
               ? "Credentials are set. Sign in to load your band."
               : "Add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to .env.local, then sign in."}
         </p>
         <div className="mt-4 flex flex-col gap-2">
           <a
-            href="/api/auth/whoop"
+            href={appPath("/api/auth/whoop")}
             className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
           >
             {data.connected ? "Reconnect WHOOP" : "Connect WHOOP"}
@@ -149,6 +200,8 @@ export function SettingsView() {
           <li>Copy client id and secret into .env.local and restart the app.</li>
         </ol>
       </section>
+        </>
+      )}
 
       <section className="mt-4 rounded-[28px] border border-white/8 p-5 text-sm text-muted">
         <h2 className="font-display text-lg text-paper">Aether Lab vs WHOOP 5.0</h2>
@@ -171,11 +224,35 @@ export function SettingsView() {
       </section>
 
       <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
+        <h2 className="font-display text-lg text-paper">Private data</h2>
+        <p className="mt-2 text-sm text-muted">
+          Journal, live workouts, GPS tracks, and athlete notes stay on this
+          phone. They never go to GitHub Pages. Weather uses a rounded location
+          from this browser. We never look up your IP. No ads or trackers.
+        </p>
+        <div className="mt-4 flex flex-col gap-2">
+          <Link
+            href="/privacy"
+            className="rounded-full border border-white/15 px-4 py-3 text-center text-sm"
+          >
+            How we keep it private
+          </Link>
+          <button
+            type="button"
+            onClick={() => void eraseEverything()}
+            disabled={erasing}
+            className="rounded-full border border-ember/40 px-4 py-3 text-sm text-ember"
+          >
+            {erasing ? "Erasing…" : "Erase private data on this phone"}
+          </button>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
         <h2 className="font-display text-lg text-paper">Location</h2>
         <p className="mt-2 text-sm text-muted">
-          GPS, city search, or approximate IP. Weather, AQI, UV, and heat use
-          Open-Meteo — free, no API key. Approximate uses ipwho.is on your
-          device so the lookup sees your IP, not the server&apos;s.
+          GPS (rounded to ~1 km) or city search. Weather, AQI, UV, and heat use
+          Open-Meteo with that coarse pin. Your IP is never sent to a locator.
         </p>
         <div className="mt-4">
           <LocationFields />
@@ -183,18 +260,23 @@ export function SettingsView() {
       </section>
 
       <section className="mt-4 rounded-[28px] border border-white/8 p-5 text-sm text-muted">
-        <h2 className="font-display text-lg text-paper">Phone and laptop</h2>
+        <h2 className="font-display text-lg text-paper">Phone app</h2>
         <p className="mt-2">
-          Download from{" "}
+          After install, open the home-screen icon. That is the device app — not
+          a laptop dashboard. The live site is{" "}
+          <a className="text-lime" href={PUBLIC_SITE} target="_blank" rel="noreferrer">
+            {PUBLIC_SITE.replace("https://", "")}
+          </a>
+          . Source files stay on{" "}
           <a className="text-lime" href={downloads.repoUrl} target="_blank" rel="noreferrer">
             GitHub
           </a>
-          . The same install works in a mobile browser (or Add to Home Screen) and in Chrome/Edge on a laptop. Live tracking, builder, and WHOOP sync share this device&apos;s storage.
+          .
         </p>
         <ul className="mt-3 list-disc space-y-2 pl-4">
-          <li>iPhone/iPad: Practice pulse or timer. Safari has no Web Bluetooth. Add to Home Screen from Share.</li>
-          <li>Android Chrome: pair a Polar/Garmin-class strap, GPS, and install as an app.</li>
-          <li>Laptop Chrome/Edge: same strap pairing, keyboard Space/Esc on live track, GPS if you allow it.</li>
+          <li>iPhone: Share → Add to Home Screen. Live HR strap pairing needs Android Chrome; use Practice pulse here. WHOOP still records the band.</li>
+          <li>Android: Install app, then Pair live HR with a Polar/Garmin/Wahoo strap.</li>
+          <li>Do not keep working in a laptop browser after you have the icon on the phone.</li>
         </ul>
         <div className="mt-3">
           <DeviceStrip gps />

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { Place } from "@/lib/place";
+import { reversePlace, searchPlaces } from "@/lib/open-meteo";
+import { roundCoords } from "@/lib/privacy";
 import { usePlace } from "./usePlace";
 
 type Hit = { name: string; lat: number; lon: number; timezone: string | null };
@@ -20,18 +22,18 @@ export function LocationFields() {
       return;
     }
     const handle = window.setTimeout(() => {
-      void fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
-        .then((res) => res.json())
-        .then((body) => setHits((body.results ?? []) as Hit[]))
+      void searchPlaces(q)
+        .then((results) => setHits(results))
         .catch(() => setHits([]));
     }, 280);
     return () => window.clearTimeout(handle);
   }, [query]);
 
   async function choose(hit: Hit, source: Place["source"]) {
+    const coarse = roundCoords(hit.lat, hit.lon);
     const next: Place = {
-      lat: hit.lat,
-      lon: hit.lon,
+      lat: coarse.lat,
+      lon: coarse.lon,
       name: hit.name,
       timezone: hit.timezone,
       source,
@@ -52,16 +54,8 @@ export function LocationFields() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          const res = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
-          const body = await res.json();
-          const hit = (body.results?.[0] as Hit | undefined) ?? {
-            name: `${lat.toFixed(3)}, ${lon.toFixed(3)}`,
-            lat,
-            lon,
-            timezone: null,
-          };
+          const coarse = roundCoords(pos.coords.latitude, pos.coords.longitude);
+          const hit = await reversePlace(coarse.lat, coarse.lon);
           await choose(hit, "gps");
         } catch {
           setNote("GPS worked but reverse-geocode failed. Try a city name.");
@@ -77,39 +71,6 @@ export function LocationFields() {
     );
   }
 
-  async function useIp() {
-    setBusy("ip");
-    setNote(null);
-    try {
-      const res = await fetch("https://ipwho.is/");
-      const body = (await res.json()) as {
-        success?: boolean;
-        city?: string;
-        region?: string;
-        country?: string;
-        latitude?: number;
-        longitude?: number;
-        timezone?: { id?: string };
-      };
-      if (!body.success || body.latitude == null || body.longitude == null) {
-        throw new Error("ipwho.is had no coordinates");
-      }
-      await choose(
-        {
-          name: [body.city, body.region, body.country].filter(Boolean).join(", "),
-          lat: body.latitude,
-          lon: body.longitude,
-          timezone: body.timezone?.id ?? null,
-        },
-        "ip",
-      );
-    } catch {
-      setNote("Approximate IP location failed. Use GPS or type a city.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <div>
       {place ? (
@@ -117,31 +78,21 @@ export function LocationFields() {
           {place.name}
           <span className="text-muted">
             {" "}
-            · {place.lat.toFixed(3)}, {place.lon.toFixed(3)} · {place.source}
+            · {place.lat.toFixed(2)}, {place.lon.toFixed(2)}
           </span>
         </p>
       ) : (
         <p className="text-sm text-muted">No location yet.</p>
       )}
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => void useGps()}
-          disabled={busy != null}
-          className="rounded-full bg-lime px-3 py-2 text-sm text-ink"
-        >
-          {busy === "gps" ? "Locating…" : "Use GPS"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void useIp()}
-          disabled={busy != null}
-          className="rounded-full border border-white/15 px-3 py-2 text-sm"
-        >
-          {busy === "ip" ? "Looking up…" : "Approximate"}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => void useGps()}
+        disabled={busy != null}
+        className="mt-3 w-full rounded-full bg-lime px-3 py-2 text-sm text-ink"
+      >
+        {busy === "gps" ? "Locating…" : "Use GPS (rounded, not a street pin)"}
+      </button>
 
       <input
         value={query}

@@ -9,7 +9,7 @@ import { ZoneBar } from "./ZoneBar";
 export function LiveLogCard({ log }: { log: LiveLog }) {
   return (
     <Link
-      href={`/workouts/local/${log.id}`}
+      href={`/workouts/local?id=${encodeURIComponent(log.id)}`}
       className="block overflow-hidden rounded-[28px] border border-white/8 bg-panel p-4"
     >
       <div className="flex items-start justify-between gap-3">

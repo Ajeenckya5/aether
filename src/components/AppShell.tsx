@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, Download, FlaskConical, House, Moon, PlayCircle, Settings, Watch } from "lucide-react";
 import { DataProvider } from "./DataProvider";
 import { HeartRateProvider } from "./LiveHeartRate";
-import { InstallBanner } from "./DeviceChrome";
+import { InstallBanner, useDevice } from "./DeviceChrome";
+import { preferPhoneShell } from "@/lib/device";
 
 const NAV = [
   { href: "/", label: "Today", icon: House },
@@ -23,17 +25,25 @@ export function AppShell({
   hideNav?: boolean;
 }) {
   const pathname = usePathname();
+  const device = useDevice();
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+  const phoneApp = !ready || preferPhoneShell(device);
   const backTo = backHref(pathname);
   const hideMobileNav = hideNav || Boolean(backTo && pathname !== "/settings");
 
   return (
     <DataProvider>
       <HeartRateProvider>
-        <div className="min-h-dvh bg-[#070706] lg:flex">
-          <aside className="hidden lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-white/8 lg:bg-ink lg:px-4 lg:py-6 lg:sticky lg:top-0">
+        <div className={`min-h-dvh bg-[#070706] ${phoneApp ? "" : "lg:flex"}`}>
+          <aside
+            className={`h-dvh w-60 shrink-0 flex-col border-r border-white/8 bg-ink px-4 py-6 sticky top-0 ${
+              phoneApp ? "hidden" : "hidden lg:flex"
+            }`}
+          >
             <p className="font-display px-2 text-2xl tracking-tight">Aether</p>
             <p className="mt-1 px-2 text-[11px] uppercase tracking-widest text-muted">
-              Phone and laptop
+              Phone app
             </p>
             <nav className="mt-8 flex flex-1 flex-col gap-1">
               {NAV.map((item) => (
@@ -56,9 +66,13 @@ export function AppShell({
           <div className="relative mx-auto flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-ink">
             <div className="pointer-events-none absolute inset-0 grain" />
             {backTo && (
-              <div className="absolute left-3 z-30 lg:left-5" style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}>
+              <div
+                className={`absolute left-3 z-30 ${phoneApp ? "" : "lg:left-5"}`}
+                style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
+              >
                 <Link
                   href={backTo}
+                  aria-label="Back"
                   className="grid h-11 w-11 place-items-center rounded-full bg-black/45 text-paper backdrop-blur"
                 >
                   <ChevronLeft size={18} />
@@ -68,15 +82,26 @@ export function AppShell({
             <div
               className={`relative flex-1 overflow-y-auto no-scrollbar ${
                 hideMobileNav
-                  ? "pb-4 lg:pb-8"
-                  : "pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-8"
-              }`}
+                  ? "pb-4"
+                  : "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
+              } ${phoneApp || hideMobileNav ? "" : "lg:pb-8"}`}
               style={{ paddingTop: "env(safe-area-inset-top)" }}
             >
-              <div className="mx-auto w-full max-w-3xl xl:max-w-5xl">{children}</div>
+              <div
+                className={`mx-auto w-full ${
+                  phoneApp ? "max-w-lg" : "max-w-3xl xl:max-w-5xl"
+                }`}
+              >
+                {children}
+              </div>
             </div>
             {!hideMobileNav && (
-              <nav className="absolute inset-x-0 bottom-0 z-20 border-t border-white/8 bg-ink/92 px-2 pt-1 backdrop-blur-xl lg:hidden" style={{ paddingBottom: "max(0.4rem, env(safe-area-inset-bottom))" }}>
+              <nav
+                className={`absolute inset-x-0 bottom-0 z-20 border-t border-white/8 bg-ink/92 px-2 pt-1 backdrop-blur-xl ${
+                  phoneApp ? "" : "lg:hidden"
+                }`}
+                style={{ paddingBottom: "max(0.4rem, env(safe-area-inset-bottom))" }}
+              >
                 <ul className="grid grid-cols-5">
                   {NAV.map((item) => {
                     const active =
@@ -134,9 +159,11 @@ function SideLink({
 }
 
 function backHref(pathname: string): string | null {
-  if (pathname.startsWith("/workouts/")) return "/workouts";
-  if (pathname.startsWith("/coach/")) return "/coach";
-  if (pathname.startsWith("/sleep/")) return "/sleep";
-  if (pathname === "/download") return "/settings";
+  const path = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  if (path.startsWith("/workouts/")) return "/workouts";
+  if (path.startsWith("/coach/")) return "/coach";
+  if (path.startsWith("/sleep/")) return "/sleep";
+  if (path === "/download") return "/settings";
+  if (path === "/privacy") return "/settings";
   return null;
 }

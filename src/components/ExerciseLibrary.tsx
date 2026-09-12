@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { TrainingCall } from "@/lib/intelligence";
+import { fetchExercises } from "@/lib/wger";
 
 type Exercise = {
   id: string | number;
@@ -23,10 +24,9 @@ export function ExerciseLibrary({ intent }: { intent: TrainingCall | "build" }) 
 
   useEffect(() => {
     let cancelled = false;
-    void fetch(`/api/exercises?intent=${intent}`)
-      .then(async (res) => {
-        const body = await res.json();
-        if (!cancelled) setRows((body.exercises ?? []) as Exercise[]);
+    void fetchExercises(intent)
+      .then((exercises) => {
+        if (!cancelled) setRows(exercises);
       })
       .catch(() => {
         if (!cancelled) setError("wger.de is unreachable.");

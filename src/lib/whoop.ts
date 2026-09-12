@@ -63,8 +63,7 @@ async function requestToken(body: Record<string, string>): Promise<TokenResponse
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`WHOOP token error (${res.status}): ${text}`);
+    throw new Error(`WHOOP token error (${res.status})`);
   }
 
   return (await res.json()) as TokenResponse;
@@ -99,8 +98,7 @@ async function whoopGet<T>(token: string, path: string, query?: Record<string, s
     cache: "no-store",
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`WHOOP ${path} failed (${res.status}): ${text}`);
+    throw new Error(`WHOOP ${path} failed (${res.status})`);
   }
   return (await res.json()) as T;
 }

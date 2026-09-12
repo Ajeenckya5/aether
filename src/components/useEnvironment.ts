@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { EnvironmentSnapshot } from "@/lib/environment";
+import { fetchEnvironment } from "@/lib/open-meteo";
 import { usePlace } from "./usePlace";
 
 export function useEnvironment() {
@@ -16,15 +17,12 @@ export function useEnvironment() {
       return;
     }
     let cancelled = false;
-    const url = `/api/environment?lat=${place.lat}&lon=${place.lon}`;
     const load = () => {
       setLoading(true);
       setError(null);
-      void fetch(url)
-        .then(async (res) => {
-          const body = await res.json();
-          if (!res.ok) throw new Error(body.error || "Environment failed");
-          if (!cancelled) setEnv(body as EnvironmentSnapshot);
+      void fetchEnvironment(place.lat, place.lon)
+        .then((snapshot) => {
+          if (!cancelled) setEnv(snapshot);
         })
         .catch((err: unknown) => {
           if (!cancelled) {

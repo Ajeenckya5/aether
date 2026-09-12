@@ -53,6 +53,11 @@ export async function readOauthState(): Promise<string | undefined> {
   return store.get(STATE)?.value;
 }
 
+export async function clearOauthState() {
+  const store = await cookies();
+  store.delete(STATE);
+}
+
 export async function readWhoopSession(): Promise<{
   accessToken: string | null;
   refreshToken: string | null;

@@ -10,10 +10,11 @@ import { EnvironmentCard } from "./EnvironmentCard";
 import { JournalChips } from "./JournalChips";
 import { SleepStages } from "./SleepStages";
 import { SourceBanner } from "./SourceBanner";
-import { InstallBanner } from "./DeviceChrome";
+import { InstallBanner, useDevice } from "./DeviceChrome";
 import { WorkoutCard } from "./WorkoutCard";
 import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
+import { preferPhoneShell } from "@/lib/device";
 
 function recoveryColor(score: number) {
   const tone = recoveryTone(score);
@@ -25,6 +26,7 @@ function recoveryColor(score: number) {
 export function TodayView() {
   const { data, report, journal, updateJournal } = useLab();
   const { env } = useEnvironment();
+  const phoneApp = preferPhoneShell(useDevice());
   const recovery = data.recoveries[0];
   const cycle = data.cycles[0];
   const sleep = data.sleeps[0];
@@ -45,7 +47,7 @@ export function TodayView() {
 
   return (
     <div className="px-5 pt-6 lg:px-2">
-      <div className="mb-4 lg:hidden">
+      <div className="mb-4">
         <InstallBanner />
       </div>
       <header className="mb-6 flex items-start justify-between">
@@ -78,7 +80,11 @@ export function TodayView() {
 
       <WeekStrip recoveries={data.recoveries} />
 
-      <div className="lg:mt-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
+      <div
+        className={
+          phoneApp ? undefined : "lg:mt-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8"
+        }
+      >
       <div>
 
       {report && (
@@ -161,7 +167,7 @@ export function TodayView() {
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg">Last night</h2>
-            <Link href={`/sleep/${sleep.id}`} className="text-xs text-lime">
+            <Link href={`/sleep/view?id=${encodeURIComponent(sleep.id)}`} className="text-xs text-lime">
               Open
             </Link>
           </div>

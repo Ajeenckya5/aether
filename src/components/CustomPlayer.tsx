@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { CoachSession } from "@/lib/coach";
 import { asCoachSession, getCustomWorkout } from "@/lib/sessions";
 import { CoachPlayer } from "./CoachPlayer";
 
 export function CustomPlayer() {
-  const params = useParams<{ id: string }>();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
   const [session, setSession] = useState<CoachSession | null>(null);
   const [missing, setMissing] = useState(false);
 

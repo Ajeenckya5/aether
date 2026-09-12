@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
+import { PUBLIC_SITE } from "@/lib/site";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -13,9 +14,10 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(PUBLIC_SITE),
   title: "Aether — Band companion",
   description:
-    "Read recovery, strain, sleep, and workouts from your WHOOP band — on a phone or a laptop.",
+    "Install Aether on your phone. Journal and live workouts stay on this device. No shared user database.",
   applicationName: "Aether",
   appleWebApp: {
     capable: true,

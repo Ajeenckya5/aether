@@ -1,6 +1,13 @@
 import { notFound } from "next/navigation";
 import { CoachPlayer } from "@/components/CoachPlayer";
 import { coachBySlug } from "@/lib/coach";
+import { coachSlugs } from "@/lib/static-params";
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return coachSlugs().map((slug) => ({ slug }));
+}
 
 export default async function CoachPlayerPage({
   params,

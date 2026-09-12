@@ -106,7 +106,7 @@ export function CoachView() {
                   </button>
                 </div>
                 <div className="mt-2 flex gap-2 text-xs">
-                  <Link href={`/coach/custom/${workout.id}`} className="rounded-full bg-white/8 px-3 py-1.5">
+                  <Link href={`/coach/custom?id=${encodeURIComponent(workout.id)}`} className="rounded-full bg-white/8 px-3 py-1.5">
                     Play
                   </Link>
                   <Link

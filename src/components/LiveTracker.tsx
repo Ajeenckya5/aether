@@ -30,10 +30,11 @@ import {
   type LiveLog,
   type LiveSample,
 } from "@/lib/sessions";
-import { DeviceStrip } from "./DeviceChrome";
+import { DeviceStrip, useDevice } from "./DeviceChrome";
 import { useLab } from "./useLab";
 import { useLiveHeartRate } from "./LiveHeartRate";
 import { ZoneBar } from "./ZoneBar";
+import { preferPhoneShell } from "@/lib/device";
 
 type Plan = {
   id: string;
@@ -95,6 +96,7 @@ export function LiveTracker() {
   const params = useSearchParams();
   const { data, athlete } = useLab();
   const hr = useLiveHeartRate();
+  const phoneApp = preferPhoneShell(useDevice());
   const kind = params.get("kind");
   const planId = params.get("id");
   const token = params.get("plan");
@@ -430,7 +432,13 @@ export function LiveTracker() {
         {plan ? `${plan.blocks.length} blocks · follow the clock` : "Free ride — no prescribed blocks"}
       </p>
 
-      <div className="lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-10">
+      <div
+        className={
+          phoneApp
+            ? undefined
+            : "lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-10"
+        }
+      >
         <div>
       <div className="mt-4 space-y-3">
         {idle && !plan && (
@@ -446,7 +454,11 @@ export function LiveTracker() {
             onClick={() => void hr.connect()}
             className="min-h-12 rounded-full bg-white/8 px-3 py-2 text-sm"
           >
-            {hr.status === "live" ? `${hr.bpm ?? "--"} bpm strap` : "Pair HR strap"}
+            {hr.status === "live"
+              ? `${hr.bpm ?? "--"} bpm live`
+              : hr.status === "connecting"
+                ? "Pairing…"
+                : "Pair live HR"}
           </button>
           <button
             type="button"

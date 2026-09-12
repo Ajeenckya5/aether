@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboard } from "./DataProvider";
+import { isStaticSite } from "@/lib/site";
 
 export function SourceBanner() {
   const { data, loading } = useDashboard();
@@ -8,6 +9,13 @@ export function SourceBanner() {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
         Live from your WHOOP band
+      </p>
+    );
+  }
+  if (isStaticSite()) {
+    return (
+      <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
+        On-device copy · nothing is stored on this website
       </p>
     );
   }

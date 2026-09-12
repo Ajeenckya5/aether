@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  clearOauthState,
   readOauthState,
   saveWhoopTokens,
   whoopRedirectUri,
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
   const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
   const expected = await readOauthState();
+  await clearOauthState();
 
   if (error || !code || !state || !expected || state !== expected) {
     return NextResponse.redirect(new URL("/settings?error=oauth", request.url));

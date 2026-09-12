@@ -2,7 +2,7 @@
   "name": "aether",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://github.com/Ajeenckya5/aether",
+  "homepage": "https://ajeenckya5.github.io/aether",
   "repository": {
     "type": "git",
     "url": "https://github.com/Ajeenckya5/aether.git"
@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:pages": "node scripts/build-pages.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

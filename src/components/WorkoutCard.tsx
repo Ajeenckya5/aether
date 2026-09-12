@@ -14,7 +14,7 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
 
   return (
     <Link
-      href={`/workouts/${workout.id}`}
+      href={`/workouts/view?id=${encodeURIComponent(workout.id)}`}
       className="block overflow-hidden rounded-[28px] border border-white/8 bg-panel"
     >
       <div className="relative h-36 overflow-hidden" style={{ background: media.tint }}>

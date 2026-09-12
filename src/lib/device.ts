@@ -41,6 +41,13 @@ export function gpsLabel(coarse: boolean): string {
   return coarse ? "Phone GPS distance" : "Device GPS distance";
 }
 
+/** Installed home-screen app, or a phone — not a laptop dashboard. */
+export function preferPhoneShell(
+  device: Pick<DeviceProbe, "standalone" | "coarse">,
+): boolean {
+  return device.standalone || device.coarse;
+}
+
 export function readDevice(): DeviceProbe {
   if (typeof navigator === "undefined") {
     return {

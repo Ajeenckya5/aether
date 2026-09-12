@@ -2,20 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatClock, zoneDurationsFromMs } from "@/lib/live-math";
 import { deleteLiveLog, getLiveLog, type LiveLog } from "@/lib/sessions";
 import { sportLabel } from "@/lib/sports";
 import { ZoneBar } from "./ZoneBar";
 
 export function LiveLogReview() {
-  const params = useParams<{ id: string }>();
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
   const router = useRouter();
   const [log, setLog] = useState<LiveLog | null | undefined>(undefined);
 
   useEffect(() => {
-    setLog(getLiveLog(params.id) ?? null);
-  }, [params.id]);
+    setLog(id ? (getLiveLog(id) ?? null) : null);
+  }, [id]);
 
   if (log === undefined) {
     return <p className="px-5 pt-16 text-sm text-muted">Loading…</p>;
