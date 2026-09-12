@@ -96,8 +96,9 @@ export function SettingsView() {
         <p className="mt-2 text-sm text-muted">
           Tap Connect WHOOP over Bluetooth and pick the band. After that,
           Aether keeps the WHOOP connected on this phone until you tap
-          Disconnect. Live bpm uses the public Heart Rate service. Leave Aether
-          open overnight to log rest vs wake from that stream. WHOOP’s own
+          Disconnect. Live bpm uses the public Heart Rate service. On iPhone,
+          Safari cannot pair — use the Aether iPhone app (Xcode) or Bluefy.
+          Leave Aether open overnight to log rest vs wake from that stream. WHOOP’s own
           recovery score, REM/deep, SpO2, and skin temp still need their
           private radio or official API.
         </p>

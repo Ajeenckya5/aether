@@ -40,7 +40,8 @@ export function PrivacyView() {
           <li>
             <strong className="font-medium text-paper">Bluetooth</strong> — live
             heart-rate stays on this phone. Live WHOOP bpm uses the public Heart
-            Rate Bluetooth service. Aether may also ask for standard pulse-ox
+            Rate Bluetooth service. The iPhone app uses Core Bluetooth on this
+            device — still public Heart Rate only, never WHOOP’s private radio.
             and thermometer GATT. Overnight rest vs wake is logged on this
             phone from that public HR stream. WHOOP’s private overnight packets
             never leave the band except through the official WHOOP app.

@@ -834,11 +834,17 @@ function IosWhoopPath() {
   }, []);
   return (
     <div className="mt-4 grid gap-2">
-      <a
-        href={BLUEFY_APP_STORE}
+      <Link
+        href="/download#ios-native"
         className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
       >
-        Get Bluefy (free) — then pair WHOOP
+        Install Aether iPhone app — Bluetooth without Safari
+      </Link>
+      <a
+        href={BLUEFY_APP_STORE}
+        className="rounded-full border border-white/15 px-4 py-3 text-center text-sm"
+      >
+        No Mac? Use Bluefy (free) instead
       </a>
       <a
         href={bluefyOpenHref(href)}
@@ -847,9 +853,10 @@ function IosWhoopPath() {
         Open this page in Bluefy
       </a>
       <p className="text-xs text-muted">
-        Safari and Chrome on iPhone cannot talk to Bluetooth. Bluefy is a free
-        browser with Web Bluetooth. Aether is not an App Store app — Bluefy is
-        only the Bluetooth browser.
+        Apple blocks Bluetooth in Safari and Chrome. There is no Safari
+        loophole. The Aether iPhone app is our own wrapper: Core Bluetooth
+        talks to the band, then loads this site. Bluefy is the fallback if you
+        cannot install Xcode.
       </p>
     </div>
   );
@@ -925,9 +932,11 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
         <p className="text-xs uppercase tracking-widest text-lime">WHOOP</p>
         <h2 className="font-display mt-1 text-xl text-paper">Connect your band</h2>
         <p className="mt-2 text-sm text-paper/80">
-          {canBle
+          {device.nativeShell
+            ? "This is the Aether iPhone app. Tap Connect — iOS Core Bluetooth talks to the band. Safari is not in the path. Leave the app open overnight to log rest vs wake."
+            : canBle
             ? "Tap Connect once. Aether remembers the band and keeps it connected — including after you switch tabs or reopen the app. Leave this page open overnight to log rest vs wake from public heart rate. SpO2 and skin temp appear only if the band exposes those standard Bluetooth services. If they stay blank, tap Connect once more so the browser can grant them."
-            : "On this iPhone, Safari cannot pair the band. Get Bluefy, open Aether there, then Connect WHOOP. Aether will keep that link. Leave Bluefy open overnight to log rest vs wake. Camera pulse is live optical bpm from this phone, not the WHOOP."}
+            : "Safari cannot pair the band. Install the Aether iPhone app (Xcode on a Mac) so Bluetooth runs in our app. Bluefy is the no-Mac fallback. Camera pulse is optical bpm from this phone, not the WHOOP."}
         </p>
         <LiveStats hr={hr} />
         {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
@@ -967,9 +976,9 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
           </>
         ) : (
           <>
-            <li>Install Bluefy (free Web BLE browser) from the App Store.</li>
-            <li>Tap Open this page in Bluefy. Do not stay in Safari or Chrome.</li>
-            <li>In Bluefy, tap Connect WHOOP over Bluetooth and pick the band. Stay in Bluefy — Aether will keep reconnecting if the link drops.</li>
+            <li>On a Mac, open native/ios/AetherBand in Xcode, plug in this iPhone, press Run. That installs our Bluetooth app.</li>
+            <li>Or install Bluefy and open Aether there — Safari and Chrome cannot pair.</li>
+            <li>Disconnect the official WHOOP app, then Connect WHOOP over Bluetooth.</li>
           </>
         )}
       </ol>

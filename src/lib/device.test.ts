@@ -8,6 +8,7 @@ import {
   installGuideLabel,
   preferPhoneShell,
   probeNavigator,
+  whoopGuideHref,
 } from "./device";
 
 const IPHONE_SAFARI =
@@ -29,7 +30,8 @@ describe("device copy for phone and laptop", () => {
     expect(ios.ios).toBe(true);
     expect(ios.browser).toBe("safari");
     expect(ios.bluetooth).toBe(false);
-    expect(describeHrSupport(ios)).toMatch(/Bluefy/);
+    expect(describeHrSupport(ios)).toMatch(/Aether iPhone app/);
+    expect(whoopGuideHref(ios)).toBe("/download#ios-native");
   });
 
   it("detects Chrome on iPhone and points install at Chrome Share", () => {
@@ -62,6 +64,19 @@ describe("device copy for phone and laptop", () => {
     expect(android.ios).toBe(false);
     expect(installGuideHref(android)).toBe("/download#android");
     expect(describeHrSupport(android)).toMatch(/Chrome or Edge on Android/);
+  });
+
+  it("lets the Aether iPhone app pair without Safari Web Bluetooth", () => {
+    const shell = probeNavigator({
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 AetherBand/1",
+      coarse: true,
+    });
+    expect(shell.browser).toBe("aether");
+    expect(shell.nativeShell).toBe(true);
+    expect(shell.bluetooth).toBe(true);
+    expect(shell.standalone).toBe(true);
+    expect(describeHrSupport(shell)).toMatch(/Core Bluetooth/);
   });
 
   it("lets Bluefy on iPhone pair like Chrome on Android", () => {

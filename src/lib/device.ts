@@ -1,3 +1,5 @@
+import { hasAetherNativeShell, isAetherBandUserAgent } from "./native-ble";
+
 export type BrowserKind =
   | "safari"
   | "chrome"
@@ -5,6 +7,7 @@ export type BrowserKind =
   | "edge"
   | "samsung"
   | "bluefy"
+  | "aether"
   | "other";
 
 export type DeviceProbe = {
@@ -15,10 +18,12 @@ export type DeviceProbe = {
   browser: BrowserKind;
   standalone: boolean;
   coarse: boolean;
+  nativeShell: boolean;
 };
 
 export function detectBrowser(userAgent: string): BrowserKind {
   const ua = userAgent || "";
+  if (isAetherBandUserAgent(ua)) return "aether";
   if (/Bluefy/i.test(ua)) return "bluefy";
   if (/EdgiOS\/|EdgA\/|Edg\//i.test(ua)) return "edge";
   if (/FxiOS\/|Firefox\//i.test(ua)) return "firefox";
@@ -36,23 +41,35 @@ export function probeNavigator(input: {
   wakeLock?: unknown;
   standalone?: boolean;
   coarse?: boolean;
+  nativeShell?: boolean;
 }): DeviceProbe {
   const ua = input.userAgent || "";
-  const ios = /iP(hone|ad|od)/.test(ua) || (/(Mac OS X)/.test(ua) && input.coarse === true);
+  const nativeShell = hasAetherNativeShell({
+    nativeShell: input.nativeShell,
+    userAgent: ua,
+  });
+  const ios =
+    nativeShell ||
+    /iP(hone|ad|od)/.test(ua) ||
+    (/(Mac OS X)/.test(ua) && input.coarse === true);
   return {
-    bluetooth: Boolean(input.bluetooth),
+    bluetooth: Boolean(input.bluetooth) || nativeShell,
     geolocation: Boolean(input.geolocation),
     wakeLock: Boolean(input.wakeLock),
     ios,
     browser: detectBrowser(ua),
-    standalone: Boolean(input.standalone),
+    standalone: Boolean(input.standalone) || nativeShell,
     coarse: Boolean(input.coarse),
+    nativeShell,
   };
 }
 
 export function describeHrSupport(
-  device: Pick<DeviceProbe, "bluetooth" | "ios" | "browser">,
+  device: Pick<DeviceProbe, "bluetooth" | "ios" | "browser" | "nativeShell">,
 ): string {
+  if (device.nativeShell || device.browser === "aether") {
+    return "This Aether iPhone app pairs your WHOOP with Core Bluetooth. Safari is not involved. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
+  }
   if (device.ios && device.bluetooth) {
     return "This iPhone browser can pair Bluetooth. Tap Connect WHOOP, pick the band, keep this screen open. Live bpm and R-R/HRV use the public Heart Rate service.";
   }
@@ -60,7 +77,7 @@ export function describeHrSupport(
     return "Pair your WHOOP or a Polar/Garmin-class strap in this browser (Chrome or Edge on Android or a laptop). Live bpm uses the public Bluetooth Heart Rate service.";
   }
   if (device.ios) {
-    return "Safari and Chrome on iPhone cannot pair a WHOOP. Open Aether in Bluefy (free Web BLE browser) to connect the band on this iPhone, or use Camera pulse.";
+    return "Safari and Chrome on iPhone cannot pair a WHOOP. Install the Aether iPhone app from GitHub (Xcode on a Mac) so Bluetooth runs in our app, not Safari. Bluefy is the no-Mac fallback. Camera pulse also works.";
   }
   if (device.browser === "safari") {
     return "This Android Safari-like browser has no Web Bluetooth. Apple does not ship Safari on Android. Use Chrome or Edge on Android, or Camera pulse.";
@@ -89,9 +106,10 @@ export function installGuideHref(
 }
 
 export function whoopGuideHref(
-  device: Pick<DeviceProbe, "ios" | "bluetooth">,
+  device: Pick<DeviceProbe, "ios" | "bluetooth" | "nativeShell">,
 ): string {
-  if (device.ios && !device.bluetooth) return "/download#ios-whoop";
+  if (device.nativeShell) return "/download#ios-native";
+  if (device.ios && !device.bluetooth) return "/download#ios-native";
   return "/download#bluetooth";
 }
 
@@ -111,7 +129,7 @@ export function installBannerCopy(
     return "Chrome on iPhone: Share (next to the address) → Add to Home Screen, then open the Aether icon. That is the app.";
   }
   if (device.ios) {
-    return "Safari on iPhone: Share → Add to Home Screen, then open the Aether icon. Chrome works the same way. To pair a WHOOP on this iPhone, open Aether in Bluefy.";
+    return "Safari on iPhone: Share → Add to Home Screen for the website app. Bluetooth on iPhone needs the Aether iPhone app (Xcode) or Bluefy — Safari cannot pair the band.";
   }
   if (device.browser === "safari") {
     return "Apple does not ship Safari on Android. In this Safari-like browser: menu → Add to Home Screen, then open the Aether icon.";
@@ -129,6 +147,7 @@ export function readDevice(): DeviceProbe {
       browser: "other",
       standalone: false,
       coarse: false,
+      nativeShell: false,
     };
   }
   const nav = navigator as Navigator & {
@@ -149,5 +168,6 @@ export function readDevice(): DeviceProbe {
     wakeLock: nav.wakeLock,
     standalone,
     coarse,
+    nativeShell: hasAetherNativeShell({ userAgent: navigator.userAgent }),
   });
 }

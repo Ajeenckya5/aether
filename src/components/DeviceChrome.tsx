@@ -13,6 +13,7 @@ const SSR_DEVICE: DeviceProbe = {
   browser: "other",
   standalone: false,
   coarse: false,
+  nativeShell: false,
 };
 
 export function useDevice(): DeviceProbe {

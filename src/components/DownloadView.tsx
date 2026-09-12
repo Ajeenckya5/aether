@@ -19,9 +19,10 @@ export function DownloadView() {
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime">Phone app</p>
       <h1 className="font-display mt-2 text-4xl">Install Aether on this phone</h1>
       <p className="mt-3 max-w-xl text-sm text-muted">
-        After install, open the home-screen icon. That is the app — no browser
-        Connect your WHOOP over Bluetooth for live bpm. On iPhone that needs
-        Bluefy, not Safari.
+        After install, open the home-screen icon. That is the website app.
+        Connect your WHOOP over Bluetooth for live bpm. Safari and Chrome on
+        iPhone cannot do Bluetooth — install the Aether iPhone app (below) or
+        use Bluefy.
       </p>
 
       {device.standalone && (
@@ -112,8 +113,8 @@ export function DownloadView() {
           </div>
         </div>
         <p className="mt-3 text-sm text-muted">
-          Chrome on iPhone can install Aether too. Live WHOOP Bluetooth still
-          needs Bluefy on iPhone (Safari and Chrome have no Web Bluetooth).
+          Chrome on iPhone can install the website app too. Bluetooth still
+          cannot run in Chrome — use the Aether iPhone app (Xcode) or Bluefy.
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
           <li>On the iPhone, open this page in <strong className="font-medium text-paper">Chrome</strong>.</li>
@@ -124,7 +125,7 @@ export function DownloadView() {
       </section>
 
       <section
-        id="ios-whoop"
+        id="ios-native"
         className={`mt-4 rounded-[28px] border bg-panel p-5 ${
           device.ios ? "border-lime/40" : "border-white/8"
         }`}
@@ -134,17 +135,58 @@ export function DownloadView() {
             <Apple size={20} />
           </span>
           <div>
-            <h2 className="font-display text-xl">iPhone — connect WHOOP</h2>
+            <h2 className="font-display text-xl">iPhone — Aether Bluetooth app</h2>
             <p className="text-xs uppercase tracking-widest text-muted">
-              Bluefy · stays connected
+              Our app · Core Bluetooth · not Safari
             </p>
           </div>
         </div>
         <p className="mt-3 text-sm text-muted">
-          Apple blocks Bluetooth in Safari and Chrome. The free Bluefy browser
-          is how this iPhone pairs the WHOOP. After one Connect, Aether keeps
-          that band linked. Aether is not an App Store app — Bluefy is only the
-          Bluetooth browser.
+          Apple does not allow Bluetooth in Safari or Chrome. There is no
+          browser loophole. This is our own iPhone app: it talks to the WHOOP
+          with iOS Core Bluetooth (public Heart Rate only), then shows Aether
+          inside that app. It is not on the App Store.
+        </p>
+        <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
+          <li>On a Mac, install Xcode from the Mac App Store (free).</li>
+          <li>
+            Open{" "}
+            <a className="font-medium text-lime" href={`${urls.repoUrl}/tree/master/native/ios/AetherBand`}>
+              native/ios/AetherBand/AetherBand.xcodeproj
+            </a>{" "}
+            from this GitHub repo.
+          </li>
+          <li>Plug in the iPhone. Unlock it. Trust the computer if asked.</li>
+          <li>In Xcode pick the iPhone, then the Team = your Apple ID (Signing &amp; Capabilities).</li>
+          <li>Press Run. On the iPhone: Settings → General → VPN &amp; Device Management → Trust your Apple ID.</li>
+          <li>Open the Aether icon. Allow Bluetooth. Disconnect the official WHOOP app, then tap Connect WHOOP.</li>
+        </ol>
+        <p className="mt-3 text-xs text-muted">
+          A free Apple ID install lasts 7 days, then press Run again. A paid
+          Apple Developer account lasts a year. Bluefy remains the path if you
+          do not have a Mac.
+        </p>
+      </section>
+
+      <section
+        id="ios-whoop"
+        className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5"
+      >
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/8">
+            <Apple size={20} />
+          </span>
+          <div>
+            <h2 className="font-display text-xl">iPhone — Bluefy fallback</h2>
+            <p className="text-xs uppercase tracking-widest text-muted">
+              No Mac · Web BLE browser
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted">
+          If you cannot install Xcode, Bluefy is a free App Store browser with
+          Web Bluetooth. Aether itself is not on the App Store — Bluefy is only
+          the Bluetooth browser.
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
           <li>
