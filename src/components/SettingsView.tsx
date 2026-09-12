@@ -1,18 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LocationFields } from "./LocationFields";
 import { publicDownloadUrls } from "@/lib/downloads";
 import { eraseLocalPrivateData } from "@/lib/privacy";
-import { appPath, PUBLIC_SITE } from "@/lib/site";
+import { appPath, isStaticSite, PUBLIC_SITE } from "@/lib/site";
 import { DeviceStrip, InstallBanner } from "./DeviceChrome";
 import { BluetoothPanel } from "./LiveHeartRate";
 import { AthleteFields } from "./AthleteFields";
+import { useDashboard } from "./DataProvider";
+
+const ERRORS: Record<string, string> = {
+  config: "Add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to .env.local, then restart.",
+  oauth: "WHOOP sign-in did not finish. Try connect again.",
+  token: "WHOOP did not return tokens. Check the redirect URI and client secret.",
+};
 
 export function SettingsView() {
+  const { data, refresh } = useDashboard();
+  const [busy, setBusy] = useState(false);
   const [erasing, setErasing] = useState(false);
+  const params = useSearchParams();
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const downloads = publicDownloadUrls();
+  const staticSite = isStaticSite();
+
+  useEffect(() => {
+    setOauthError(ERRORS[params.get("error") ?? ""] ?? null);
+  }, [params]);
+
+  async function disconnect() {
+    setBusy(true);
+    try {
+      await fetch(appPath("/api/auth/logout"), { method: "POST" });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function eraseEverything() {
     if (
@@ -24,6 +51,9 @@ export function SettingsView() {
     }
     setErasing(true);
     try {
+      if (!staticSite) {
+        await fetch(appPath("/api/auth/logout"), { method: "POST" });
+      }
       eraseLocalPrivateData();
       window.location.assign(appPath("/") || "/");
     } finally {
@@ -43,7 +73,7 @@ export function SettingsView() {
         <h2 className="font-display text-xl text-paper">On this phone</h2>
         <p className="mt-2 text-sm text-muted">
           Install Aether to the home screen so it is a phone app. Then connect
-          over Bluetooth. GitHub is only the source files.
+          your WHOOP over Bluetooth. GitHub is only the source files.
         </p>
         <div className="mt-4 flex flex-col gap-2">
           <Link
@@ -62,18 +92,66 @@ export function SettingsView() {
       </section>
 
       <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
-        <h2 className="font-display text-xl">Bluetooth only</h2>
+        <h2 className="font-display text-xl">Connect your WHOOP</h2>
         <p className="mt-2 text-sm text-muted">
-          Aether never signs into WHOOP and never pulls the WHOOP cloud. The
-          only live connection is Bluetooth on this phone. Pair a standard
-          heart-rate strap (Polar, Garmin, Wahoo). The WHOOP band uses a closed
-          radio WHOOP does not publish, so it cannot stream here.
+          Tap Connect over Bluetooth and pick the WHOOP band. Live bpm uses the
+          public Heart Rate service. That is the free path on this phone app.
+          Overnight recovery and sleep from WHOOP’s official API need a copy you
+          run yourself (developer.whoop.com is free with a WHOOP membership).
         </p>
       </section>
 
       <div className="mt-4">
         <BluetoothPanel />
       </div>
+
+      {oauthError && !staticSite && (
+        <p className="mt-4 rounded-2xl bg-ember/15 px-4 py-3 text-sm text-ember">
+          {oauthError}
+        </p>
+      )}
+
+      {!staticSite && (
+        <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
+          <p className="text-xs uppercase tracking-widest text-muted">WHOOP account</p>
+          <p className="font-display mt-1 text-2xl">
+            {data.connected ? "Connected to WHOOP" : "Demo recovery until you sign in"}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            {data.connected
+              ? `${data.profile.first_name || "Connected"} · recovery, sleep, and workouts from the official WHOOP API`
+              : data.configured
+                ? "Credentials are set. Sign in to load overnight recovery."
+                : "Optional. Add WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET to .env.local for recovery history. Live bpm still uses Bluetooth."}
+          </p>
+          <div className="mt-4 flex flex-col gap-2">
+            <a
+              href={appPath("/api/auth/whoop")}
+              className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
+            >
+              {data.connected ? "Reconnect WHOOP" : "Connect WHOOP account"}
+            </a>
+            {data.connected && (
+              <button
+                type="button"
+                onClick={() => void disconnect()}
+                disabled={busy}
+                className="rounded-full border border-white/15 px-4 py-3 text-sm"
+              >
+                {busy ? "Disconnecting…" : "Disconnect account"}
+              </button>
+            )}
+          </div>
+          <p className="mt-3 text-xs text-muted">
+            Free at{" "}
+            <a className="text-lime" href="https://developer.whoop.com" target="_blank" rel="noreferrer">
+              developer.whoop.com
+            </a>
+            . Redirect URI:{" "}
+            <code className="text-paper">http://localhost:3000/api/auth/callback</code>
+          </p>
+        </section>
+      )}
 
       <section className="mt-4 rounded-[28px] border border-white/8 p-5 text-sm text-muted">
         <h2 className="font-display text-lg text-paper">Aether Lab vs WHOOP 5.0</h2>
@@ -102,9 +180,9 @@ export function SettingsView() {
         <h2 className="font-display text-lg text-paper">Private data</h2>
         <p className="mt-2 text-sm text-muted">
           Journal, live workouts, GPS tracks, and your height, weight, name, and
-          blood pressure stay on this phone. They never go to GitHub Pages or
-          to WHOOP. Weather uses a rounded location from this browser. We never
-          look up your IP. No ads or trackers.
+          blood pressure stay on this phone. They never go to GitHub Pages.
+          Weather uses a rounded location from this browser. We never look up
+          your IP. No ads or trackers.
         </p>
         <div className="mt-4 flex flex-col gap-2">
           <Link
@@ -152,8 +230,8 @@ export function SettingsView() {
           .
         </p>
         <ul className="mt-3 list-disc space-y-2 pl-4">
-          <li>iPhone: Safari Share → Add to Home Screen (not the App Store). Live HR pairing needs Android Chrome; use Practice pulse here.</li>
-          <li>Android: Chrome Install app (not Play Store), then Connect over Bluetooth with a Polar/Garmin/Wahoo strap.</li>
+          <li>iPhone: Safari or Chrome → Share → Add to Home Screen. Live WHOOP pairing needs Android Chrome; use Practice pulse here.</li>
+          <li>Android: Chrome Install app, or another browser’s Add to Home Screen. Then Connect over Bluetooth and pick WHOOP.</li>
           <li>After the icon is on the phone, open that — not a browser tab.</li>
         </ul>
         <div className="mt-3">

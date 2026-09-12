@@ -39,8 +39,9 @@ export function PrivacyView() {
         <ul className="mt-3 list-disc space-y-2 pl-4 text-muted">
           <li>
             <strong className="font-medium text-paper">Bluetooth</strong> — live
-            heart-rate stays on this phone. Aether never signs into WHOOP and
-            never pulls the WHOOP cloud.
+            heart-rate stays on this phone. Live WHOOP bpm uses the public Heart
+            Rate Bluetooth service. Overnight packets never leave the band except
+            through the official WHOOP app.
           </li>
           <li>
             <strong className="font-medium text-paper">Weather</strong> — this browser talks to Open-Meteo with a rounded lat/lon (~1 km). GitHub never sees the pin. City search sends only the letters you type.
@@ -60,7 +61,7 @@ export function PrivacyView() {
         <ul className="mt-3 list-disc space-y-2 pl-4">
           <li>No advertising SDKs, analytics pixels, or crash reporters.</li>
           <li>No selling or sharing journal, GPS, or heart-rate logs.</li>
-          <li>No WHOOP cloud tokens. The WHOOP band cannot stream to Aether over Bluetooth.</li>
+          <li>No WHOOP cloud tokens. Live WHOOP bpm uses public Heart Rate GATT only — not WHOOP’s private radio.</li>
         </ul>
         <Link href="/settings" className="mt-4 inline-block text-sm text-lime">
           Erase private data in Settings

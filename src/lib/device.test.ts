@@ -1,16 +1,67 @@
 import { describe, expect, it } from "vitest";
-import { describeHrSupport, gpsLabel, preferPhoneShell, probeNavigator } from "./device";
+import {
+  describeHrSupport,
+  detectBrowser,
+  gpsLabel,
+  installBannerCopy,
+  installGuideHref,
+  installGuideLabel,
+  preferPhoneShell,
+  probeNavigator,
+} from "./device";
+
+const IPHONE_SAFARI =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+const IPHONE_CHROME =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/129.0.6668.69 Mobile/15E148 Safari/604.1";
+const ANDROID_CHROME =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36";
+const ANDROID_SAFARI_LIKE =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
 describe("device copy for phone and laptop", () => {
-  it("tells iPhone users to use practice pulse, not Web Bluetooth", () => {
+  it("tells iPhone Safari and Chrome users to use practice pulse, not Web Bluetooth", () => {
     const ios = probeNavigator({
-      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+      userAgent: IPHONE_SAFARI,
       bluetooth: undefined,
       geolocation: {},
     });
     expect(ios.ios).toBe(true);
+    expect(ios.browser).toBe("safari");
     expect(ios.bluetooth).toBe(false);
-    expect(describeHrSupport(ios)).toMatch(/iPhone\/iPad Safari has no Web Bluetooth/);
+    expect(describeHrSupport(ios)).toMatch(/Safari and Chrome have no Web Bluetooth/);
+  });
+
+  it("detects Chrome on iPhone and points install at Chrome Share", () => {
+    expect(detectBrowser(IPHONE_CHROME)).toBe("chrome");
+    const chromeIos = probeNavigator({ userAgent: IPHONE_CHROME });
+    expect(chromeIos.ios).toBe(true);
+    expect(chromeIos.browser).toBe("chrome");
+    expect(installGuideHref(chromeIos)).toBe("/download#ios-chrome");
+    expect(installGuideLabel(chromeIos)).toMatch(/Chrome iPhone/);
+    expect(installBannerCopy(chromeIos)).toMatch(/Chrome on iPhone/);
+    expect(describeHrSupport(chromeIos)).toMatch(/Safari and Chrome have no Web Bluetooth/);
+  });
+
+  it("treats a Safari-like Android UA as Android Safari, not iPhone", () => {
+    expect(detectBrowser(ANDROID_SAFARI_LIKE)).toBe("safari");
+    const androidSafari = probeNavigator({
+      userAgent: ANDROID_SAFARI_LIKE,
+      coarse: true,
+    });
+    expect(androidSafari.ios).toBe(false);
+    expect(androidSafari.browser).toBe("safari");
+    expect(installGuideHref(androidSafari)).toBe("/download#android-safari");
+    expect(installBannerCopy(androidSafari)).toMatch(/does not ship Safari on Android/);
+    expect(describeHrSupport(androidSafari)).toMatch(/Safari-like/);
+  });
+
+  it("keeps Android Chrome on the Install app path", () => {
+    expect(detectBrowser(ANDROID_CHROME)).toBe("chrome");
+    const android = probeNavigator({ userAgent: ANDROID_CHROME, bluetooth: {} });
+    expect(android.ios).toBe(false);
+    expect(installGuideHref(android)).toBe("/download#android");
+    expect(describeHrSupport(android)).toMatch(/Chrome or Edge on Android/);
   });
 
   it("treats iPadOS desktop UA + coarse pointer as iOS", () => {
@@ -29,7 +80,8 @@ describe("device copy for phone and laptop", () => {
       wakeLock: {},
     });
     expect(laptop.ios).toBe(false);
-    expect(describeHrSupport(laptop)).toMatch(/laptop Chrome\/Edge or Android Chrome/);
+    expect(laptop.browser).toBe("chrome");
+    expect(describeHrSupport(laptop)).toMatch(/Chrome or Edge on Android or a laptop/);
   });
 
   it("labels GPS for touch vs pointer", () => {

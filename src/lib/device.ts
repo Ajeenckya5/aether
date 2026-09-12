@@ -1,11 +1,31 @@
+export type BrowserKind =
+  | "safari"
+  | "chrome"
+  | "firefox"
+  | "edge"
+  | "samsung"
+  | "other";
+
 export type DeviceProbe = {
   bluetooth: boolean;
   geolocation: boolean;
   wakeLock: boolean;
   ios: boolean;
+  browser: BrowserKind;
   standalone: boolean;
   coarse: boolean;
 };
+
+export function detectBrowser(userAgent: string): BrowserKind {
+  const ua = userAgent || "";
+  if (/EdgiOS\/|EdgA\/|Edg\//i.test(ua)) return "edge";
+  if (/FxiOS\/|Firefox\//i.test(ua)) return "firefox";
+  if (/SamsungBrowser/i.test(ua)) return "samsung";
+  if (/CriOS\//i.test(ua)) return "chrome";
+  if (/Chrome\//i.test(ua) && !/OPR\//i.test(ua)) return "chrome";
+  if (/Safari/i.test(ua)) return "safari";
+  return "other";
+}
 
 export function probeNavigator(input: {
   userAgent: string;
@@ -22,17 +42,23 @@ export function probeNavigator(input: {
     geolocation: Boolean(input.geolocation),
     wakeLock: Boolean(input.wakeLock),
     ios,
+    browser: detectBrowser(ua),
     standalone: Boolean(input.standalone),
     coarse: Boolean(input.coarse),
   };
 }
 
-export function describeHrSupport(device: Pick<DeviceProbe, "bluetooth" | "ios">): string {
+export function describeHrSupport(
+  device: Pick<DeviceProbe, "bluetooth" | "ios" | "browser">,
+): string {
   if (device.bluetooth) {
-    return "Pair a Polar/Garmin-class strap in this browser (laptop Chrome/Edge or Android Chrome). Aether only connects over Bluetooth — not the WHOOP cloud. The WHOOP band is not this GATT profile.";
+    return "Pair your WHOOP or a Polar/Garmin-class strap in this browser (Chrome or Edge on Android or a laptop). Live bpm uses the public Bluetooth Heart Rate service.";
   }
   if (device.ios) {
-    return "iPhone/iPad Safari has no Web Bluetooth. Use Practice pulse here, or pair a strap in Chrome on a laptop or Android. Aether does not use the WHOOP cloud.";
+    return "iPhone/iPad Safari and Chrome have no Web Bluetooth. Use Practice pulse here, or pair the WHOOP in Chrome or Edge on Android or a laptop.";
+  }
+  if (device.browser === "safari") {
+    return "This Android Safari-like browser has no Web Bluetooth. Apple does not ship Safari on Android. Use Chrome or Edge on Android, or Practice pulse.";
   }
   return "This browser has no Web Bluetooth. Use Chrome or Edge on a laptop or Android, or Practice pulse.";
 }
@@ -48,6 +74,39 @@ export function preferPhoneShell(
   return device.standalone || device.coarse;
 }
 
+export function installGuideHref(
+  device: Pick<DeviceProbe, "ios" | "browser">,
+): string {
+  if (device.ios && device.browser === "chrome") return "/download#ios-chrome";
+  if (device.ios) return "/download#ios";
+  if (device.browser === "safari") return "/download#android-safari";
+  return "/download#android";
+}
+
+export function installGuideLabel(
+  device: Pick<DeviceProbe, "ios" | "browser">,
+): string {
+  if (device.ios && device.browser === "chrome") return "Show Chrome iPhone steps";
+  if (device.ios) return "Show Safari iPhone steps";
+  if (device.browser === "safari") return "Show Android Safari steps";
+  return "Show Android Chrome steps";
+}
+
+export function installBannerCopy(
+  device: Pick<DeviceProbe, "ios" | "browser">,
+): string {
+  if (device.ios && device.browser === "chrome") {
+    return "Chrome on iPhone: Share (next to the address) → Add to Home Screen, then open the Aether icon. That is the app.";
+  }
+  if (device.ios) {
+    return "Safari on iPhone: Share → Add to Home Screen, then open the Aether icon. Chrome works the same way. That is the app.";
+  }
+  if (device.browser === "safari") {
+    return "Apple does not ship Safari on Android. In this Safari-like browser: menu → Add to Home Screen, then open the Aether icon.";
+  }
+  return "Install Aether on this phone so it opens from the home screen, not a browser tab.";
+}
+
 export function readDevice(): DeviceProbe {
   if (typeof navigator === "undefined") {
     return {
@@ -55,6 +114,7 @@ export function readDevice(): DeviceProbe {
       geolocation: false,
       wakeLock: false,
       ios: false,
+      browser: "other",
       standalone: false,
       coarse: false,
     };

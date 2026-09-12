@@ -12,6 +12,8 @@ export const STRAP_FILTERS: Array<{ services?: string[]; namePrefix?: string }> 
   { namePrefix: "Coospo" },
   { namePrefix: "Magene" },
   { namePrefix: "Scosche" },
+  { namePrefix: "WHOOP" },
+  { namePrefix: "Whoop" },
 ];
 
 export function heartRateRequestOptions(scanAll: boolean): {
@@ -46,20 +48,23 @@ export function isPlausibleHr(bpm: number): boolean {
   return bpm > 20 && bpm < 240;
 }
 
-/** WHOOP’s radio is closed. We refuse it by name instead of guessing its GATT. */
 export function isWhoopBandName(name: string | null | undefined): boolean {
   return Boolean(name && /whoop/i.test(name));
 }
 
-export const WHOOP_BAND_REFUSAL =
-  "The WHOOP band does not publish a Bluetooth heart-rate service. Aether will not reverse-engineer that radio, and it does not use the WHOOP cloud. Pair a Polar, Garmin, or Wahoo strap.";
+/** Public Bluetooth Heart Rate (0x180D) — the same open GATT Goose also reads for live bpm. */
+export const WHOOP_PUBLIC_HR =
+  "WHOOP is using the public Heart Rate service (Bluetooth 180D). Live bpm can stream here. Overnight recovery, sleep, and strain packets use WHOOP’s private radio — a native iOS app like Goose can parse that; a website cannot, and Aether will not copy that protocol.";
+
+export const WHOOP_NO_PUBLIC_HR =
+  "This WHOOP did not expose the public Heart Rate service in this browser. Aether only uses that open GATT for live bpm. Full band history needs a native iOS companion, not a website. Keep the band in the official WHOOP app for recovery/sleep, or tap Scan all devices and pick it again.";
 
 export function explainBleError(
   err: unknown,
   bluetoothAvailable: boolean,
 ): string {
   if (!bluetoothAvailable) {
-    return "This browser cannot do live Bluetooth. Use Chrome on an Android phone (from the home-screen app) or Chrome on a computer. iPhone Safari has no Web Bluetooth. Aether does not use the WHOOP cloud.";
+    return "This browser cannot do live Bluetooth. Use Chrome or Edge on an Android phone (from the home-screen app) or a computer. iPhone Safari and iPhone Chrome have no Web Bluetooth — native iOS apps can use CoreBluetooth instead.";
   }
   const name =
     err && typeof err === "object" && "name" in err
@@ -67,7 +72,7 @@ export function explainBleError(
       : "";
   const message = err instanceof Error ? err.message : "";
   if (name === "NotFoundError") {
-    return "No heart-rate strap found. Wear a Polar, Garmin, or Wahoo strap — not the WHOOP band — then tap Scan all devices.";
+    return "No heart-rate strap found. Wear the WHOOP band or a Polar / Garmin / Wahoo strap, then tap Scan all devices.";
   }
   if (name === "SecurityError" || /secure|https/i.test(message)) {
     return "Bluetooth needs the installed phone app (home-screen icon) or localhost. HTTP on a LAN address will not pair.";
@@ -78,8 +83,11 @@ export function explainBleError(
   if (name === "NotAllowedError" || /cancel|abort/i.test(message)) {
     return "Pairing cancelled. Tap Connect over Bluetooth to try again.";
   }
-  if (/heart_rate|GATT|getPrimaryService|characteristic/i.test(message)) {
-    return "That device is not a standard heart-rate strap. The WHOOP band cannot stream here. Use Polar, Garmin, or Wahoo.";
+  if (/WHOOP/i.test(message) && /public Heart Rate|did not expose/i.test(message)) {
+    return WHOOP_NO_PUBLIC_HR;
   }
-  return message || "Could not connect. Use Android Chrome with a Polar/Garmin-class strap.";
+  if (/heart_rate|GATT|getPrimaryService|characteristic/i.test(message)) {
+    return "That device did not expose a standard heart-rate service. If it is a WHOOP, tap Scan all devices. Aether uses public Heart Rate GATT only.";
+  }
+  return message || "Could not connect. Use Chrome or Edge on Android with a Polar/Garmin-class strap.";
 }

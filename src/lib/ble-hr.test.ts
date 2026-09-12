@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  WHOOP_NO_PUBLIC_HR,
+  WHOOP_PUBLIC_HR,
   explainBleError,
   heartRateRequestOptions,
   isPlausibleHr,
@@ -48,13 +50,21 @@ describe("Web Bluetooth chooser", () => {
     expect(opts.optionalServices).toEqual(["heart_rate"]);
   });
 
-  it("tells iPhone users the WHOOP band is not the live strap", () => {
-    expect(explainBleError(null, false)).toMatch(/does not use the WHOOP cloud/);
-    expect(explainBleError({ name: "NotFoundError" }, true)).toMatch(/not the WHOOP band/);
+  it("lists WHOOP in the chooser and uses public Heart Rate GATT", () => {
+    const opts = heartRateRequestOptions(false);
+    expect(opts.filters?.some((f) => f.namePrefix === "WHOOP")).toBe(true);
+    expect(opts.optionalServices).toEqual(["heart_rate"]);
   });
 
-  it("refuses WHOOP-named devices instead of guessing their GATT", () => {
+  it("explains missing Web Bluetooth without refusing WHOOP by name", () => {
+    expect(explainBleError(null, false)).toMatch(/iPhone Safari and iPhone Chrome/);
+    expect(explainBleError({ name: "NotFoundError" }, true)).toMatch(/WHOOP band/);
+    expect(explainBleError(new Error(WHOOP_NO_PUBLIC_HR), true)).toBe(WHOOP_NO_PUBLIC_HR);
+  });
+
+  it("recognizes WHOOP names so live copy can mention the public HR profile", () => {
     expect(isWhoopBandName("WHOOP 4.0")).toBe(true);
     expect(isWhoopBandName("Polar H10")).toBe(false);
+    expect(WHOOP_PUBLIC_HR).toMatch(/public Heart Rate/);
   });
 });

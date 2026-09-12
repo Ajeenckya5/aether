@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { describeHrSupport, gpsLabel, readDevice, type DeviceProbe } from "@/lib/device";
+import { describeHrSupport, gpsLabel, installBannerCopy, installGuideHref, installGuideLabel, readDevice, type DeviceProbe } from "@/lib/device";
 import { appPath } from "@/lib/site";
 
 const SSR_DEVICE: DeviceProbe = {
@@ -10,6 +10,7 @@ const SSR_DEVICE: DeviceProbe = {
   geolocation: false,
   wakeLock: false,
   ios: false,
+  browser: "other",
   standalone: false,
   coarse: false,
 };
@@ -82,9 +83,8 @@ export function InstallBanner() {
   if (device.ios) {
     return (
       <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
-        Put Aether on the iPhone: Share → Add to Home Screen, then open the icon.
-        That is the app — Apple has no App Store listing for Aether.{" "}
-        <Link href="/download" className="text-lime">
+        {installBannerCopy(device)}{" "}
+        <Link href={installGuideHref(device)} className="text-lime">
           Step by step
         </Link>
         <button type="button" className="ml-2 text-lime" onClick={() => setHidden(true)}>
@@ -96,9 +96,8 @@ export function InstallBanner() {
 
   return (
     <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
-      Install Aether on this phone so it opens from the home screen, not a
-      browser tab.{" "}
-      <Link href="/download" className="text-lime">
+      {installBannerCopy(device)}{" "}
+      <Link href={installGuideHref(device)} className="text-lime">
         Put it on the phone
       </Link>
     </p>
@@ -137,10 +136,10 @@ export function PhoneInstallCard() {
         </button>
       ) : (
         <Link
-          href={device.ios ? "/download#ios" : "/download#android"}
+          href={installGuideHref(device)}
           className="mt-4 flex w-full items-center justify-center rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
         >
-          {device.ios ? "Show iPhone steps" : "Show Android steps"}
+          {installGuideLabel(device)}
         </Link>
       )}
     </div>

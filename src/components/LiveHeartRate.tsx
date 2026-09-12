@@ -12,7 +12,8 @@ import { Bluetooth, BluetoothOff } from "lucide-react";
 import {
   HEART_RATE_MEASUREMENT,
   HEART_RATE_SERVICE,
-  WHOOP_BAND_REFUSAL,
+  WHOOP_NO_PUBLIC_HR,
+  WHOOP_PUBLIC_HR,
   explainBleError,
   heartRateRequestOptions,
   isPlausibleHr,
@@ -36,7 +37,8 @@ type HrValue = {
 
 const HrContext = createContext<HrValue | null>(null);
 
-const LIVE_COPY = "Live Bluetooth on this phone. Aether does not use the WHOOP cloud.";
+const LIVE_COPY =
+  "Live Bluetooth on this phone. WHOOP uses the public Heart Rate service here.";
 
 export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const [bpm, setBpm] = useState<number | null>(null);
@@ -96,7 +98,15 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     async (device: BluetoothDevice) => {
       if (!device.gatt) throw new Error("No GATT on this device.");
       const server = await device.gatt.connect();
-      const service = await server.getPrimaryService(HEART_RATE_SERVICE);
+      let service;
+      try {
+        service = await server.getPrimaryService(HEART_RATE_SERVICE);
+      } catch (err) {
+        if (isWhoopBandName(device.name)) {
+          throw new Error(WHOOP_NO_PUBLIC_HR);
+        }
+        throw err;
+      }
       const characteristic = await service.getCharacteristic(HEART_RATE_MEASUREMENT);
       const onValue = (event: Event) => {
         const target = event.target as unknown as BluetoothRemoteGATTCharacteristic;
@@ -148,18 +158,6 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
         const device = await nav.bluetooth.requestDevice(
           heartRateRequestOptions(Boolean(opts?.scanAll)),
         );
-        if (isWhoopBandName(device.name)) {
-          wantLiveRef.current = false;
-          detachDevice();
-          try {
-            device.gatt?.disconnect();
-          } catch {
-            /* never subscribed */
-          }
-          setStatus("error");
-          setMessage(WHOOP_BAND_REFUSAL);
-          return;
-        }
         detachDevice();
         deviceRef.current = device;
         setDeviceName(device.name || "HR strap");
@@ -179,7 +177,11 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
             void subscribe(deviceRef.current)
               .then(() => {
                 setStatus("live");
-                setMessage(LIVE_COPY);
+                setMessage(
+                  isWhoopBandName(deviceRef.current?.name)
+                    ? WHOOP_PUBLIC_HR
+                    : LIVE_COPY,
+                );
               })
               .catch((err) => {
                 setStatus("error");
@@ -191,7 +193,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
         device.addEventListener("gattserverdisconnected", onDisc);
         await subscribe(device);
         setStatus("live");
-        setMessage(LIVE_COPY);
+        setMessage(isWhoopBandName(device.name) ? WHOOP_PUBLIC_HR : LIVE_COPY);
       } catch (err) {
         wantLiveRef.current = false;
         setStatus("error");
@@ -271,9 +273,10 @@ export function BluetoothPanel() {
       <p className="text-xs uppercase tracking-widest text-muted">Connection</p>
       <h2 className="font-display mt-1 text-xl text-paper">Connect over Bluetooth</h2>
       <p className="mt-2 text-sm text-paper/80">
-        This is the only way Aether connects. No WHOOP login, no WHOOP cloud.
-        Live bpm is a standard Bluetooth heart-rate strap (Polar, Garmin, Wahoo)
-        on this device. The WHOOP band cannot stream here.
+        This is how Aether talks to your WHOOP on the web: the public Bluetooth
+        Heart Rate service (live bpm). Polar, Garmin, and Wahoo straps use the
+        same profile. Overnight recovery and sleep packets stay on WHOOP’s
+        private radio — a native iOS app can parse those; this website cannot.
       </p>
       {live && (
         <p className="font-display mt-4 text-5xl leading-none tracking-tight text-lime">
@@ -286,10 +289,10 @@ export function BluetoothPanel() {
       )}
       <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-muted">
         <li>Install Aether on the phone (home-screen icon), then open that icon.</li>
-        <li>Put on a Polar / Garmin / Wahoo strap. Wake it. Turn phone Bluetooth on.</li>
-        <li>Tap Connect over Bluetooth, pick the strap, keep this screen open.</li>
+        <li>Put on the WHOOP band (or a Polar / Garmin / Wahoo strap). Wake it. Turn phone Bluetooth on.</li>
+        <li>Tap Connect over Bluetooth, pick WHOOP, keep this screen open.</li>
         {device.ios ? (
-          <li>iPhone Safari cannot pair Bluetooth HR. Use Android Chrome, or Practice pulse here.</li>
+          <li>iPhone browsers have no Web Bluetooth. Pair the WHOOP in Chrome on Android, or Practice pulse here.</li>
         ) : (
           <li>If the strap is missing from the list, tap Scan all devices.</li>
         )}

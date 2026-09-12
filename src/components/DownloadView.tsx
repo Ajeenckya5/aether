@@ -20,8 +20,7 @@ export function DownloadView() {
       <h1 className="font-display mt-2 text-4xl">Install Aether on this phone</h1>
       <p className="mt-3 max-w-xl text-sm text-muted">
         After install, open the home-screen icon. That is the app — no browser
-        bar. Data stays on this phone. Connect over Bluetooth. Aether does not
-        use the WHOOP cloud.
+        bar. Data stays on this phone. Connect your WHOOP over Bluetooth for live bpm.
       </p>
 
       {device.standalone && (
@@ -76,22 +75,51 @@ export function DownloadView() {
           </div>
         </div>
         <p className="mt-3 text-sm text-muted">
-          There is no App Store listing. Safari → Add to Home Screen is how
-          iPhone gets the Aether app.
+          There is no App Store listing. Safari or Chrome → Add to Home Screen
+          is how iPhone gets the Aether app.
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
-          <li>On the iPhone, open this page in <strong className="font-medium text-paper">Safari</strong> (not Chrome).</li>
-          <li>Tap the Share button (square with an arrow).</li>
-          <li>Scroll and tap <strong className="font-medium text-paper">Add to Home Screen</strong>, then Add.</li>
+          <li>On the iPhone, open this page in <strong className="font-medium text-paper">Safari</strong>.</li>
+          <li>Tap the Share button (square with an arrow). On compact Safari, tap More first.</li>
+          <li>Scroll and tap <strong className="font-medium text-paper">Add to Home Screen</strong>, then Add. Leave Open as Web App on if you see it.</li>
           <li>Leave Safari. Tap the <strong className="font-medium text-paper">Aether</strong> icon on the home screen.</li>
           <li>It opens as a phone app (no browser bar, no laptop sidebar).</li>
         </ol>
         {!onPhone && (
           <p className="mt-3 text-sm text-muted">
             You are on a computer. Pick up the iPhone, type the address below in
-            Safari, then do the steps above.
+            Safari or Chrome, then do the steps.
           </p>
         )}
+      </section>
+
+      <section
+        id="ios-chrome"
+        className={`mt-4 rounded-[28px] border bg-panel p-5 ${
+          device.ios && device.browser === "chrome" ? "border-lime/40" : "border-white/8"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/8">
+            <Apple size={20} />
+          </span>
+          <div>
+            <h2 className="font-display text-xl">iPhone — Chrome</h2>
+            <p className="text-xs uppercase tracking-widest text-muted">
+              Share next to the address · not the App Store
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted">
+          Chrome on iPhone can install Aether too. Live WHOOP Bluetooth still
+          needs Android Chrome (iOS has no Web Bluetooth).
+        </p>
+        <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
+          <li>On the iPhone, open this page in <strong className="font-medium text-paper">Chrome</strong>.</li>
+          <li>Tap <strong className="font-medium text-paper">Share</strong> next to the address bar.</li>
+          <li>Tap <strong className="font-medium text-paper">Add to Home Screen</strong>, then Add.</li>
+          <li>Tap the <strong className="font-medium text-paper">Aether</strong> icon. That is the app.</li>
+        </ol>
       </section>
 
       <section
@@ -116,7 +144,37 @@ export function DownloadView() {
           <li>On the Android phone, open this page in <strong className="font-medium text-paper">Chrome</strong>.</li>
           <li>Tap <strong className="font-medium text-paper">Install</strong> when Chrome offers it, or Chrome menu → <strong className="font-medium text-paper">Install app</strong> / Add to Home screen.</li>
           <li>Tap the <strong className="font-medium text-paper">Aether</strong> icon. That is the app on the device.</li>
-          <li>Scroll to Connect over Bluetooth and pair a Polar / Garmin / Wahoo strap.</li>
+          <li>Scroll to Connect over Bluetooth and pick the WHOOP band (or Polar / Garmin / Wahoo).</li>
+        </ol>
+      </section>
+
+      <section
+        id="android-safari"
+        className={`mt-4 rounded-[28px] border bg-panel p-5 ${
+          !device.ios && device.browser === "safari" ? "border-lime/40" : "border-white/8"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/8">
+            <Smartphone size={20} />
+          </span>
+          <div>
+            <h2 className="font-display text-xl">Android — Safari-like browsers</h2>
+            <p className="text-xs uppercase tracking-widest text-muted">
+              Add to Home Screen · not Play Store
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted">
+          Apple does not ship Safari on Android. Do not install a fake Safari
+          APK. If you use Firefox, Edge, Samsung Internet, or a Safari-named
+          browser: menu → Add to Home Screen. Live WHOOP bpm needs a browser
+          with Web Bluetooth (Chrome or Edge).
+        </p>
+        <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
+          <li>Open this page in that browser.</li>
+          <li>Menu or Share → <strong className="font-medium text-paper">Add to Home Screen</strong> / Install.</li>
+          <li>Tap the <strong className="font-medium text-paper">Aether</strong> icon, then Connect over Bluetooth.</li>
         </ol>
       </section>
 
