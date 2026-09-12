@@ -23,7 +23,6 @@ import {
   isPlausibleHr,
   isWhoopBandName,
   parseHeartRateMeasurement,
-  rmssdMs,
 } from "@/lib/ble-hr";
 import {
   loadBlePair,
@@ -32,6 +31,12 @@ import {
   saveBlePair,
   setBleKeepAlive,
 } from "@/lib/ble-pair";
+import {
+  loadBandLive,
+  physiologyFromRr,
+  saveBandLive,
+  sessionRestHr,
+} from "@/lib/band-live";
 import { estimateBpmFromPpg, fingerLikelyOnLens, type PpgSample } from "@/lib/camera-hr";
 import { describeHrSupport, readDevice, whoopGuideHref } from "@/lib/device";
 import { aetherPageUrl, BLUEFY_APP_STORE, bluefyOpenHref } from "@/lib/ios-ble";
@@ -42,8 +47,11 @@ export type HrStatus = "off" | "connecting" | "live" | "camera" | "practice" | "
 type HrValue = {
   bpm: number | null;
   rmssd: number | null;
+  sdnn: number | null;
   restHr: number | null;
   batteryPct: number | null;
+  rrCount: number;
+  fromBand: boolean;
   status: HrStatus;
   message: string | null;
   deviceName: string | null;
@@ -61,8 +69,10 @@ const LIVE_COPY =
 export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const [bpm, setBpm] = useState<number | null>(null);
   const [rmssd, setRmssd] = useState<number | null>(null);
+  const [sdnn, setSdnn] = useState<number | null>(null);
   const [restHr, setRestHr] = useState<number | null>(null);
   const [batteryPct, setBatteryPct] = useState<number | null>(null);
+  const [rrCount, setRrCount] = useState(0);
   const [status, setStatus] = useState<HrStatus>("off");
   const [message, setMessage] = useState<string | null>(null);
   const [deviceName, setDeviceName] = useState<string | null>(null);
@@ -84,7 +94,10 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     async () => false,
   );
   const rrWindowRef = useRef<number[]>([]);
+  const bpmHistoryRef = useRef<number[]>([]);
   const restRef = useRef<number | null>(null);
+  const lastSaveRef = useRef(0);
+  const batteryRef = useRef<number | null>(null);
   const cameraRef = useRef<{
     stream: MediaStream | null;
     raf: number | null;
@@ -153,29 +166,71 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
 
   const resetLiveStats = useCallback(() => {
     rrWindowRef.current = [];
+    bpmHistoryRef.current = [];
     restRef.current = null;
-    setRmssd(null);
-    setRestHr(null);
-    setBatteryPct(null);
   }, []);
+
+  const persistSnapshot = useCallback(
+    (patch: {
+      bpm?: number | null;
+      restHr?: number | null;
+      rmssd?: number | null;
+      sdnn?: number | null;
+      rrCount?: number;
+      batteryPct?: number | null;
+      deviceName?: string | null;
+    }) => {
+      const now = Date.now();
+      if (now - lastSaveRef.current < 1200) return;
+      lastSaveRef.current = now;
+      const current = loadBandLive();
+      saveBandLive({
+        rmssd: patch.rmssd ?? current?.rmssd ?? null,
+        sdnn: patch.sdnn ?? current?.sdnn ?? null,
+        restHr: patch.restHr ?? current?.restHr ?? null,
+        bpm: patch.bpm ?? current?.bpm ?? null,
+        batteryPct: patch.batteryPct ?? batteryRef.current ?? current?.batteryPct ?? null,
+        rrCount: patch.rrCount ?? current?.rrCount ?? 0,
+        deviceName: patch.deviceName ?? deviceRef.current?.name ?? current?.deviceName ?? null,
+        at: now,
+      });
+    },
+    [],
+  );
 
   const applyMeasurement = useCallback((data: DataView | undefined) => {
     if (!data) return;
     const sample = parseHeartRateMeasurement(data);
     if (!sample || !isPlausibleHr(sample.bpm)) return;
     setBpm(sample.bpm);
-    if (sample.bpm >= 35 && sample.bpm <= 100) {
+    bpmHistoryRef.current = [...bpmHistoryRef.current, sample.bpm].slice(-300);
+    const quiet = sessionRestHr(bpmHistoryRef.current);
+    if (quiet != null) {
+      restRef.current = quiet;
+      setRestHr(quiet);
+    } else if (sample.bpm >= 38 && sample.bpm <= 90) {
       restRef.current =
         restRef.current == null ? sample.bpm : Math.min(restRef.current, sample.bpm);
       setRestHr(restRef.current);
     }
     if (sample.rrMs.length) {
-      const next = [...rrWindowRef.current, ...sample.rrMs].slice(-32);
+      const next = [...rrWindowRef.current, ...sample.rrMs].slice(-96);
       rrWindowRef.current = next;
-      const hrv = rmssdMs(next);
-      if (hrv != null) setRmssd(Math.round(hrv));
+      const phys = physiologyFromRr(next);
+      setRrCount(phys.rrCount);
+      if (phys.rmssd != null) setRmssd(phys.rmssd);
+      if (phys.sdnn != null) setSdnn(phys.sdnn);
+      persistSnapshot({
+        bpm: sample.bpm,
+        restHr: restRef.current,
+        rmssd: phys.rmssd,
+        sdnn: phys.sdnn,
+        rrCount: phys.rrCount,
+      });
+    } else {
+      persistSnapshot({ bpm: sample.bpm, restHr: restRef.current });
     }
-  }, []);
+  }, [persistSnapshot]);
 
   const subscribe = useCallback(
     async (device: BluetoothDevice) => {
@@ -215,7 +270,10 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
         const level = await battery.getCharacteristic(BATTERY_LEVEL);
         const view = await level.readValue();
         const pct = view.getUint8(0);
-        if (pct <= 100) setBatteryPct(pct);
+        if (pct <= 100) {
+          batteryRef.current = pct;
+          setBatteryPct(pct);
+        }
       } catch {
         /* battery is optional on the public profile */
       }
@@ -333,9 +391,10 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     deviceRef.current = null;
     resetLiveStats();
     setBpm(null);
-    setDeviceName(null);
     setStatus("off");
-    setMessage("WHOOP disconnected. Connect again to keep it linked to Aether.");
+    setMessage(
+      "Live stream paused. HRV and resting HR from the band stay on this phone until you erase data.",
+    );
   }, [clearReconnectTimer, detachDevice, resetLiveStats, stopCamera, stopPractice]);
 
   const connect = useCallback(
@@ -386,6 +445,18 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    const savedPhys = loadBandLive();
+    if (savedPhys) {
+      if (savedPhys.rmssd != null) setRmssd(savedPhys.rmssd);
+      if (savedPhys.sdnn != null) setSdnn(savedPhys.sdnn);
+      if (savedPhys.restHr != null) setRestHr(savedPhys.restHr);
+      if (savedPhys.batteryPct != null) {
+        batteryRef.current = savedPhys.batteryPct;
+        setBatteryPct(savedPhys.batteryPct);
+      }
+      if (savedPhys.rrCount) setRrCount(savedPhys.rrCount);
+      if (savedPhys.deviceName) setDeviceName(savedPhys.deviceName);
+    }
     const saved = loadBlePair();
     if (saved?.keepAlive) {
       wantLiveRef.current = true;
@@ -546,8 +617,11 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     () => ({
       bpm,
       rmssd,
+      sdnn,
       restHr,
       batteryPct,
+      rrCount,
+      fromBand: rmssd != null || restHr != null,
       status,
       message,
       deviceName,
@@ -557,17 +631,19 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       disconnect,
     }),
     [
-      bpm,
-      rmssd,
-      restHr,
       batteryPct,
-      status,
-      message,
-      deviceName,
+      bpm,
       connect,
+      deviceName,
+      disconnect,
+      message,
+      restHr,
+      rmssd,
+      rrCount,
+      sdnn,
       startCamera,
       startPractice,
-      disconnect,
+      status,
     ],
   );
 
@@ -600,30 +676,38 @@ export function LiveHeartRateButton() {
 }
 
 function LiveStats({ hr }: { hr: HrValue }) {
-  if (hr.status !== "live" && hr.status !== "camera") return null;
+  if (hr.status !== "live" && hr.status !== "camera" && !hr.fromBand) return null;
   return (
     <div className="mt-4">
-      <p className="font-display text-5xl leading-none tracking-tight text-lime">
-        {hr.bpm ?? "—"}
-        <span className="ml-2 text-lg text-paper">
-          bpm {hr.status === "camera" ? "camera" : "live"}
-        </span>
-      </p>
-      {hr.deviceName && hr.status === "live" && (
+      {(hr.status === "live" || hr.status === "camera") && (
+        <p className="font-display text-5xl leading-none tracking-tight text-lime">
+          {hr.bpm ?? "—"}
+          <span className="ml-2 text-lg text-paper">
+            bpm {hr.status === "camera" ? "camera" : "live"}
+          </span>
+        </p>
+      )}
+      {hr.deviceName && (
         <p className="mt-2 text-sm text-muted">{hr.deviceName}</p>
       )}
-      {hr.status === "live" && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-          <p className="rounded-2xl bg-black/20 px-3 py-2">
-            <span className="block text-[10px] uppercase tracking-widest text-muted">HRV RMSSD</span>
-            {hr.rmssd != null ? `${hr.rmssd} ms` : "Waiting for R-R"}
-          </p>
-          <p className="rounded-2xl bg-black/20 px-3 py-2">
-            <span className="block text-[10px] uppercase tracking-widest text-muted">Battery</span>
-            {hr.batteryPct != null ? `${hr.batteryPct}%` : "Not on public GATT"}
-          </p>
-        </div>
-      )}
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <p className="rounded-2xl bg-black/20 px-3 py-2">
+          <span className="block text-[10px] uppercase tracking-widest text-muted">HRV RMSSD</span>
+          {hr.rmssd != null ? `${hr.rmssd} ms` : hr.status === "live" ? "Listening for R-R…" : "—"}
+        </p>
+        <p className="rounded-2xl bg-black/20 px-3 py-2">
+          <span className="block text-[10px] uppercase tracking-widest text-muted">Resting HR</span>
+          {hr.restHr != null ? `${hr.restHr} bpm` : hr.status === "live" ? "Sit still ~15s" : "—"}
+        </p>
+        <p className="rounded-2xl bg-black/20 px-3 py-2">
+          <span className="block text-[10px] uppercase tracking-widest text-muted">HRV SDNN</span>
+          {hr.sdnn != null ? `${hr.sdnn} ms` : "—"}
+        </p>
+        <p className="rounded-2xl bg-black/20 px-3 py-2">
+          <span className="block text-[10px] uppercase tracking-widest text-muted">Battery</span>
+          {hr.batteryPct != null ? `${hr.batteryPct}%` : "—"}
+        </p>
+      </div>
     </div>
   );
 }

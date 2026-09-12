@@ -38,7 +38,7 @@ export function SourceBanner() {
   }
   return (
     <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
-      Sample recovery · pair WHOOP in Bluefy on iPhone, or Chrome on Android
+      Sample recovery · pair WHOOP for live HRV, RHR, and bpm
     </p>
   );
 }

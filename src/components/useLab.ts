@@ -18,11 +18,35 @@ import {
   saveJournal,
   type JournalFlags,
 } from "@/lib/journal";
+import { overlayDashboard } from "@/lib/band-live";
 import { useDashboard } from "./DataProvider";
 
 export function useLab() {
-  const { data, loading } = useDashboard();
+  const { data: remote, loading } = useDashboard();
   const hr = useLiveHeartRate();
+  const data = useMemo(
+    () =>
+      overlayDashboard(remote, {
+        rmssd: hr.rmssd,
+        sdnn: hr.sdnn,
+        restHr: hr.restHr,
+        bpm: hr.bpm,
+        batteryPct: hr.batteryPct,
+        rrCount: hr.rrCount,
+        deviceName: hr.deviceName,
+        at: Date.now(),
+      }),
+    [
+      hr.batteryPct,
+      hr.bpm,
+      hr.deviceName,
+      hr.restHr,
+      hr.rmssd,
+      hr.rrCount,
+      hr.sdnn,
+      remote,
+    ],
+  );
   const [journal, setJournal] = useState<JournalFlags>(EMPTY_JOURNAL);
   const [athlete, setAthlete] = useState<Athlete>(DEFAULT_ATHLETE);
 
@@ -60,8 +84,8 @@ export function useLab() {
   const bioAge = useMemo(
     () =>
       estimateBioAge(data, athlete, {
-        rmssdMs: hr.status === "live" ? hr.rmssd : null,
-        restHr: hr.status === "live" ? hr.restHr : null,
+        rmssdMs: hr.rmssd,
+        restHr: hr.restHr,
       }),
     [athlete, data, hr.restHr, hr.rmssd, hr.status],
   );

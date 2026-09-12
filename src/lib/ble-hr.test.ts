@@ -9,6 +9,7 @@ import {
   parseHeartRate,
   parseHeartRateMeasurement,
   rmssdMs,
+  sdnnMs,
 } from "./ble-hr";
 
 function view(bytes: number[]): DataView {
@@ -47,6 +48,7 @@ describe("GATT heart-rate measurement", () => {
   it("computes RMSSD from successive R-R", () => {
     expect(rmssdMs([800, 820, 790])).toBeGreaterThan(10);
     expect(rmssdMs([800])).toBeNull();
+    expect(sdnnMs([800, 820, 790])).toBeGreaterThan(5);
   });
 });
 

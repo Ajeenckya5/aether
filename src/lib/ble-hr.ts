@@ -93,6 +93,28 @@ export function rmssdMs(rrMs: number[]): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+/** SDNN in milliseconds — standard deviation of R-R intervals. */
+export function sdnnMs(rrMs: number[]): number | null {
+  if (rrMs.length < 3) return null;
+  const mean = rrMs.reduce((a, b) => a + b, 0) / rrMs.length;
+  let sum = 0;
+  for (const rr of rrMs) sum += (rr - mean) ** 2;
+  const value = Math.sqrt(sum / (rrMs.length - 1));
+  return Number.isFinite(value) ? value : null;
+}
+
+/** Drop implausible or ectopic R-R beats before HRV. */
+export function cleanRrIntervals(rrMs: number[]): number[] {
+  const out: number[] = [];
+  for (const rr of rrMs) {
+    if (rr < 300 || rr > 2000) continue;
+    const prev = out[out.length - 1];
+    if (prev != null && Math.abs(rr - prev) / prev > 0.25) continue;
+    out.push(rr);
+  }
+  return out;
+}
+
 export function isPlausibleHr(bpm: number): boolean {
   return bpm > 20 && bpm < 240;
 }

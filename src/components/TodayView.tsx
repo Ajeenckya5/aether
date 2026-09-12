@@ -12,7 +12,7 @@ import { JournalChips } from "./JournalChips";
 import { SleepStages } from "./SleepStages";
 import { SourceBanner } from "./SourceBanner";
 import { InstallBanner, useDevice } from "./DeviceChrome";
-import { BluetoothPanel } from "./LiveHeartRate";
+import { BluetoothPanel, useLiveHeartRate } from "./LiveHeartRate";
 import { WorkoutCard } from "./WorkoutCard";
 import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
@@ -28,6 +28,8 @@ function recoveryColor(score: number) {
 
 export function TodayView() {
   const { data, report, journal, updateJournal, athlete, bioAge } = useLab();
+  const hr = useLiveHeartRate();
+  const fromBand = hr.fromBand;
   const { env } = useEnvironment();
   const phoneApp = preferPhoneShell(useDevice());
   const recovery = data.recoveries[0];
@@ -129,11 +131,13 @@ export function TodayView() {
           color={recoveryColor(score)}
           label="Aether readiness"
           sub={
-            report
-              ? `${data.connected ? "WHOOP" : "Sample"} ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
-              : recovery?.score
-                ? `HRV ${Math.round(recovery.score.hrv_rmssd_milli)} · RHR ${recovery.score.resting_heart_rate}`
-                : "Calibrating"
+            fromBand
+              ? `Your WHOOP · HRV ${hr.rmssd ?? "…"} · RHR ${hr.restHr ?? "…"}`
+              : report
+                ? `${data.connected ? "WHOOP" : "Sample"} ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
+                : recovery?.score
+                  ? `HRV ${Math.round(recovery.score.hrv_rmssd_milli)} · RHR ${recovery.score.resting_heart_rate}`
+                  : "Calibrating"
           }
         />
       </section>
@@ -160,23 +164,41 @@ export function TodayView() {
 
       {recovery?.score && (
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Mini label="HRV" value={`${Math.round(recovery.score.hrv_rmssd_milli)} ms`} />
-          <Mini label="Resting HR" value={`${recovery.score.resting_heart_rate} bpm`} />
+          <Mini
+            label="HRV"
+            value={
+              hr.status === "live" && hr.rmssd == null
+                ? "Listening…"
+                : `${Math.round(recovery.score.hrv_rmssd_milli)} ms`
+            }
+            note={fromBand ? "from your WHOOP" : "sample"}
+          />
+          <Mini
+            label="Resting HR"
+            value={
+              hr.status === "live" && hr.restHr == null
+                ? "Sit still…"
+                : `${recovery.score.resting_heart_rate} bpm`
+            }
+            note={fromBand ? "from your WHOOP" : "sample"}
+          />
           <Mini
             label="SpO2"
             value={
-              recovery.score.spo2_percentage
+              data.connected && recovery.score.spo2_percentage
                 ? `${recovery.score.spo2_percentage.toFixed(1)}%`
                 : "—"
             }
+            note={data.connected ? "WHOOP overnight" : "not on public Bluetooth"}
           />
           <Mini
             label="Skin temp"
             value={
-              recovery.score.skin_temp_celsius
+              data.connected && recovery.score.skin_temp_celsius
                 ? `${recovery.score.skin_temp_celsius.toFixed(1)}°C`
                 : "—"
             }
+            note={data.connected ? "WHOOP overnight" : "not on public Bluetooth"}
           />
         </div>
       )}
@@ -243,11 +265,20 @@ export function TodayView() {
   );
 }
 
-function Mini({ label, value }: { label: string; value: string }) {
+function Mini({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
   return (
     <div className="rounded-2xl border border-white/8 px-3 py-3">
       <p className="text-[10px] uppercase tracking-widest text-muted">{label}</p>
       <p className="mt-1 text-lg">{value}</p>
+      {note ? <p className="mt-1 text-[11px] text-muted">{note}</p> : null}
     </div>
   );
 }
