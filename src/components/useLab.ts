@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildAtlas } from "@/lib/atlas";
 import { estimateBioAge } from "@/lib/bio-age";
+import { useLiveHeartRate } from "./LiveHeartRate";
 import {
   DEFAULT_ATHLETE,
   loadAthlete,
@@ -21,6 +22,7 @@ import { useDashboard } from "./DataProvider";
 
 export function useLab() {
   const { data, loading } = useDashboard();
+  const hr = useLiveHeartRate();
   const [journal, setJournal] = useState<JournalFlags>(EMPTY_JOURNAL);
   const [athlete, setAthlete] = useState<Athlete>(DEFAULT_ATHLETE);
 
@@ -55,7 +57,14 @@ export function useLab() {
     [data, journal, athlete],
   );
 
-  const bioAge = useMemo(() => estimateBioAge(data, athlete), [data, athlete]);
+  const bioAge = useMemo(
+    () =>
+      estimateBioAge(data, athlete, {
+        rmssdMs: hr.status === "live" ? hr.rmssd : null,
+        restHr: hr.status === "live" ? hr.restHr : null,
+      }),
+    [athlete, data, hr.restHr, hr.rmssd, hr.status],
+  );
 
   return {
     data,

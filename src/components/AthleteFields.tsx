@@ -20,16 +20,21 @@ export function AthleteFields() {
   const { athlete, updateAthlete } = useLab();
   const imperial = athlete.units === "imperial";
   const ftIn = athlete.heightCm != null ? cmToFeetInches(athlete.heightCm) : { feet: 5, inches: 0 };
+  const [ageText, setAgeText] = useState(String(athlete.age));
   const [heightText, setHeightText] = useState("");
   const [weightText, setWeightText] = useState("");
   const [feetText, setFeetText] = useState("");
   const [inchText, setInchText] = useState("");
+  const [restText, setRestText] = useState("");
+  const [maxText, setMaxText] = useState("");
+  const [sbpText, setSbpText] = useState("");
   const bmi =
     athlete.weightKg != null && athlete.heightCm != null
       ? bodyMassIndex(athlete.weightKg, athlete.heightCm)
       : null;
 
   useEffect(() => {
+    setAgeText(String(athlete.age));
     setHeightText(athlete.heightCm != null ? String(athlete.heightCm) : "");
     setFeetText(athlete.heightCm != null ? String(cmToFeetInches(athlete.heightCm).feet) : "");
     setInchText(athlete.heightCm != null ? String(cmToFeetInches(athlete.heightCm).inches) : "");
@@ -40,7 +45,18 @@ export function AthleteFields() {
           ? String(Math.round(kgToLb(athlete.weightKg) * 10) / 10)
           : String(athlete.weightKg),
     );
-  }, [athlete.heightCm, athlete.weightKg, imperial]);
+    setRestText(athlete.restHrOverride != null ? String(athlete.restHrOverride) : "");
+    setMaxText(athlete.maxHrOverride != null ? String(athlete.maxHrOverride) : "");
+    setSbpText(athlete.systolicMmHg != null ? String(athlete.systolicMmHg) : "");
+  }, [
+    athlete.age,
+    athlete.heightCm,
+    athlete.maxHrOverride,
+    athlete.restHrOverride,
+    athlete.systolicMmHg,
+    athlete.weightKg,
+    imperial,
+  ]);
 
   function setUnits(units: Units) {
     updateAthlete({ units });
@@ -69,8 +85,23 @@ export function AthleteFields() {
             min={16}
             max={90}
             inputMode="numeric"
-            value={athlete.age}
-            onChange={(e) => updateAthlete({ age: Number(e.target.value) || 16 })}
+            value={ageText}
+            onChange={(e) => {
+              const next = e.target.value;
+              setAgeText(next);
+              const n = Number(next);
+              if (Number.isFinite(n) && n >= 16 && n <= 90) {
+                updateAthlete({ age: n });
+              }
+            }}
+            onBlur={() => {
+              const n = Number(ageText);
+              if (Number.isFinite(n) && n >= 16 && n <= 90) {
+                updateAthlete({ age: n });
+                return;
+              }
+              setAgeText(String(athlete.age));
+            }}
             className={fieldClass}
           />
         </label>
@@ -243,12 +274,19 @@ export function AthleteFields() {
             max={110}
             inputMode="numeric"
             placeholder="Band / 60"
-            value={athlete.restHrOverride ?? ""}
-            onChange={(e) =>
-              updateAthlete({
-                restHrOverride: e.target.value ? Number(e.target.value) : null,
-              })
-            }
+            value={restText}
+            onChange={(e) => {
+              const next = e.target.value;
+              setRestText(next);
+              if (next === "") {
+                updateAthlete({ restHrOverride: null });
+                return;
+              }
+              const n = Number(next);
+              if (Number.isFinite(n) && n >= 30 && n <= 110) {
+                updateAthlete({ restHrOverride: n });
+              }
+            }}
             className={fieldClass}
           />
         </label>
@@ -260,12 +298,19 @@ export function AthleteFields() {
             max={230}
             inputMode="numeric"
             placeholder="Tanaka"
-            value={athlete.maxHrOverride ?? ""}
-            onChange={(e) =>
-              updateAthlete({
-                maxHrOverride: e.target.value ? Number(e.target.value) : null,
-              })
-            }
+            value={maxText}
+            onChange={(e) => {
+              const next = e.target.value;
+              setMaxText(next);
+              if (next === "") {
+                updateAthlete({ maxHrOverride: null });
+                return;
+              }
+              const n = Number(next);
+              if (Number.isFinite(n) && n >= 120 && n <= 230) {
+                updateAthlete({ maxHrOverride: n });
+              }
+            }}
             className={fieldClass}
           />
         </label>
@@ -293,12 +338,19 @@ export function AthleteFields() {
             max={220}
             inputMode="numeric"
             placeholder="Home cuff"
-            value={athlete.systolicMmHg ?? ""}
-            onChange={(e) =>
-              updateAthlete({
-                systolicMmHg: e.target.value ? Number(e.target.value) : null,
-              })
-            }
+            value={sbpText}
+            onChange={(e) => {
+              const next = e.target.value;
+              setSbpText(next);
+              if (next === "") {
+                updateAthlete({ systolicMmHg: null });
+                return;
+              }
+              const n = Number(next);
+              if (Number.isFinite(n) && n >= 80 && n <= 220) {
+                updateAthlete({ systolicMmHg: n });
+              }
+            }}
             className={fieldClass}
           />
         </label>

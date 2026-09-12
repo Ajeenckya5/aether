@@ -20,7 +20,7 @@ const ANDROID_SAFARI_LIKE =
   "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
 describe("device copy for phone and laptop", () => {
-  it("tells iPhone Safari and Chrome users to use practice pulse, not Web Bluetooth", () => {
+  it("tells iPhone Safari and Chrome users to open Bluefy for the WHOOP", () => {
     const ios = probeNavigator({
       userAgent: IPHONE_SAFARI,
       bluetooth: undefined,
@@ -29,7 +29,7 @@ describe("device copy for phone and laptop", () => {
     expect(ios.ios).toBe(true);
     expect(ios.browser).toBe("safari");
     expect(ios.bluetooth).toBe(false);
-    expect(describeHrSupport(ios)).toMatch(/Safari and Chrome have no Web Bluetooth/);
+    expect(describeHrSupport(ios)).toMatch(/Bluefy/);
   });
 
   it("detects Chrome on iPhone and points install at Chrome Share", () => {
@@ -40,7 +40,7 @@ describe("device copy for phone and laptop", () => {
     expect(installGuideHref(chromeIos)).toBe("/download#ios-chrome");
     expect(installGuideLabel(chromeIos)).toMatch(/Chrome iPhone/);
     expect(installBannerCopy(chromeIos)).toMatch(/Chrome on iPhone/);
-    expect(describeHrSupport(chromeIos)).toMatch(/Safari and Chrome have no Web Bluetooth/);
+    expect(describeHrSupport(chromeIos)).toMatch(/Bluefy/);
   });
 
   it("treats a Safari-like Android UA as Android Safari, not iPhone", () => {
@@ -62,6 +62,18 @@ describe("device copy for phone and laptop", () => {
     expect(android.ios).toBe(false);
     expect(installGuideHref(android)).toBe("/download#android");
     expect(describeHrSupport(android)).toMatch(/Chrome or Edge on Android/);
+  });
+
+  it("lets Bluefy on iPhone pair like Chrome on Android", () => {
+    const bluefy = probeNavigator({
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Bluefy/1.1",
+      bluetooth: {},
+      coarse: true,
+    });
+    expect(bluefy.ios).toBe(true);
+    expect(bluefy.browser).toBe("bluefy");
+    expect(bluefy.bluetooth).toBe(true);
+    expect(describeHrSupport(bluefy)).toMatch(/can pair Bluetooth/);
   });
 
   it("treats iPadOS desktop UA + coarse pointer as iOS", () => {

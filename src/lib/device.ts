@@ -4,6 +4,7 @@ export type BrowserKind =
   | "firefox"
   | "edge"
   | "samsung"
+  | "bluefy"
   | "other";
 
 export type DeviceProbe = {
@@ -18,6 +19,7 @@ export type DeviceProbe = {
 
 export function detectBrowser(userAgent: string): BrowserKind {
   const ua = userAgent || "";
+  if (/Bluefy/i.test(ua)) return "bluefy";
   if (/EdgiOS\/|EdgA\/|Edg\//i.test(ua)) return "edge";
   if (/FxiOS\/|Firefox\//i.test(ua)) return "firefox";
   if (/SamsungBrowser/i.test(ua)) return "samsung";
@@ -51,16 +53,19 @@ export function probeNavigator(input: {
 export function describeHrSupport(
   device: Pick<DeviceProbe, "bluetooth" | "ios" | "browser">,
 ): string {
+  if (device.ios && device.bluetooth) {
+    return "This iPhone browser can pair Bluetooth. Tap Connect WHOOP, pick the band, keep this screen open. Live bpm and R-R/HRV use the public Heart Rate service.";
+  }
   if (device.bluetooth) {
     return "Pair your WHOOP or a Polar/Garmin-class strap in this browser (Chrome or Edge on Android or a laptop). Live bpm uses the public Bluetooth Heart Rate service.";
   }
   if (device.ios) {
-    return "iPhone/iPad Safari and Chrome have no Web Bluetooth. Use Practice pulse here, or pair the WHOOP in Chrome or Edge on Android or a laptop.";
+    return "Safari and Chrome on iPhone cannot pair a WHOOP. Open Aether in Bluefy (free Web BLE browser) to connect the band on this iPhone, or use Camera pulse.";
   }
   if (device.browser === "safari") {
-    return "This Android Safari-like browser has no Web Bluetooth. Apple does not ship Safari on Android. Use Chrome or Edge on Android, or Practice pulse.";
+    return "This Android Safari-like browser has no Web Bluetooth. Apple does not ship Safari on Android. Use Chrome or Edge on Android, or Camera pulse.";
   }
-  return "This browser has no Web Bluetooth. Use Chrome or Edge on a laptop or Android, or Practice pulse.";
+  return "This browser has no Web Bluetooth. Use Chrome or Edge on a laptop or Android, Bluefy on iPhone, or Camera pulse.";
 }
 
 export function gpsLabel(coarse: boolean): string {
@@ -83,6 +88,13 @@ export function installGuideHref(
   return "/download#android";
 }
 
+export function whoopGuideHref(
+  device: Pick<DeviceProbe, "ios" | "bluetooth">,
+): string {
+  if (device.ios && !device.bluetooth) return "/download#ios-whoop";
+  return "/download#bluetooth";
+}
+
 export function installGuideLabel(
   device: Pick<DeviceProbe, "ios" | "browser">,
 ): string {
@@ -99,7 +111,7 @@ export function installBannerCopy(
     return "Chrome on iPhone: Share (next to the address) → Add to Home Screen, then open the Aether icon. That is the app.";
   }
   if (device.ios) {
-    return "Safari on iPhone: Share → Add to Home Screen, then open the Aether icon. Chrome works the same way. That is the app.";
+    return "Safari on iPhone: Share → Add to Home Screen, then open the Aether icon. Chrome works the same way. To pair a WHOOP on this iPhone, open Aether in Bluefy.";
   }
   if (device.browser === "safari") {
     return "Apple does not ship Safari on Android. In this Safari-like browser: menu → Add to Home Screen, then open the Aether icon.";

@@ -45,12 +45,14 @@ export function AgeCard({
     <>
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime">Age</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <div>
-          <p className="font-display text-5xl leading-none">{report.chronological}</p>
+        <div className="min-w-0">
+          <p className="font-display text-[2.5rem] leading-none tabular-nums sm:text-5xl">
+            {report.chronological}
+          </p>
           <p className="mt-1 text-xs text-muted">Actual</p>
         </div>
-        <div>
-          <p className="font-display text-5xl leading-none">
+        <div className="min-w-0">
+          <p className="font-display text-[2.5rem] leading-none tabular-nums sm:text-5xl">
             {ba == null ? "—" : ba % 1 === 0 ? ba.toFixed(0) : ba.toFixed(1)}
           </p>
           <p className="mt-1 text-xs text-muted">Biological</p>
@@ -67,10 +69,7 @@ export function AgeCard({
 
   if (variant === "compact") {
     return (
-      <Link
-        href="/lab"
-        className="mt-4 block rounded-[28px] border border-white/8 bg-panel p-5"
-      >
+      <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
         {body}
         {systems.length > 0 && (
           <p className="mt-3 text-xs text-paper/70">
@@ -79,8 +78,15 @@ export function AgeCard({
               .join(" · ")}
           </p>
         )}
-        <p className="mt-3 text-xs text-lime">Open Lab for the breakdown →</p>
-      </Link>
+        <div className="mt-3 flex flex-col gap-2 text-xs">
+          <Link href="/settings" className="text-paper/80">
+            Change actual age in Settings
+          </Link>
+          <Link href="/lab" className="text-lime">
+            Open Lab for the breakdown →
+          </Link>
+        </div>
+      </section>
     );
   }
 
@@ -113,6 +119,9 @@ export function AgeCard({
       )}
       <p className="mt-4 text-xs leading-relaxed text-muted">{report.notes[0]}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted">{report.notes[1]}</p>
+      <Link href="/settings" className="mt-3 block text-xs text-lime">
+        Change actual age in Settings
+      </Link>
     </section>
   );
 }

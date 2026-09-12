@@ -92,4 +92,20 @@ describe("Klemera–Doubal biological age", () => {
     expect(withSbp.biological).not.toBeNull();
     expect(withSbp.confidence).toBe("low");
   });
+
+  it("prefers live band RMSSD over overnight sample when streaming", () => {
+    const athlete = sanitizeAthlete({
+      age: 36,
+      heightCm: 175,
+      weightKg: 70,
+      systolicMmHg: 118,
+    });
+    const live = estimateBioAge(buildDemoDashboard(), athlete, {
+      rmssdMs: 90,
+      restHr: 52,
+    });
+    const hrv = live.rows.find((row) => row.id === "ln-rmssd");
+    expect(hrv?.name).toMatch(/live band/);
+    expect(hrv?.observed).toBeCloseTo(Math.log(90), 5);
+  });
 });

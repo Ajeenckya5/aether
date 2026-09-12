@@ -134,10 +134,23 @@ function systemAge(markers: Marker[], chronological: number): number | null {
   return kdm(markers, chronological, true);
 }
 
-export function estimateBioAge(data: Dashboard, athlete: Athlete): BioAgeReport {
+export type LivePhysiology = {
+  rmssdMs?: number | null;
+  restHr?: number | null;
+};
+
+export function estimateBioAge(
+  data: Dashboard,
+  athlete: Athlete,
+  live?: LivePhysiology,
+): BioAgeReport {
   const chronological = athlete.age;
   const days = buildDaySeries(data);
-  const hrv = lastSample(days.map((d) => d.hrv));
+  const overnightHrv = lastSample(days.map((d) => d.hrv));
+  const hrv =
+    live?.rmssdMs != null && live.rmssdMs > 1
+      ? { mean: live.rmssdMs, n: 1 }
+      : overnightHrv;
   const rhrTrend = lastSample(days.map((d) => d.rhr));
   const spo2 = lastSample(days.map((d) => d.spo2));
   const resp = lastSample(days.map((d) => d.resp));
@@ -149,10 +162,14 @@ export function estimateBioAge(data: Dashboard, athlete: Athlete): BioAgeReport 
     ),
   );
 
-  const restHr = resolvedRestHr(athlete, rhrTrend?.mean ?? null);
+  const restHr = resolvedRestHr(
+    athlete,
+    live?.restHr ?? rhrTrend?.mean ?? null,
+  );
   const maxHr = resolvedMaxHr(athlete, data.body.max_heart_rate || null);
   const hasMeasuredRest =
     (athlete.restHrOverride != null && athlete.restHrOverride >= 30) ||
+    (live?.restHr != null && live.restHr >= 30) ||
     (rhrTrend != null && rhrTrend.mean >= 30);
   const vo2 = hasMeasuredRest && maxHr > restHr ? (15.3 * maxHr) / restHr : null;
   const vo2Repeats =
@@ -196,7 +213,7 @@ export function estimateBioAge(data: Dashboard, athlete: Athlete): BioAgeReport 
       ? {
           id: "ln-rmssd",
           system: "autonomic",
-          name: "ln RMSSD (7-night)",
+          name: live?.rmssdMs != null ? "ln RMSSD (live band)" : "ln RMSSD (7-night)",
           x: Math.log(Math.max(hrv.mean, 1)),
           q: 4.14,
           k: -0.015,
@@ -213,7 +230,7 @@ export function estimateBioAge(data: Dashboard, athlete: Athlete): BioAgeReport 
       ? {
           id: "rhr",
           system: "autonomic",
-          name: "Resting HR (7-night)",
+          name: live?.restHr != null ? "Resting HR (live session)" : "Resting HR (7-night)",
           x: rhrTrend.mean,
           q: 61.5,
           k: 0.08,

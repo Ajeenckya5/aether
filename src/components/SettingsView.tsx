@@ -94,10 +94,10 @@ export function SettingsView() {
       <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
         <h2 className="font-display text-xl">Connect your WHOOP</h2>
         <p className="mt-2 text-sm text-muted">
-          Tap Connect over Bluetooth and pick the WHOOP band. Live bpm uses the
-          public Heart Rate service. That is the free path on this phone app.
-          Overnight recovery and sleep from WHOOP’s official API need a copy you
-          run yourself (developer.whoop.com is free with a WHOOP membership).
+          Tap Connect WHOOP over Bluetooth and pick the band. After that,
+          Aether keeps the WHOOP connected on this phone until you tap
+          Disconnect. Live bpm uses the public Heart Rate service. Overnight
+          recovery still needs WHOOP’s official API on a copy you run yourself.
         </p>
       </section>
 
@@ -230,8 +230,8 @@ export function SettingsView() {
           .
         </p>
         <ul className="mt-3 list-disc space-y-2 pl-4">
-          <li>iPhone: Safari or Chrome → Share → Add to Home Screen. Live WHOOP pairing needs Android Chrome; use Practice pulse here.</li>
-          <li>Android: Chrome Install app, or another browser’s Add to Home Screen. Then Connect over Bluetooth and pick WHOOP.</li>
+          <li>iPhone: Safari or Chrome → Share → Add to Home Screen. Pair WHOOP in Bluefy so the band stays connected.</li>
+          <li>Android: Chrome Install app, or another browser’s Add to Home Screen. Then Connect WHOOP — Aether keeps that link.</li>
           <li>After the icon is on the phone, open that — not a browser tab.</li>
         </ul>
         <div className="mt-3">
