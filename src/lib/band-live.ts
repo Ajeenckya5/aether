@@ -1,4 +1,11 @@
 import { cleanRrIntervals, rmssdMs, sdnnMs } from "./ble-hr";
+import {
+  AETHER_OVERNIGHT_SLEEP_ID,
+  attachVitalsToOvernight,
+  parseOvernightSummary,
+  sleepFromOvernight,
+  type OvernightSummary,
+} from "./overnight";
 import type { Dashboard } from "./types";
 
 export const BAND_LIVE_KEY = "aether-band-live-v1";
@@ -11,6 +18,9 @@ export type BandLive = {
   batteryPct: number | null;
   rrCount: number;
   deviceName: string | null;
+  spo2: number | null;
+  skinTempC: number | null;
+  overnight: OvernightSummary | null;
   at: number;
 };
 
@@ -23,6 +33,9 @@ export function emptyBandLive(): BandLive {
     batteryPct: null,
     rrCount: 0,
     deviceName: null,
+    spo2: null,
+    skinTempC: null,
+    overnight: null,
     at: 0,
   };
 }
@@ -40,6 +53,9 @@ export function parseBandLive(raw: string | null | undefined): BandLive | null {
       batteryPct: numOrNull(parsed.batteryPct),
       rrCount: typeof parsed.rrCount === "number" ? parsed.rrCount : 0,
       deviceName: typeof parsed.deviceName === "string" ? parsed.deviceName : null,
+      spo2: numOrNull(parsed.spo2),
+      skinTempC: numOrNull(parsed.skinTempC),
+      overnight: parseOvernightSummary(parsed.overnight),
       at: typeof parsed.at === "number" ? parsed.at : 0,
     };
   } catch {
@@ -66,7 +82,7 @@ export function sessionRestHr(bpmSamples: number[]): number | null {
   const rest = bpmSamples.filter((bpm) => bpm >= 38 && bpm <= 90);
   if (rest.length < 12) return null;
   const sorted = [...rest].sort((a, b) => a - b);
-  return Math.round(sorted[Math.floor(sorted.length * 0.1)]);
+  return Math.round(sorted[Math.floor(sorted.length * 0.1)]!);
 }
 
 export function physiologyFromRr(
@@ -84,23 +100,55 @@ export function physiologyFromRr(
 
 export function hasBandPhysiology(live: BandLive | null | undefined): boolean {
   if (!live) return false;
-  return live.rmssd != null || live.restHr != null;
+  return (
+    live.rmssd != null ||
+    live.restHr != null ||
+    live.spo2 != null ||
+    live.skinTempC != null ||
+    live.overnight != null
+  );
 }
 
-/** Put live-band HRV and RHR onto today's recovery so Lab/Today stop showing sample vitals. */
+function withOvernightVitals(live: BandLive): BandLive {
+  const overnight = attachVitalsToOvernight(
+    live.overnight,
+    live.spo2,
+    live.skinTempC,
+  );
+  return overnight === live.overnight ? live : { ...live, overnight };
+}
+
+/** Put live-band vitals onto today. Overnight rest/wake replaces sample sleep only. */
 export function overlayDashboard(data: Dashboard, live: BandLive | null): Dashboard {
   if (!hasBandPhysiology(live) || !live) return data;
-  if (!data.recoveries.length) return data;
+  const band = withOvernightVitals(live);
+  const overnight = band.overnight;
   const recoveries = data.recoveries.map((row, index) => {
     if (index !== 0 || !row.score) return row;
+    const spo2 =
+      band.spo2 ?? overnight?.spo2 ?? (data.connected ? row.score.spo2_percentage : null);
+    const skinTemp =
+      band.skinTempC ??
+      overnight?.skinTempC ??
+      (data.connected ? row.score.skin_temp_celsius : null);
     return {
       ...row,
+      sleep_id: overnight && !data.connected ? AETHER_OVERNIGHT_SLEEP_ID : row.sleep_id,
       score: {
         ...row.score,
-        hrv_rmssd_milli: live.rmssd ?? row.score.hrv_rmssd_milli,
-        resting_heart_rate: live.restHr ?? row.score.resting_heart_rate,
+        hrv_rmssd_milli: band.rmssd ?? overnight?.rmssd ?? row.score.hrv_rmssd_milli,
+        resting_heart_rate: band.restHr ?? overnight?.restHr ?? row.score.resting_heart_rate,
+        spo2_percentage: spo2,
+        skin_temp_celsius: skinTemp,
       },
     };
   });
-  return { ...data, recoveries };
+  if (!overnight || data.connected) {
+    return { ...data, recoveries };
+  }
+  const nextSleep = sleepFromOvernight(overnight, data.sleeps[0]);
+  const sleeps = data.sleeps.length
+    ? data.sleeps.map((row, index) => (index === 0 ? nextSleep : row))
+    : [nextSleep];
+  return { ...data, recoveries, sleeps };
 }

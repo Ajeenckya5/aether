@@ -44,7 +44,7 @@ export function LabView() {
         WHOOP API cannot feed stay listed as unavailable instead of guessed.
         {data.connected
           ? ""
-          : " Overnight numbers here are a sample until a WHOOP account is connected."}
+          : " Overnight WHOOP recovery/sleep here stay a sample. Pair the band to overlay live HRV, RHR, and rest vs wake from public heart rate."}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-2">

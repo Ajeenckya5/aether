@@ -18,6 +18,8 @@ import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
 import { greetingName, hasPersonalBody } from "@/lib/athlete";
 import { preferPhoneShell } from "@/lib/device";
+import { isAetherOvernightSleep } from "@/lib/overnight";
+import { isRestWakeStages } from "./SleepStages";
 
 function recoveryColor(score: number) {
   const tone = recoveryTone(score);
@@ -35,6 +37,8 @@ export function TodayView() {
   const recovery = data.recoveries[0];
   const cycle = data.cycles[0];
   const sleep = data.sleeps[0];
+  const overnightSleep = isAetherOvernightSleep(sleep?.id);
+  const restWake = sleep?.score ? isRestWakeStages(sleep.score.stage_summary) : false;
   const todayWorkouts = data.workouts.filter((w) => isSameDay(w.start));
   const score = report?.aether ?? recovery?.score?.recovery_score ?? 0;
   const sleepPct = sleep?.score?.sleep_performance_percentage ?? 0;
@@ -99,7 +103,7 @@ export function TodayView() {
         <BluetoothPanel compact />
       </div>
 
-      <WeekStrip recoveries={data.recoveries} />
+      <WeekStrip recoveries={data.recoveries} todayScore={hr.overnight?.recovery ?? null} />
 
       <div
         className={
@@ -122,7 +126,7 @@ export function TodayView() {
         <JournalChips journal={journal} onChange={updateJournal} />
       </div>
 
-      <AgeCard report={bioAge} variant="compact" sample={!data.connected} />
+      <AgeCard report={bioAge} variant="compact" sample={!data.connected && !fromBand} />
 
       <section className="mt-6 rounded-[32px] border border-white/8 bg-panel px-2 pb-6 pt-4">
         <ArcMeter
@@ -131,7 +135,9 @@ export function TodayView() {
           color={recoveryColor(score)}
           label="Aether readiness"
           sub={
-            fromBand
+            hr.overnight
+              ? `Overnight from your WHOOP HR · rest ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
+              : fromBand
               ? `Your WHOOP · HRV ${hr.rmssd ?? "…"} · RHR ${hr.restHr ?? "…"}`
               : report
                 ? `${data.connected ? "WHOOP" : "Sample"} ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
@@ -157,7 +163,7 @@ export function TodayView() {
             {sleep?.score
               ? formatHours(sleep.score.stage_summary.total_in_bed_time_milli)
               : "—"}{" "}
-            in bed
+            {overnightSleep ? "quiet HR window" : "in bed"}
           </p>
         </Link>
       </div>
@@ -185,20 +191,33 @@ export function TodayView() {
           <Mini
             label="SpO2"
             value={
-              data.connected && recovery.score.spo2_percentage
+              recovery.score.spo2_percentage != null && (data.connected || hr.spo2 != null)
                 ? `${recovery.score.spo2_percentage.toFixed(1)}%`
                 : "—"
             }
-            note={data.connected ? "WHOOP overnight" : "not on public Bluetooth"}
+            note={
+              hr.spo2 != null
+                ? "standard pulse-ox GATT"
+                : data.connected
+                  ? "WHOOP overnight"
+                  : "WHOOP private radio — not on public Bluetooth"
+            }
           />
           <Mini
             label="Skin temp"
             value={
-              data.connected && recovery.score.skin_temp_celsius
+              recovery.score.skin_temp_celsius != null &&
+              (data.connected || hr.skinTempC != null)
                 ? `${recovery.score.skin_temp_celsius.toFixed(1)}°C`
                 : "—"
             }
-            note={data.connected ? "WHOOP overnight" : "not on public Bluetooth"}
+            note={
+              hr.skinTempC != null
+                ? "standard thermometer GATT"
+                : data.connected
+                  ? "WHOOP overnight"
+                  : "WHOOP private radio — not on public Bluetooth"
+            }
           />
         </div>
       )}
@@ -218,6 +237,11 @@ export function TodayView() {
               Open
             </Link>
           </div>
+          {restWake ? (
+            <p className="mb-3 text-xs text-muted">
+              Rest vs wake from your WHOOP’s public heart rate. Not WHOOP REM / light / deep.
+            </p>
+          ) : null}
           <SleepStages stages={sleep.score.stage_summary} />
         </section>
       )}
@@ -283,14 +307,21 @@ function Mini({
   );
 }
 
-function WeekStrip({ recoveries }: { recoveries: Recovery[] }) {
+function WeekStrip({
+  recoveries,
+  todayScore,
+}: {
+  recoveries: Recovery[];
+  todayScore?: number | null;
+}) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
     const rec = recoveries.find((r) => isSameDay(r.created_at, date));
+    const isToday = i === 6;
     return {
       date,
-      score: rec?.score?.recovery_score ?? null,
+      score: isToday && todayScore != null ? todayScore : rec?.score?.recovery_score ?? null,
       label: date.toLocaleDateString("en-US", { weekday: "narrow" }),
     };
   });

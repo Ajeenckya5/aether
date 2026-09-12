@@ -56,7 +56,12 @@ describe("Web Bluetooth chooser", () => {
   it("filters Polar-class straps and always requests the heart_rate service", () => {
     const opts = heartRateRequestOptions(false);
     expect(opts.acceptAllDevices).toBeUndefined();
-    expect(opts.optionalServices).toEqual(["heart_rate", "battery_service"]);
+    expect(opts.optionalServices).toEqual([
+      "heart_rate",
+      "battery_service",
+      "pulse_oximeter",
+      "health_thermometer",
+    ]);
     expect(opts.filters?.some((f) => f.services?.includes("heart_rate"))).toBe(true);
     expect(opts.filters?.some((f) => f.namePrefix === "Polar")).toBe(true);
   });
@@ -65,13 +70,15 @@ describe("Web Bluetooth chooser", () => {
     const opts = heartRateRequestOptions(true);
     expect(opts.acceptAllDevices).toBe(true);
     expect(opts.filters).toBeUndefined();
-    expect(opts.optionalServices).toEqual(["heart_rate", "battery_service"]);
+    expect(opts.optionalServices).toContain("pulse_oximeter");
+    expect(opts.optionalServices).toContain("health_thermometer");
   });
 
   it("lists WHOOP in the chooser and uses public Heart Rate GATT", () => {
     const opts = heartRateRequestOptions(false);
     expect(opts.filters?.some((f) => f.namePrefix === "WHOOP")).toBe(true);
-    expect(opts.optionalServices).toEqual(["heart_rate", "battery_service"]);
+    expect(opts.optionalServices).toContain("heart_rate");
+    expect(opts.optionalServices).toContain("pulse_oximeter");
   });
 
   it("explains missing Web Bluetooth without refusing WHOOP by name", () => {
@@ -84,5 +91,7 @@ describe("Web Bluetooth chooser", () => {
     expect(isWhoopBandName("WHOOP 4.0")).toBe(true);
     expect(isWhoopBandName("Polar H10")).toBe(false);
     expect(WHOOP_PUBLIC_HR).toMatch(/public Heart Rate/);
+    expect(WHOOP_PUBLIC_HR).toMatch(/pulse-oximeter/);
+    expect(WHOOP_PUBLIC_HR).toMatch(/rest\/wake/);
   });
 });

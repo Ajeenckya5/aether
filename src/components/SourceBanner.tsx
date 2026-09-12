@@ -11,6 +11,7 @@ export function SourceBanner() {
     const extras = [
       hr.rmssd != null ? `HRV ${hr.rmssd} ms` : null,
       hr.batteryPct != null ? `bat ${hr.batteryPct}%` : null,
+      hr.spo2 != null ? `SpO2 ${hr.spo2.toFixed(1)}%` : null,
     ]
       .filter(Boolean)
       .join(" · ");
@@ -29,6 +30,13 @@ export function SourceBanner() {
       </p>
     );
   }
+  if (hr.overnight) {
+    return (
+      <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
+        Aether overnight · rest from public HR · not WHOOP stages
+      </p>
+    );
+  }
   if (data.connected) {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
@@ -38,7 +46,7 @@ export function SourceBanner() {
   }
   return (
     <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
-      Sample recovery · pair WHOOP for live HRV, RHR, and bpm
+      Sample recovery · pair WHOOP for live HRV, RHR, and overnight rest log
     </p>
   );
 }

@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { formatDate, formatHours, formatTime } from "@/lib/format";
-import { useDashboard } from "./DataProvider";
-import { SleepStages } from "./SleepStages";
+import { isAetherOvernightSleep } from "@/lib/overnight";
+import { useLab } from "./useLab";
+import { isRestWakeStages, SleepStages } from "./SleepStages";
 import { SourceBanner } from "./SourceBanner";
 
 export function SleepView() {
-  const { data } = useDashboard();
+  const { data } = useLab();
   const latest = data.sleeps.find((s) => !s.nap) ?? data.sleeps[0];
+  const restWake = latest?.score ? isRestWakeStages(latest.score.stage_summary) : false;
+  const fromBand = isAetherOvernightSleep(latest?.id);
 
   return (
     <div className="px-5 pt-6 lg:px-2">
@@ -17,15 +20,21 @@ export function SleepView() {
       {latest?.score ? (
         <div className="mt-6 rounded-[32px] bg-violet/12 p-5">
           <p className="text-[11px] uppercase tracking-[0.18em] text-violet">
-            Performance
+            {fromBand ? "Aether overnight" : "Performance"}
           </p>
           <p className="font-display mt-2 text-6xl leading-none">
             {latest.score.sleep_performance_percentage}%
           </p>
           <p className="mt-2 text-sm text-paper/70">
-            {formatHours(latest.score.stage_summary.total_in_bed_time_milli)} in bed ·{" "}
-            {formatTime(latest.start)} – {formatTime(latest.end)}
+            {formatHours(latest.score.stage_summary.total_in_bed_time_milli)}{" "}
+            {fromBand ? "quiet HR window" : "in bed"} · {formatTime(latest.start)} –{" "}
+            {formatTime(latest.end)}
           </p>
+          {restWake ? (
+            <p className="mt-2 text-xs text-muted">
+              Rest vs wake from public heart rate. Not WHOOP REM / light / deep.
+            </p>
+          ) : null}
           <div className="mt-5">
             <SleepStages stages={latest.score.stage_summary} />
           </div>
@@ -34,14 +43,28 @@ export function SleepView() {
               <p className="text-muted">Efficiency</p>
               <p>{Math.round(latest.score.sleep_efficiency_percentage)}%</p>
             </div>
-            <div>
-              <p className="text-muted">Consistency</p>
-              <p>{latest.score.sleep_consistency_percentage}%</p>
-            </div>
-            <div>
-              <p className="text-muted">Breaths</p>
-              <p>{latest.score.respiratory_rate.toFixed(1)}</p>
-            </div>
+            {latest.score.sleep_consistency_percentage > 0 ? (
+              <div>
+                <p className="text-muted">Consistency</p>
+                <p>{latest.score.sleep_consistency_percentage}%</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-muted">Source</p>
+                <p>{fromBand ? "Public HR" : "WHOOP"}</p>
+              </div>
+            )}
+            {latest.score.respiratory_rate > 0 ? (
+              <div>
+                <p className="text-muted">Breaths</p>
+                <p>{latest.score.respiratory_rate.toFixed(1)}</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-muted">Stages</p>
+                <p>{restWake ? "Rest / wake" : "Full"}</p>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -60,6 +83,7 @@ export function SleepView() {
                 <p className="text-sm">
                   {formatDate(sleep.end)}
                   {sleep.nap ? " · Nap" : ""}
+                  {isAetherOvernightSleep(sleep.id) ? " · Aether" : ""}
                 </p>
                 <p className="text-xs text-muted">
                   {sleep.score

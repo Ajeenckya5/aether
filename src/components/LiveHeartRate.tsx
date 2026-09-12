@@ -37,9 +37,26 @@ import {
   saveBandLive,
   sessionRestHr,
 } from "@/lib/band-live";
+import {
+  attachStandardVitals,
+  detachVitalSubscriptions,
+  type VitalSubscription,
+} from "@/lib/ble-vitals";
+import {
+  appendNightPoint,
+  loadNightLog,
+  mergeOvernight,
+  overnightProgress,
+  saveNightLog,
+  summarizeOvernight,
+  type OvernightProgress,
+  type OvernightSummary,
+} from "@/lib/overnight";
+import { formatHours } from "@/lib/format";
 import { estimateBpmFromPpg, fingerLikelyOnLens, type PpgSample } from "@/lib/camera-hr";
 import { describeHrSupport, readDevice, whoopGuideHref } from "@/lib/device";
 import { aetherPageUrl, BLUEFY_APP_STORE, bluefyOpenHref } from "@/lib/ios-ble";
+import { PUBLIC_SITE } from "@/lib/site";
 import { useDevice } from "./DeviceChrome";
 
 export type HrStatus = "off" | "connecting" | "live" | "camera" | "practice" | "error";
@@ -51,6 +68,10 @@ type HrValue = {
   restHr: number | null;
   batteryPct: number | null;
   rrCount: number;
+  spo2: number | null;
+  skinTempC: number | null;
+  overnight: OvernightSummary | null;
+  nightProgress: OvernightProgress | null;
   fromBand: boolean;
   status: HrStatus;
   message: string | null;
@@ -64,7 +85,7 @@ type HrValue = {
 const HrContext = createContext<HrValue | null>(null);
 
 const LIVE_COPY =
-  "Live Bluetooth on this phone. Public Heart Rate service: bpm, R-R/HRV when sent, battery if exposed.";
+  "Live Bluetooth on this phone. Public Heart Rate service: bpm, R-R/HRV when sent, battery if exposed. Standard pulse-ox and thermometer if this strap exposes them. Leave the page open overnight for rest/wake from HR.";
 
 export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const [bpm, setBpm] = useState<number | null>(null);
@@ -73,6 +94,10 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const [restHr, setRestHr] = useState<number | null>(null);
   const [batteryPct, setBatteryPct] = useState<number | null>(null);
   const [rrCount, setRrCount] = useState(0);
+  const [spo2, setSpo2] = useState<number | null>(null);
+  const [skinTempC, setSkinTempC] = useState<number | null>(null);
+  const [overnight, setOvernight] = useState<OvernightSummary | null>(null);
+  const [nightProgress, setNightProgress] = useState<OvernightProgress | null>(null);
   const [status, setStatus] = useState<HrStatus>("off");
   const [message, setMessage] = useState<string | null>(null);
   const [deviceName, setDeviceName] = useState<string | null>(null);
@@ -98,6 +123,11 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const restRef = useRef<number | null>(null);
   const lastSaveRef = useRef(0);
   const batteryRef = useRef<number | null>(null);
+  const spo2Ref = useRef<number | null>(null);
+  const skinTempRef = useRef<number | null>(null);
+  const overnightRef = useRef<OvernightSummary | null>(null);
+  const rmssdRef = useRef<number | null>(null);
+  const extraSubsRef = useRef<VitalSubscription[]>([]);
   const cameraRef = useRef<{
     stream: MediaStream | null;
     raf: number | null;
@@ -134,6 +164,8 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const detachDevice = useCallback(() => {
+    detachVitalSubscriptions(extraSubsRef.current);
+    extraSubsRef.current = [];
     const characteristic = charRef.current;
     if (characteristic && onValueRef.current) {
       characteristic.removeEventListener(
@@ -179,9 +211,12 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       rrCount?: number;
       batteryPct?: number | null;
       deviceName?: string | null;
+      spo2?: number | null;
+      skinTempC?: number | null;
+      overnight?: OvernightSummary | null;
     }) => {
       const now = Date.now();
-      if (now - lastSaveRef.current < 1200) return;
+      if (now - lastSaveRef.current < 1200 && patch.overnight == null) return;
       lastSaveRef.current = now;
       const current = loadBandLive();
       saveBandLive({
@@ -192,6 +227,9 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
         batteryPct: patch.batteryPct ?? batteryRef.current ?? current?.batteryPct ?? null,
         rrCount: patch.rrCount ?? current?.rrCount ?? 0,
         deviceName: patch.deviceName ?? deviceRef.current?.name ?? current?.deviceName ?? null,
+        spo2: patch.spo2 ?? spo2Ref.current ?? current?.spo2 ?? null,
+        skinTempC: patch.skinTempC ?? skinTempRef.current ?? current?.skinTempC ?? null,
+        overnight: patch.overnight ?? overnightRef.current ?? current?.overnight ?? null,
         at: now,
       });
     },
@@ -218,7 +256,10 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       rrWindowRef.current = next;
       const phys = physiologyFromRr(next);
       setRrCount(phys.rrCount);
-      if (phys.rmssd != null) setRmssd(phys.rmssd);
+      if (phys.rmssd != null) {
+        rmssdRef.current = phys.rmssd;
+        setRmssd(phys.rmssd);
+      }
       if (phys.sdnn != null) setSdnn(phys.sdnn);
       persistSnapshot({
         bpm: sample.bpm,
@@ -229,6 +270,24 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       });
     } else {
       persistSnapshot({ bpm: sample.bpm, restHr: restRef.current });
+    }
+    const logged = loadNightLog();
+    const points = appendNightPoint(logged, {
+      t: Date.now(),
+      bpm: sample.bpm,
+      rmssd: rmssdRef.current,
+    });
+    if (points !== logged) saveNightLog(points);
+    const progress = overnightProgress(points);
+    setNightProgress(progress.pointCount ? progress : null);
+    const nextOvernight = mergeOvernight(
+      overnightRef.current ?? loadBandLive()?.overnight ?? null,
+      summarizeOvernight(points),
+    );
+    if (nextOvernight !== overnightRef.current) {
+      overnightRef.current = nextOvernight;
+      setOvernight(nextOvernight);
+      persistSnapshot({ overnight: nextOvernight });
     }
   }, [persistSnapshot]);
 
@@ -277,8 +336,21 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* battery is optional on the public profile */
       }
+      detachVitalSubscriptions(extraSubsRef.current);
+      extraSubsRef.current = await attachStandardVitals(server, {
+        onSpo2: (value) => {
+          spo2Ref.current = value;
+          setSpo2(value);
+          persistSnapshot({ spo2: value });
+        },
+        onSkinTempC: (value) => {
+          skinTempRef.current = value;
+          setSkinTempC(value);
+          persistSnapshot({ skinTempC: value });
+        },
+      });
     },
-    [applyMeasurement],
+    [applyMeasurement, persistSnapshot],
   );
 
   subscribeRef.current = subscribe;
@@ -456,7 +528,22 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       }
       if (savedPhys.rrCount) setRrCount(savedPhys.rrCount);
       if (savedPhys.deviceName) setDeviceName(savedPhys.deviceName);
+      if (savedPhys.spo2 != null) {
+        spo2Ref.current = savedPhys.spo2;
+        setSpo2(savedPhys.spo2);
+      }
+      if (savedPhys.skinTempC != null) {
+        skinTempRef.current = savedPhys.skinTempC;
+        setSkinTempC(savedPhys.skinTempC);
+      }
+      if (savedPhys.overnight) {
+        overnightRef.current = savedPhys.overnight;
+        setOvernight(savedPhys.overnight);
+      }
+      if (savedPhys.rmssd != null) rmssdRef.current = savedPhys.rmssd;
     }
+    const progress = overnightProgress(loadNightLog());
+    if (progress.pointCount) setNightProgress(progress);
     const saved = loadBlePair();
     if (saved?.keepAlive) {
       wantLiveRef.current = true;
@@ -621,7 +708,11 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       restHr,
       batteryPct,
       rrCount,
-      fromBand: rmssd != null || restHr != null,
+      spo2,
+      skinTempC,
+      overnight,
+      nightProgress,
+      fromBand: rmssd != null || restHr != null || spo2 != null || overnight != null,
       status,
       message,
       deviceName,
@@ -637,10 +728,14 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       deviceName,
       disconnect,
       message,
+      nightProgress,
+      overnight,
       restHr,
       rmssd,
       rrCount,
       sdnn,
+      skinTempC,
+      spo2,
       startCamera,
       startPractice,
       status,
@@ -707,13 +802,36 @@ function LiveStats({ hr }: { hr: HrValue }) {
           <span className="block text-[10px] uppercase tracking-widest text-muted">Battery</span>
           {hr.batteryPct != null ? `${hr.batteryPct}%` : "—"}
         </p>
+        <p className="rounded-2xl bg-black/20 px-3 py-2">
+          <span className="block text-[10px] uppercase tracking-widest text-muted">SpO2</span>
+          {hr.spo2 != null ? `${hr.spo2.toFixed(1)}%` : "—"}
+        </p>
+        <p className="rounded-2xl bg-black/20 px-3 py-2">
+          <span className="block text-[10px] uppercase tracking-widest text-muted">Skin temp</span>
+          {hr.skinTempC != null ? `${hr.skinTempC.toFixed(1)}°C` : "—"}
+        </p>
       </div>
+      {hr.overnight ? (
+        <p className="mt-3 text-sm text-paper/80">
+          Overnight rest {formatHours(hr.overnight.restMs)} · Aether {hr.overnight.recovery}
+          <span className="block text-xs text-muted">
+            Quiet vs active heart rate while this page stayed connected. Not WHOOP REM / deep / recovery.
+          </span>
+        </p>
+      ) : hr.nightProgress && hr.nightProgress.pointCount >= 8 ? (
+        <p className="mt-3 text-sm text-paper/80">
+          Logging night · {formatHours(hr.nightProgress.restMs)} quiet HR so far. Leave Aether open.
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function IosWhoopPath() {
-  const href = aetherPageUrl();
+  const [href, setHref] = useState(PUBLIC_SITE);
+  useEffect(() => {
+    setHref(aetherPageUrl());
+  }, []);
   return (
     <div className="mt-4 grid gap-2">
       <a
@@ -808,8 +926,8 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
         <h2 className="font-display mt-1 text-xl text-paper">Connect your band</h2>
         <p className="mt-2 text-sm text-paper/80">
           {canBle
-            ? "Tap Connect once. Aether remembers the band and keeps it connected — including after you switch tabs or reopen the app. Overnight scores on this page stay a sample."
-            : "On this iPhone, Safari cannot pair the band. Get Bluefy, open Aether there, then Connect WHOOP. Aether will keep that link. Camera pulse is live optical bpm from this phone, not the WHOOP."}
+            ? "Tap Connect once. Aether remembers the band and keeps it connected — including after you switch tabs or reopen the app. Leave this page open overnight to log rest vs wake from public heart rate. SpO2 and skin temp appear only if the band exposes those standard Bluetooth services. If they stay blank, tap Connect once more so the browser can grant them."
+            : "On this iPhone, Safari cannot pair the band. Get Bluefy, open Aether there, then Connect WHOOP. Aether will keep that link. Leave Bluefy open overnight to log rest vs wake. Camera pulse is live optical bpm from this phone, not the WHOOP."}
         </p>
         <LiveStats hr={hr} />
         {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
@@ -832,16 +950,19 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
       <h2 className="font-display mt-1 text-xl text-paper">Connect over Bluetooth</h2>
       <p className="mt-2 text-sm text-paper/80">
         Aether reads the public Bluetooth Heart Rate service: live bpm, R-R/HRV
-        when the band sends it, and battery. Polar, Garmin, and Wahoo straps
-        use the same profile. Overnight recovery and sleep stay on WHOOP’s
-        private radio — this website cannot read those packets.
+        when the band sends it, and battery. It also asks for the standard
+        pulse-oximeter and thermometer services. Polar, Garmin, and Wahoo
+        straps use those profiles; WHOOP firmware usually does not. Leave this
+        page connected overnight and Aether logs quiet vs active HR as rest/wake.
+        WHOOP’s own recovery score, REM/deep stages, and private SpO2/temp stay
+        on their radio — this website cannot copy those packets.
       </p>
       <LiveStats hr={hr} />
       <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-muted">
         {canBle ? (
           <>
             <li>Wear the WHOOP. Wake it. Phone Bluetooth on. Disconnect the official WHOOP app first — the band talks to one phone at a time.</li>
-            <li>Tap Connect WHOOP over Bluetooth, pick WHOOP. Aether keeps that band connected until you tap Disconnect.</li>
+            <li>Tap Connect WHOOP over Bluetooth, pick WHOOP. Aether keeps that band connected until you tap Disconnect. Leave the page open overnight for rest/wake.</li>
             <li>If the strap is missing, tap Scan all devices.</li>
           </>
         ) : (

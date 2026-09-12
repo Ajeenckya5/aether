@@ -20,12 +20,14 @@ describe("on-device storage", () => {
         "aether-ble-pair-v1",
         "theme",
         "aether-live-logs-v1",
+        "aether-band-night-v1",
       ]),
     ).toEqual([
       "aether-journal-v1",
       "aether-place-v1",
       "aether-ble-pair-v1",
       "aether-live-logs-v1",
+      "aether-band-night-v1",
     ]);
   });
 });

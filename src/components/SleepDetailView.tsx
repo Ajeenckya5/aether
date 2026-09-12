@@ -1,15 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { formatDate, formatHours, formatTime } from "@/lib/format";
-import { useDashboard } from "./DataProvider";
-import { SleepStages } from "./SleepStages";
+import { isAetherOvernightSleep } from "@/lib/overnight";
+import { useLab } from "./useLab";
+import { isRestWakeStages, SleepStages } from "./SleepStages";
 
 export function SleepDetailView({ id }: { id: string }) {
-  const { data, loading } = useDashboard();
+  const { data, loading } = useLab();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
   const sleep = data.sleeps.find((item) => item.id === id);
   const recovery = data.recoveries.find((item) => item.sleep_id === id);
+  const fromBand = isAetherOvernightSleep(sleep?.id);
+  const restWake = sleep?.score ? isRestWakeStages(sleep.score.stage_summary) : false;
 
-  if (loading && !sleep) {
+  if ((loading || !hydrated) && !sleep) {
     return <p className="px-5 pt-16 text-sm text-muted">Loading night…</p>;
   }
   if (!sleep) {
@@ -21,7 +29,7 @@ export function SleepDetailView({ id }: { id: string }) {
   return (
     <div className="px-5 pb-8 pt-16">
       <p className="text-[11px] uppercase tracking-[0.18em] text-violet">
-        {sleep.nap ? "Nap" : "Night"}
+        {sleep.nap ? "Nap" : fromBand ? "Aether overnight" : "Night"}
       </p>
       <h1 className="font-display mt-2 text-4xl">{formatDate(sleep.end)}</h1>
       <p className="mt-2 text-sm text-muted">
@@ -32,28 +40,50 @@ export function SleepDetailView({ id }: { id: string }) {
         <>
           <div className="mt-6 rounded-[32px] bg-violet/12 p-5">
             <p className="text-[11px] uppercase tracking-[0.18em] text-violet">
-              Performance
+              {fromBand ? "Quiet HR rest" : "Performance"}
             </p>
             <p className="font-display mt-2 text-6xl leading-none">
               {score.sleep_performance_percentage}%
             </p>
             <p className="mt-2 text-sm text-paper/70">
-              {formatHours(score.stage_summary.total_in_bed_time_milli)} in bed
+              {formatHours(score.stage_summary.total_in_bed_time_milli)}{" "}
+              {fromBand ? "quiet HR window" : "in bed"}
             </p>
+            {restWake ? (
+              <p className="mt-2 text-xs text-muted">
+                Rest vs wake from public heart rate. Not WHOOP REM / light / deep.
+              </p>
+            ) : null}
           </div>
           <div className="mt-4">
             <SleepStages stages={score.stage_summary} />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Mini label="Efficiency" value={`${Math.round(score.sleep_efficiency_percentage)}%`} />
-            <Mini label="Consistency" value={`${score.sleep_consistency_percentage}%`} />
-            <Mini label="Cycles" value={String(score.stage_summary.sleep_cycle_count)} />
-            <Mini label="Disturbances" value={String(score.stage_summary.disturbance_count)} />
-            <Mini label="Respiratory" value={`${score.respiratory_rate.toFixed(1)}`} />
+            {score.sleep_consistency_percentage > 0 ? (
+              <Mini label="Consistency" value={`${score.sleep_consistency_percentage}%`} />
+            ) : (
+              <Mini label="Source" value="Public HR" />
+            )}
+            {score.stage_summary.sleep_cycle_count > 0 ? (
+              <Mini label="Cycles" value={String(score.stage_summary.sleep_cycle_count)} />
+            ) : null}
+            {score.stage_summary.disturbance_count > 0 ? (
+              <Mini label="Disturbances" value={String(score.stage_summary.disturbance_count)} />
+            ) : null}
+            {score.respiratory_rate > 0 ? (
+              <Mini label="Respiratory" value={`${score.respiratory_rate.toFixed(1)}`} />
+            ) : null}
             <Mini
-              label="Recovery"
+              label={fromBand ? "HRV" : "Recovery"}
               value={
-                recovery?.score ? `${recovery.score.recovery_score}%` : "—"
+                fromBand
+                  ? recovery?.score
+                    ? `${Math.round(recovery.score.hrv_rmssd_milli)} ms`
+                    : "—"
+                  : recovery?.score
+                    ? `${recovery.score.recovery_score}%`
+                    : "—"
               }
             />
           </div>

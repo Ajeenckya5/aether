@@ -1,9 +1,15 @@
+import { STANDARD_VITAL_SERVICES } from "./ble-vitals";
+
 export const HEART_RATE_SERVICE = "heart_rate";
 export const HEART_RATE_MEASUREMENT = "heart_rate_measurement";
 export const BATTERY_SERVICE = "battery_service";
 export const BATTERY_LEVEL = "battery_level";
 
-const LIVE_SERVICES = [HEART_RATE_SERVICE, BATTERY_SERVICE];
+const LIVE_SERVICES = [
+  HEART_RATE_SERVICE,
+  BATTERY_SERVICE,
+  ...STANDARD_VITAL_SERVICES,
+];
 
 export const STRAP_FILTERS: Array<{ services?: string[]; namePrefix?: string }> = [
   { services: [HEART_RATE_SERVICE] },
@@ -125,7 +131,7 @@ export function isWhoopBandName(name: string | null | undefined): boolean {
 
 /** Public Bluetooth Heart Rate (0x180D) — the same open GATT Goose also reads for live bpm. */
 export const WHOOP_PUBLIC_HR =
-  "WHOOP is streaming the public Heart Rate service (Bluetooth 180D): live bpm, R-R/HRV when the band sends it, and battery if exposed. Overnight recovery and sleep stay on WHOOP’s private radio — this website cannot read that, and will not copy it.";
+  "WHOOP is streaming the public Heart Rate service (Bluetooth 180D): live bpm, R-R/HRV when the band sends it, and battery if exposed. Aether also asks for the standard pulse-oximeter and thermometer services — if this firmware exposes them, SpO2 and skin temp appear. Leave this page connected overnight and Aether logs quiet vs active HR as rest/wake. WHOOP’s own recovery score, REM/deep stages, and private SpO2/temp stay on their radio — this website cannot copy that.";
 
 export const WHOOP_NO_PUBLIC_HR =
   "This WHOOP did not expose the public Heart Rate service in this browser. Aether only uses that open GATT for live bpm. Full band history needs a native iOS companion, not a website. Keep the band in the official WHOOP app for recovery/sleep, or tap Scan all devices and pick it again.";
