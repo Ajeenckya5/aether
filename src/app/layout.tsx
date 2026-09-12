@@ -17,12 +17,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(PUBLIC_SITE),
   title: "Aether — Band companion",
   description:
-    "Install Aether on your phone. Journal and live workouts stay on this device. No shared user database.",
+    "Aether is a phone app. Install it to the home screen. Journal and live workouts stay on this device.",
   applicationName: "Aether",
   appleWebApp: {
     capable: true,
     title: "Aether",
     statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
   },
 };
 

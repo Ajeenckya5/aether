@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gulatiMaxHr, nesMaxHr, resolvedMaxHr, tanakaMaxHr } from "./athlete";
+import { gulatiMaxHr, nesMaxHr, resolvedMaxHr, tanakaMaxHr, DEFAULT_ATHLETE } from "./athlete";
 import { edwardsTrimp } from "./intelligence";
 import {
   accumulateZones,
@@ -29,7 +29,7 @@ describe("max HR formulas (published regressions)", () => {
   });
 
   it("resolvedMaxHr prefers override, then WHOOP, then Tanaka", () => {
-    const athlete = { age: 32, sex: "unspecified" as const, maxHrOverride: null, cycleDay: null };
+    const athlete = { ...DEFAULT_ATHLETE, age: 32, sex: "unspecified" as const, maxHrOverride: null, cycleDay: null };
     expect(resolvedMaxHr(athlete, 188)).toBe(188);
     expect(resolvedMaxHr({ ...athlete, maxHrOverride: 190 }, 188)).toBe(190);
     expect(resolvedMaxHr(athlete, null)).toBe(186);

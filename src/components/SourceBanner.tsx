@@ -1,27 +1,19 @@
 "use client";
 
-import { useDashboard } from "./DataProvider";
-import { isStaticSite } from "@/lib/site";
+import { useLiveHeartRate } from "./LiveHeartRate";
 
 export function SourceBanner() {
-  const { data, loading } = useDashboard();
-  if (data.connected) {
+  const hr = useLiveHeartRate();
+  if (hr.status === "live") {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
-        Live from your WHOOP band
-      </p>
-    );
-  }
-  if (isStaticSite()) {
-    return (
-      <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
-        On-device copy · nothing is stored on this website
+        Live Bluetooth{hr.deviceName ? ` · ${hr.deviceName}` : ""}
       </p>
     );
   }
   return (
     <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
-      {loading ? "Checking band…" : "Demo data · connect WHOOP to load yours"}
+      On-device · Bluetooth only · no WHOOP cloud
     </p>
   );
 }

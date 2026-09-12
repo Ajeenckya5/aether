@@ -2,9 +2,11 @@
 
 Aether is an original recovery companion for a WHOOP band. It is **not** a clone of the WHOOP app: it does not copy WHOOP’s interface, branding, or workout video catalog.
 
-**Live site (install this on the phone):** [ajeenckya5.github.io/aether](https://ajeenckya5.github.io/aether)
+Aether is a **phone app** (home-screen install). It is not on the App Store or Play Store.
 
-Your strap still syncs through the official WHOOP app. A self-hosted copy can then read recovery, strain, sleep, and workouts with WHOOP’s public OAuth API. The public GitHub Pages site has no server and no user database.
+**Install the app:** [ajeenckya5.github.io/aether](https://ajeenckya5.github.io/aether) — open once on the phone, then always use the icon.
+
+Your live connection is **Bluetooth on this phone** — a Polar / Garmin / Wahoo heart-rate strap. Aether does not sign into WHOOP and does not use the WHOOP cloud.
 
 ## Download — put it on the phone
 
@@ -21,23 +23,19 @@ Aether is a **phone app**. After you install it, open the home-screen icon. Do n
 4. Leave Safari. Tap the **Aether** icon.
 5. You are in the phone app (no browser bar).
 
-Live Bluetooth heart-rate straps do not work in iPhone Safari. Use **Practice pulse**, and keep the WHOOP band in the WHOOP app.
+Live Bluetooth heart-rate straps do not work in iPhone Safari. Use **Practice pulse**, or pair a strap in Chrome on Android or a laptop.
 
 ### Android
 
 1. On the phone, open [https://ajeenckya5.github.io/aether](https://ajeenckya5.github.io/aether) in **Chrome**.
 2. Tap **Install** / Chrome menu → **Install app** or **Add to Home screen**.
 3. Tap the **Aether** icon.
-4. Open **Download** or **Settings** → **Pair live HR strap**.
+4. Open **Download** or **Settings** → **Connect over Bluetooth**.
 5. Wear a Polar, Garmin, or Wahoo strap (not the WHOOP band). Pick it in the list. BPM updates in real time.
 
 ### Live Bluetooth
 
-The WHOOP band cannot stream to Aether. Path for the band:
-
-**WHOOP band → official WHOOP app (Bluetooth) → WHOOP cloud → your self-hosted Aether (OAuth)**
-
-Live bpm inside Aether is a standard Bluetooth Heart Rate strap on Android Chrome or laptop Chrome, from the home-screen app (secure context).
+Aether connects over Bluetooth only. The WHOOP band cannot stream here (closed radio, not reverse-engineered). Live bpm is a standard Bluetooth Heart Rate strap on Android Chrome or laptop Chrome, from the home-screen app (secure context).
 
 ### Run the source (only if you need files)
 
@@ -64,9 +62,7 @@ WHOOP 5.0 still does not expose fitness-fatigue or ACWR. Healthspan and Stress s
 
 ## Why not Bluetooth to the WHOOP band?
 
-WHOOP does not publish a third-party Bluetooth API. The supported path is:
-
-**WHOOP band → official WHOOP app (Bluetooth) → WHOOP cloud → Aether (OAuth)**
+WHOOP does not publish a third-party Bluetooth API. Aether will not reverse-engineer that radio and does not use WHOOP’s cloud OAuth. Pair a Polar, Garmin, or Wahoo strap instead.
 
 ## Run it
 
@@ -77,22 +73,18 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Demo data loads immediately.
 
-## Connect your band
+## Connect over Bluetooth
 
-WHOOP Connect is **not** on the public GitHub Pages site (no server, so your tokens are never mixed with anyone else’s). Run your own copy:
+Aether does **not** sign into WHOOP and does **not** use the WHOOP cloud.
 
-1. Create an app at [developer.whoop.com](https://developer.whoop.com).
-2. Redirect URI: `http://localhost:3000/api/auth/callback`
-3. Scopes: `read:recovery`, `read:cycles`, `read:sleep`, `read:workout`, `read:profile`, `read:body_measurement`, `offline`
-4. Copy `.env.example` to `.env.local` and add your client id and secret.
-5. Restart the app and tap **Connect WHOOP** in Settings.
+1. Install the phone app (home screen) or open Chrome on a laptop/Android.
+2. Wear a standard Bluetooth heart-rate strap (Polar, Garmin, Wahoo).
+3. Settings → **Connect over Bluetooth**, pick the strap.
 
-WHOOP apps start in a sandbox with a member cap until they approve production access.
+The WHOOP band uses a closed radio WHOOP does not publish. Aether will not reverse-engineer it, so that band cannot stream here.
 
 ## Privacy
 
-The public website is a static app. GitHub Pages cannot store journal, GPS, heart-rate, or WHOOP tokens. Those stay in **this browser’s** storage, isolated from every other visitor.
+The public website is a static app. GitHub Pages cannot store journal, GPS, or heart-rate. Those stay in **this browser’s** storage, isolated from every other visitor.
 
 Weather requests go from your phone to Open-Meteo with a rounded lat/lon (~1 km). Aether does not look up your IP, and it does not include ads or analytics. Settings → Erase private data clears the phone copy.
-
-Self-hosted WHOOP tokens are httpOnly cookies on that host only.

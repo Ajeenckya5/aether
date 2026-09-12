@@ -458,7 +458,7 @@ export function LiveTracker() {
               ? `${hr.bpm ?? "--"} bpm live`
               : hr.status === "connecting"
                 ? "Pairing…"
-                : "Pair live HR"}
+                : "Connect BT"}
           </button>
           <button
             type="button"

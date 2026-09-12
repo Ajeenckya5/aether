@@ -2,11 +2,15 @@ import {
   gellishMaxHr,
   gulatiMaxHr,
   nesMaxHr,
+  resolvedHeightCm,
   resolvedMaxHr,
+  resolvedRestHr,
+  resolvedWeightKg,
   tanakaMaxHr,
   foxMaxHr,
   type Athlete,
 } from "./athlete";
+import { estimateBioAge, friendFitnessAge } from "./bio-age";
 import { buildDaySeries, edwardsTrimp } from "./intelligence";
 import type { JournalFlags } from "./journal";
 import type { Dashboard, Sleep, Workout } from "./types";
@@ -333,11 +337,6 @@ function acwrBand(ratio: number): string {
   return "spike";
 }
 
-function fitnessAgeYears(vo2: number, sex: Athlete["sex"]): number {
-  const peak = sex === "female" ? 44 : 52;
-  const decline = sex === "female" ? 0.35 : 0.39;
-  return 20 + (peak - vo2) / decline;
-}
 
 function luciaTrimp(workout: Workout): number {
   const z = workout.score?.zone_durations;
@@ -410,10 +409,10 @@ export function buildAtlas(
   const spo2 = days.map((d) => d.spo2).filter((v): v is number => v != null);
   const resp = days.map((d) => d.resp).filter((v): v is number => v != null);
   const maxHr = resolvedMaxHr(athlete, data.body.max_heart_rate);
-  const restHr = last(rhr) ?? 60;
-  const weight = data.body.weight_kilogram || 76;
-  const heightM = data.body.height_meter || 1.78;
-  const heightCm = heightM * 100;
+  const restHr = resolvedRestHr(athlete, last(rhr) ?? null);
+  const weight = resolvedWeightKg(athlete, data.body.weight_kilogram, data.connected);
+  const heightCm = resolvedHeightCm(athlete, data.body.height_meter, data.connected);
+  const heightM = heightCm != null ? heightCm / 100 : null;
   const female = athlete.sex === "female";
   const latestHrv = last(hrv);
   const lnHrv = hrv.map((v) => Math.log(Math.max(v, 1)));
@@ -650,7 +649,7 @@ export function buildAtlas(
     banisterSession = banisterTrimp(sessionMin, avg, restHr, maxHr, female);
     const hours = sessionMin / 60;
     sessionMet =
-      hours > 0
+      hours > 0 && weight != null
         ? latestWorkout.score.kilojoule / 4.184 / (weight * hours)
         : null;
   }
@@ -732,25 +731,35 @@ export function buildAtlas(
       ? riegelPredict(bestRunSec, bestRunDist, 10000) / 60
       : null;
 
-  const bmi = weight / (heightM * heightM);
-  const bsa = Math.sqrt((heightCm * weight) / 3600);
+  const bmi = weight != null && heightM != null ? weight / (heightM * heightM) : null;
+  const bsa =
+    weight != null && heightCm != null ? Math.sqrt((heightCm * weight) / 3600) : null;
   const bmr =
-    10 * weight +
-    6.25 * heightCm -
-    5 * athlete.age +
-    (female ? -161 : athlete.sex === "male" ? 5 : -78);
+    weight != null && heightCm != null
+      ? 10 * weight +
+        6.25 * heightCm -
+        5 * athlete.age +
+        (female ? -161 : athlete.sex === "male" ? 5 : -78)
+      : null;
   const cycleKj = today ? (data.cycles[0]?.score?.kilojoule ?? today.strain * 700) : 0;
   const activityKcal = cycleKj / 4.184;
-  const tdee = bmr + activityKcal;
-  const pal = tdee / Math.max(1, bmr);
-  const metH = activityKcal / Math.max(1, weight);
-  const hbBmr = harrisBenedictBmr(weight, heightCm, athlete.age, female);
-  const rozaBmr = rozaShizgalBmr(weight, heightCm, athlete.age, female);
-  const henryBmr = henryOxfordBmr(weight, athlete.age, female);
-  const ibw = devineIbwKg(heightM, female);
-  const ponderal = weight / heightM ** 3;
+  const tdee = bmr != null ? bmr + activityKcal : null;
+  const pal = bmr != null && tdee != null ? tdee / Math.max(1, bmr) : null;
+  const metH = weight != null ? activityKcal / Math.max(1, weight) : null;
+  const hbBmr =
+    weight != null && heightCm != null
+      ? harrisBenedictBmr(weight, heightCm, athlete.age, female)
+      : null;
+  const rozaBmr =
+    weight != null && heightCm != null
+      ? rozaShizgalBmr(weight, heightCm, athlete.age, female)
+      : null;
+  const henryBmr = weight != null ? henryOxfordBmr(weight, athlete.age, female) : null;
+  const ibw = heightM != null ? devineIbwKg(heightM, female) : null;
+  const ponderal = weight != null && heightM != null ? weight / heightM ** 3 : null;
   const vo2Mets = uthVo2 / 3.5;
-  const fitAge = fitnessAgeYears(uthVo2, athlete.sex);
+  const fitAge = friendFitnessAge(uthVo2, athlete.sex);
+  const bioAge = estimateBioAge(data, athlete);
   const lnrmssdRhr =
     lnToday != null ? lnToday / restHr : null;
   const hrvPctBaseline =
@@ -795,6 +804,73 @@ export function buildAtlas(
       : null;
 
   const metrics: AtlasMetric[] = [
+    metric({
+      id: "chrono-age",
+      group: "Biological age",
+      name: "Chronological age",
+      value: bioAge.chronological,
+      unit: "y",
+      formula: "Settings age (calendar years)",
+      citation: "User-entered. Not inferred from the band.",
+      confidence: "measured",
+      digits: 0,
+    }),
+    metric({
+      id: "biological-age",
+      group: "Biological age",
+      name: "Biological age (KDM)",
+      value: bioAge.biological,
+      unit: "y",
+      formula: "Klemera–Doubal: Σ (x−q)k/s² + CA/s_BA²  over  Σ (k/s)² + 1/s_BA²",
+      citation: bioAge.citation,
+      confidence:
+        bioAge.confidence === "unavailable"
+          ? "unavailable"
+          : bioAge.confidence === "high"
+            ? "derived"
+            : "estimated",
+      digits: 1,
+      note:
+        bioAge.biological == null
+          ? `Need at least 3 markers. Missing: ${bioAge.missing.slice(0, 4).join(", ")}.`
+          : `${bioAge.markersUsed}/${bioAge.markersPossible} markers · ${bioAge.method}`,
+    }),
+    metric({
+      id: "bio-age-delta",
+      group: "Biological age",
+      name: "Biological − actual",
+      value: bioAge.delta,
+      unit: "y",
+      formula: "KDM biological age − chronological age (negative = younger physiology)",
+      citation: "Klemera & Doubal 2006",
+      confidence: bioAge.delta != null ? "derived" : "unavailable",
+      digits: 1,
+    }),
+    metric({
+      id: "bio-age-unconstrained",
+      group: "Biological age",
+      name: "Physiology-only age (no CA prior)",
+      value: bioAge.unconstrained,
+      unit: "y",
+      formula: "KDM without treating chronological age as a biomarker",
+      citation: "Klemera & Doubal 2006 unconstrained estimator",
+      confidence: bioAge.unconstrained != null ? "estimated" : "unavailable",
+      digits: 1,
+    }),
+    ...bioAge.systems.map((system) =>
+      metric({
+        id: `bio-age-${system.id}`,
+        group: "Biological age",
+        name: `KDM ${system.label.toLowerCase()} age`,
+        value: system.age,
+        unit: "y",
+        formula: `KDM on the ${system.label.toLowerCase()} subset, including chronological age as a biomarker`,
+        citation: bioAge.citation,
+        confidence: system.age != null ? "estimated" : "unavailable",
+        digits: 0,
+        note: system.markers ? `${system.markers} marker${system.markers === 1 ? "" : "s"}` : "No markers in this system",
+      }),
+    ),
     metric({
       id: "rmssd",
       group: "Autonomic / HRV",
@@ -1491,8 +1567,8 @@ export function buildAtlas(
       name: "Fitness age (VO2 inversion)",
       value: fitAge,
       unit: "y",
-      formula: "20 + (peak20 − VO2) / decline, peak≈52/44, decline≈0.39/0.35",
-      citation: "Linear inversion of ACSM-style 50th-percentile VO2 vs age — not FRIEND registry",
+      formula: "(VO2 − q) / k · FRIEND 50th q/k by sex (Uth VO2 from HRmax/HRrest)",
+      citation: "Kaminsky et al. 2015 Mayo Clin Proc (FRIEND); Uth et al. 2004",
       confidence: "estimated",
       digits: 0,
     }),
@@ -1991,9 +2067,12 @@ export function buildAtlas(
       unit: "kg/m²",
       formula: "kg / m²",
       citation: "Quetelet; WHO BMI classification",
-      confidence: "derived",
+      confidence: bmi != null ? "derived" : "unavailable",
       digits: 1,
-      note: `WHO class: ${bmiClass(bmi)}`,
+      note:
+        bmi != null
+          ? `WHO class: ${bmiClass(bmi)}`
+          : "Add your height and weight in Settings. They stay on this phone.",
     }),
     metric({
       id: "ponderal",
@@ -2003,7 +2082,7 @@ export function buildAtlas(
       unit: "kg/m³",
       formula: "kg / m³",
       citation: "Rohrer index; less height-biased than BMI in some cohorts",
-      confidence: "derived",
+      confidence: ponderal != null ? "derived" : "unavailable",
       digits: 1,
     }),
     metric({
@@ -2014,8 +2093,9 @@ export function buildAtlas(
       unit: "kg",
       formula: "50 (m) or 45.5 (f) + 2.3 kg per inch over 5 ft",
       citation: "Devine BJ 1974, Drug Intell Clin Pharm",
-      confidence: "estimated",
+      confidence: ibw != null ? "estimated" : "unavailable",
       digits: 1,
+      note: ibw == null ? "Needs your height in Settings." : undefined,
     }),
     metric({
       id: "bsa",
@@ -2025,7 +2105,7 @@ export function buildAtlas(
       unit: "m²",
       formula: "√((cm × kg) / 3600)",
       citation: "Mosteller 1987, N Engl J Med",
-      confidence: "estimated",
+      confidence: bsa != null ? "estimated" : "unavailable",
       digits: 2,
     }),
     metric({
@@ -2036,8 +2116,9 @@ export function buildAtlas(
       unit: "kcal/d",
       formula: "10kg + 6.25cm − 5age + s, s=+5 male / −161 female / −78 unspecified",
       citation: "Mifflin et al. 1990, Am J Clin Nutr",
-      confidence: "estimated",
+      confidence: bmr != null ? "estimated" : "unavailable",
       digits: 0,
+      note: bmr == null ? "Needs your height, weight, age, and sex in Settings." : undefined,
     }),
     metric({
       id: "bmr-harris",
@@ -2047,7 +2128,7 @@ export function buildAtlas(
       unit: "kcal/d",
       formula: "men 66.5+13.75kg+5.003cm−6.755age; women 655.1+9.563kg+1.85cm−4.676age",
       citation: "Harris & Benedict 1918",
-      confidence: "estimated",
+      confidence: hbBmr != null ? "estimated" : "unavailable",
       digits: 0,
     }),
     metric({
@@ -2058,7 +2139,7 @@ export function buildAtlas(
       unit: "kcal/d",
       formula: "Revised Harris–Benedict",
       citation: "Roza & Shizgal 1984, Am J Clin Nutr",
-      confidence: "estimated",
+      confidence: rozaBmr != null ? "estimated" : "unavailable",
       digits: 0,
     }),
     metric({
@@ -2069,7 +2150,7 @@ export function buildAtlas(
       unit: "kcal/d",
       formula: "Age-banded FAO/WHO/UNU Henry equations (weight only)",
       citation: "Henry CJK 2005, Public Health Nutr",
-      confidence: "estimated",
+      confidence: henryBmr != null ? "estimated" : "unavailable",
       digits: 0,
     }),
     metric({
@@ -2091,7 +2172,7 @@ export function buildAtlas(
       unit: "kcal",
       formula: "BMR + cycle kcal",
       citation: "BMR + measured expenditure; not a doubly labeled water TDEE",
-      confidence: "estimated",
+      confidence: tdee != null ? "estimated" : "unavailable",
       digits: 0,
     }),
     metric({
@@ -2102,7 +2183,7 @@ export function buildAtlas(
       unit: "×BMR",
       formula: "TDEE / BMR",
       citation: "FAO/WHO/UNU PAL: sedentary ~1.4, very active ~2.0+",
-      confidence: "estimated",
+      confidence: pal != null ? "estimated" : "unavailable",
       digits: 2,
     }),
     metric({
@@ -2113,7 +2194,7 @@ export function buildAtlas(
       unit: "MET·h",
       formula: "kcal / body_mass_kg  (since 1 MET ≈ 1 kcal/kg/h)",
       citation: "Ainsworth Compendium of Physical Activities",
-      confidence: "estimated",
+      confidence: metH != null ? "estimated" : "unavailable",
       digits: 1,
     }),
     metric({
@@ -2375,7 +2456,7 @@ export function buildAtlas(
       "WHOOP Healthspan / PAC",
       "WHOOP physiological age",
       "WHOOP 5.0 Healthspan",
-      "Proprietary, not exported.",
+      "Proprietary PAC is not in the API. Aether’s KDM biological age (Lab / Today) is the open substitute — not WHOOP Healthspan.",
     ),
     unavailable(
       "cadence",

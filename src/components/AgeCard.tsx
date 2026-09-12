@@ -1,0 +1,115 @@
+"use client";
+
+import Link from "next/link";
+import type { BioAgeReport } from "@/lib/bio-age";
+
+function deltaCopy(delta: number | null): { text: string; className: string } {
+  if (delta == null) return { text: "Need more markers", className: "text-muted" };
+  if (delta <= -0.5) {
+    return {
+      text: `${Math.abs(delta).toFixed(1)} years younger`,
+      className: "text-lime",
+    };
+  }
+  if (delta >= 0.5) {
+    return {
+      text: `${delta.toFixed(1)} years older`,
+      className: "text-ember",
+    };
+  }
+  return { text: "Aligned with actual age", className: "text-paper/80" };
+}
+
+function confidenceCopy(level: BioAgeReport["confidence"]): string {
+  if (level === "high") return "High confidence";
+  if (level === "medium") return "Medium confidence";
+  if (level === "low") return "Low confidence";
+  return "Unavailable";
+}
+
+export function AgeCard({
+  report,
+  variant = "full",
+}: {
+  report: BioAgeReport;
+  variant?: "compact" | "full";
+}) {
+  const ba =
+    report.biological == null ? null : Math.round(report.biological * 10) / 10;
+  const delta = deltaCopy(report.delta);
+  const systems = report.systems.filter((s) => s.age != null);
+
+  const body = (
+    <>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-lime">Age</p>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <p className="font-display text-5xl leading-none">{report.chronological}</p>
+          <p className="mt-1 text-xs text-muted">Actual</p>
+        </div>
+        <div>
+          <p className="font-display text-5xl leading-none">
+            {ba == null ? "—" : ba % 1 === 0 ? ba.toFixed(0) : ba.toFixed(1)}
+          </p>
+          <p className="mt-1 text-xs text-muted">Biological</p>
+        </div>
+      </div>
+      <p className={`mt-3 text-sm ${delta.className}`}>{delta.text}</p>
+      <p className="mt-1 text-xs text-muted">
+        {confidenceCopy(report.confidence)} · {report.markersUsed}/
+        {report.markersPossible} markers · Klemera–Doubal
+      </p>
+    </>
+  );
+
+  if (variant === "compact") {
+    return (
+      <Link
+        href="/lab"
+        className="mt-4 block rounded-[28px] border border-white/8 bg-panel p-5"
+      >
+        {body}
+        {systems.length > 0 && (
+          <p className="mt-3 text-xs text-paper/70">
+            {systems
+              .map((s) => `${s.label} ${Math.round(s.age ?? 0)}`)
+              .join(" · ")}
+          </p>
+        )}
+        <p className="mt-3 text-xs text-lime">Open Lab for the breakdown →</p>
+      </Link>
+    );
+  }
+
+  return (
+    <section className="rounded-[28px] border border-white/8 bg-panel p-5">
+      {body}
+      {systems.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {systems.map((s) => (
+            <span
+              key={s.id}
+              className="rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs text-paper/80"
+            >
+              {s.label} {Math.round(s.age ?? 0)}
+            </span>
+          ))}
+        </div>
+      )}
+      {report.unconstrained != null &&
+        report.unconstrained > 16.05 &&
+        report.unconstrained < 89.95 && (
+        <p className="mt-3 text-xs text-muted">
+          Physiology-only (no age prior): {report.unconstrained.toFixed(1)} y
+        </p>
+      )}
+      {report.missing.length > 0 && (
+        <p className="mt-3 text-xs text-muted">
+          Still unused: {report.missing.join(" · ")}
+        </p>
+      )}
+      <p className="mt-4 text-xs leading-relaxed text-muted">{report.notes[0]}</p>
+      <p className="mt-2 text-xs leading-relaxed text-muted">{report.notes[1]}</p>
+    </section>
+  );
+}

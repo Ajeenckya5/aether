@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronRight, Download, Settings } from "lucide-react";
 import { formatDate, formatHours, isSameDay, kcalFromKj, recoveryTone } from "@/lib/format";
 import type { Recovery } from "@/lib/types";
+import { AgeCard } from "./AgeCard";
 import { ArcMeter } from "./ArcMeter";
 import { CallCard } from "./CallCard";
 import { EnvironmentCard } from "./EnvironmentCard";
@@ -14,6 +15,7 @@ import { InstallBanner, useDevice } from "./DeviceChrome";
 import { WorkoutCard } from "./WorkoutCard";
 import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
+import { greetingName, hasPersonalBody } from "@/lib/athlete";
 import { preferPhoneShell } from "@/lib/device";
 
 function recoveryColor(score: number) {
@@ -24,7 +26,7 @@ function recoveryColor(score: number) {
 }
 
 export function TodayView() {
-  const { data, report, journal, updateJournal } = useLab();
+  const { data, report, journal, updateJournal, athlete, bioAge } = useLab();
   const { env } = useEnvironment();
   const phoneApp = preferPhoneShell(useDevice());
   const recovery = data.recoveries[0];
@@ -33,7 +35,7 @@ export function TodayView() {
   const todayWorkouts = data.workouts.filter((w) => isSameDay(w.start));
   const score = report?.aether ?? recovery?.score?.recovery_score ?? 0;
   const sleepPct = sleep?.score?.sleep_performance_percentage ?? 0;
-  const name = data.profile.first_name || "there";
+  const name = greetingName(athlete, data.profile.first_name, data.connected);
   const mid = sleep
     ? new Date(
         (new Date(sleep.start).getTime() + new Date(sleep.end).getTime()) / 2,
@@ -50,6 +52,18 @@ export function TodayView() {
       <div className="mb-4">
         <InstallBanner />
       </div>
+      {!hasPersonalBody(athlete) && (
+        <Link
+          href="/settings"
+          className="mb-4 block rounded-[24px] border border-lime/25 bg-lime/8 px-4 py-3"
+        >
+          <p className="font-display text-lg text-paper">Add your details</p>
+          <p className="mt-1 text-xs text-muted">
+            Height, weight, age, and name stay on this phone. Lab then uses your
+            body, not a stand-in — including biological age.
+          </p>
+        </Link>
+      )}
       <header className="mb-6 flex items-start justify-between">
         <div>
           <SourceBanner />
@@ -96,6 +110,8 @@ export function TodayView() {
       <div className="mt-4">
         <JournalChips journal={journal} onChange={updateJournal} />
       </div>
+
+      <AgeCard report={bioAge} variant="compact" />
 
       <section className="mt-6 rounded-[32px] border border-white/8 bg-panel px-2 pb-6 pt-4">
         <ArcMeter

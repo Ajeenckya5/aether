@@ -1,3 +1,5 @@
+import { PUBLIC_SITE } from "./site";
+
 export type DownloadUrls = {
   owner: string;
   repo: string;
@@ -54,8 +56,8 @@ export function installHref(
   urls: DownloadUrls,
 ): string {
   if (platform === "github") return urls.repoUrl;
-  if (platform === "android") return urls.playStoreUrl || urls.repoUrl;
-  return urls.appStoreUrl || urls.repoUrl;
+  if (platform === "android") return urls.playStoreUrl || PUBLIC_SITE;
+  return urls.appStoreUrl || PUBLIC_SITE;
 }
 
 export function storeListed(

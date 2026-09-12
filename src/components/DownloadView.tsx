@@ -1,7 +1,7 @@
 "use client";
 
 import { Apple, Download, FolderGit2, Smartphone } from "lucide-react";
-import { publicDownloadUrls } from "@/lib/downloads";
+import { publicDownloadUrls, storeListed } from "@/lib/downloads";
 import { preferPhoneShell } from "@/lib/device";
 import { PUBLIC_SITE } from "@/lib/site";
 import { InstallBanner, PhoneInstallCard, useDevice } from "./DeviceChrome";
@@ -11,49 +11,54 @@ export function DownloadView() {
   const urls = publicDownloadUrls();
   const device = useDevice();
   const onPhone = preferPhoneShell(device);
+  const onPlay = storeListed("android", urls);
+  const onAppStore = storeListed("ios", urls);
 
   return (
     <div className="px-5 pt-6 pb-8 lg:px-2">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-lime">On your phone</p>
-      <h1 className="font-display mt-2 text-4xl">Put Aether on this device</h1>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-lime">Phone app</p>
+      <h1 className="font-display mt-2 text-4xl">Install Aether on this phone</h1>
       <p className="mt-3 max-w-xl text-sm text-muted">
-        Open the public site on your phone, then add it to the home screen.
-        Journal, workouts, and heart-rate stay in this browser — GitHub Pages
-        never stores them. Follow the steps for your phone, then pair live
-        Bluetooth.
+        After install, open the home-screen icon. That is the app — no browser
+        bar. Data stays on this phone. Connect over Bluetooth. Aether does not
+        use the WHOOP cloud.
       </p>
-
-      <section className="mt-6 rounded-[28px] border border-lime/25 bg-lime/8 p-5">
-        <h2 className="font-display text-xl text-paper">Public site</h2>
-        <p className="mt-2 text-sm text-muted">
-          On the phone, open this address in Safari (iPhone) or Chrome (Android):
-        </p>
-        <a
-          href={PUBLIC_SITE}
-          className="mt-3 block break-all font-mono text-sm text-lime"
-        >
-          {PUBLIC_SITE}
-        </a>
-        <p className="mt-2 text-xs text-muted">
-          Each phone keeps its own copy. There is no login and no shared user
-          list on this host.
-        </p>
-      </section>
-
-      <div className="mt-5">
-        <InstallBanner />
-      </div>
 
       {device.standalone && (
         <p className="mt-4 rounded-[24px] border border-lime/30 bg-lime/10 px-4 py-3 text-sm text-paper">
           This copy is already the phone app. Use the home-screen icon next time.
-          Pair live HR below.
+          Connect over Bluetooth below.
         </p>
       )}
 
       <section id="install" className="mt-6">
         <PhoneInstallCard />
       </section>
+
+      <div className="mt-5">
+        <InstallBanner />
+      </div>
+
+      {(onPlay || onAppStore) && (
+        <section className="mt-4 grid gap-2">
+          {onPlay && (
+            <a
+              href={urls.playStoreUrl}
+              className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
+            >
+              Get it on Google Play
+            </a>
+          )}
+          {onAppStore && (
+            <a
+              href={urls.appStoreUrl}
+              className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
+            >
+              Download on the App Store
+            </a>
+          )}
+        </section>
+      )}
 
       <section
         id="ios"
@@ -64,12 +69,16 @@ export function DownloadView() {
             <Apple size={20} />
           </span>
           <div>
-            <h2 className="font-display text-xl">iPhone — step by step</h2>
+            <h2 className="font-display text-xl">iPhone — the app</h2>
             <p className="text-xs uppercase tracking-widest text-muted">
-              Home screen app, not Safari
+              Home screen · not the App Store
             </p>
           </div>
         </div>
+        <p className="mt-3 text-sm text-muted">
+          There is no App Store listing. Safari → Add to Home Screen is how
+          iPhone gets the Aether app.
+        </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
           <li>On the iPhone, open this page in <strong className="font-medium text-paper">Safari</strong> (not Chrome).</li>
           <li>Tap the Share button (square with an arrow).</li>
@@ -79,7 +88,7 @@ export function DownloadView() {
         </ol>
         {!onPhone && (
           <p className="mt-3 text-sm text-muted">
-            You are on a computer. Pick up the iPhone, type this same address in
+            You are on a computer. Pick up the iPhone, type the address below in
             Safari, then do the steps above.
           </p>
         )}
@@ -94,18 +103,34 @@ export function DownloadView() {
             <Smartphone size={20} />
           </span>
           <div>
-            <h2 className="font-display text-xl">Android — step by step</h2>
+            <h2 className="font-display text-xl">Android — the app</h2>
             <p className="text-xs uppercase tracking-widest text-muted">
-              Home screen app, then live Bluetooth
+              Chrome Install app · not Play Store
             </p>
           </div>
         </div>
+        <p className="mt-3 text-sm text-muted">
+          There is no Play Store listing. Chrome&apos;s <strong className="font-medium text-paper">Install app</strong> puts Aether on the home screen like any other app.
+        </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
           <li>On the Android phone, open this page in <strong className="font-medium text-paper">Chrome</strong>.</li>
           <li>Tap <strong className="font-medium text-paper">Install</strong> when Chrome offers it, or Chrome menu → <strong className="font-medium text-paper">Install app</strong> / Add to Home screen.</li>
           <li>Tap the <strong className="font-medium text-paper">Aether</strong> icon. That is the app on the device.</li>
-          <li>Scroll to Live Bluetooth and pair a Polar / Garmin / Wahoo strap.</li>
+          <li>Scroll to Connect over Bluetooth and pair a Polar / Garmin / Wahoo strap.</li>
         </ol>
+      </section>
+
+      <section className="mt-4 rounded-[28px] border border-white/8 p-5">
+        <h2 className="font-display text-lg text-paper">One-time address</h2>
+        <p className="mt-2 text-sm text-muted">
+          Open this once on the phone to install. After that, only use the icon.
+        </p>
+        <a
+          href={PUBLIC_SITE}
+          className="mt-3 block break-all font-mono text-sm text-lime"
+        >
+          {PUBLIC_SITE}
+        </a>
       </section>
 
       <div className="mt-4">
@@ -134,7 +159,7 @@ export function DownloadView() {
             </a>
           </li>
           <li>Click Code → Download ZIP, or copy the clone command below.</li>
-          <li>That is source, not the phone icon. Put the running site on the phone with the steps above.</li>
+          <li>That is source, not the phone icon. Put the running app on the phone with the steps above.</li>
         </ol>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <a

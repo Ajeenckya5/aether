@@ -28,7 +28,7 @@ export function PrivacyView() {
       <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5 text-sm text-paper/80">
         <h2 className="font-display text-xl text-paper">Stays on this device</h2>
         <ul className="mt-3 list-disc space-y-2 pl-4 text-muted">
-          <li>Journal tags, athlete age/sex, custom workouts, live recordings, GPS tracks.</li>
+          <li>Journal tags, athlete name/age/sex, height, weight, optional systolic BP, custom workouts, live recordings, GPS tracks.</li>
           <li>Bluetooth heart-rate samples while you track. They are not uploaded.</li>
           <li>Saved city for weather (rounded, not a street pin).</li>
         </ul>
@@ -38,7 +38,9 @@ export function PrivacyView() {
         <h2 className="font-display text-xl text-paper">Leaves the phone only if you ask</h2>
         <ul className="mt-3 list-disc space-y-2 pl-4 text-muted">
           <li>
-            <strong className="font-medium text-paper">WHOOP</strong> — only if you run your own copy and tap Connect WHOOP. The public github.io site has no server for that. Tokens would sit in httpOnly cookies on that private host, not in JavaScript.
+            <strong className="font-medium text-paper">Bluetooth</strong> — live
+            heart-rate stays on this phone. Aether never signs into WHOOP and
+            never pulls the WHOOP cloud.
           </li>
           <li>
             <strong className="font-medium text-paper">Weather</strong> — this browser talks to Open-Meteo with a rounded lat/lon (~1 km). GitHub never sees the pin. City search sends only the letters you type.
@@ -58,7 +60,7 @@ export function PrivacyView() {
         <ul className="mt-3 list-disc space-y-2 pl-4">
           <li>No advertising SDKs, analytics pixels, or crash reporters.</li>
           <li>No selling or sharing journal, GPS, or heart-rate logs.</li>
-          <li>The WHOOP band still syncs only through the official WHOOP app.</li>
+          <li>No WHOOP cloud tokens. The WHOOP band cannot stream to Aether over Bluetooth.</li>
         </ul>
         <Link href="/settings" className="mt-4 inline-block text-sm text-lime">
           Erase private data in Settings

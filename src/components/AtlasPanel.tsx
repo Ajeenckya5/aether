@@ -62,14 +62,14 @@ export function AtlasPanel({ atlas }: { atlas: AtlasReport }) {
         {tracked} computed from this band · {missing} known methods with no
         input on the WHOOP API. Search by name, formula, or paper.{" "}
         <Link href="/settings" className="text-lime">
-          Set age and HRmax
+          Set height, weight, and age
         </Link>{" "}
-        — Tanaka, Karvonen, BMR, and VO2 use them.
+        — Tanaka, Karvonen, BMR, VO2, and Klemera–Doubal biological age use them.
       </p>
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search TRIMP, SRI, VDOT, ACWR…"
+        placeholder="Search KDM, TRIMP, SRI, VDOT, ACWR…"
         className="mt-3 w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-sm outline-none placeholder:text-muted"
       />
       <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">

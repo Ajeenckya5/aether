@@ -3,6 +3,7 @@ import {
   explainBleError,
   heartRateRequestOptions,
   isPlausibleHr,
+  isWhoopBandName,
   parseHeartRate,
 } from "./ble-hr";
 
@@ -48,7 +49,12 @@ describe("Web Bluetooth chooser", () => {
   });
 
   it("tells iPhone users the WHOOP band is not the live strap", () => {
-    expect(explainBleError(null, false)).toMatch(/WHOOP band still records/);
+    expect(explainBleError(null, false)).toMatch(/does not use the WHOOP cloud/);
     expect(explainBleError({ name: "NotFoundError" }, true)).toMatch(/not the WHOOP band/);
+  });
+
+  it("refuses WHOOP-named devices instead of guessing their GATT", () => {
+    expect(isWhoopBandName("WHOOP 4.0")).toBe(true);
+    expect(isWhoopBandName("Polar H10")).toBe(false);
   });
 });

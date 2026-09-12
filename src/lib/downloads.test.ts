@@ -15,12 +15,12 @@ describe("download links", () => {
     expect(urls.cloneUrl).toBe("https://github.com/Ajeenckya5/aether.git");
   });
 
-  it("uses GitHub as the Android and iOS download until store URLs exist", () => {
+  it("uses GitHub as source, and the live app URL for phone install until stores exist", () => {
     const urls = buildDownloadUrls();
     expect(storeListed("android", urls)).toBe(false);
     expect(storeListed("ios", urls)).toBe(false);
-    expect(installHref("android", urls)).toBe(urls.repoUrl);
-    expect(installHref("ios", urls)).toBe(urls.repoUrl);
+    expect(installHref("android", urls)).toBe("https://ajeenckya5.github.io/aether");
+    expect(installHref("ios", urls)).toBe("https://ajeenckya5.github.io/aether");
     expect(installHref("github", urls)).toBe(urls.repoUrl);
   });
 

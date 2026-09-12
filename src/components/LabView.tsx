@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { MODEL_CARD } from "@/lib/model";
+import { AgeCard } from "./AgeCard";
 import { AtlasPanel } from "./AtlasPanel";
 import { CallCard } from "./CallCard";
 import { EnvironmentCard } from "./EnvironmentCard";
@@ -12,7 +13,7 @@ import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
 
 export function LabView() {
-  const { report, journal, updateJournal, atlas, data } = useLab();
+  const { report, journal, updateJournal, atlas, data, bioAge } = useLab();
   const { env } = useEnvironment();
   const [tab, setTab] = useState<"call" | "atlas">("call");
 
@@ -62,18 +63,28 @@ export function LabView() {
 
       {tab === "atlas" ? (
         <div className="mt-6 space-y-4">
+          <AgeCard report={bioAge} />
           <EnvironmentCard midsleepHour={midsleepHour} />
           <AtlasPanel atlas={atlas} />
         </div>
       ) : !report ? (
-        <p className="mt-6 text-sm text-muted">
-          Need a few scored days before Lab can run the daily call.
-        </p>
+        <>
+          <div className="mt-6">
+            <AgeCard report={bioAge} />
+          </div>
+          <p className="mt-6 text-sm text-muted">
+            Need a few scored days before Lab can run the daily call.
+          </p>
+        </>
       ) : (
         <>
 
       <div className="mt-6">
         <CallCard report={report} extraNotes={outdoorNotes} />
+      </div>
+
+      <div className="mt-4">
+        <AgeCard report={bioAge} />
       </div>
 
       <div className="mt-4">

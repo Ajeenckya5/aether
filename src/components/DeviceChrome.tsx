@@ -82,7 +82,8 @@ export function InstallBanner() {
   if (device.ios) {
     return (
       <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
-        Put Aether on the iPhone: Share → Add to Home Screen, then open the icon.{" "}
+        Put Aether on the iPhone: Share → Add to Home Screen, then open the icon.
+        That is the app — Apple has no App Store listing for Aether.{" "}
         <Link href="/download" className="text-lime">
           Step by step
         </Link>
@@ -95,7 +96,8 @@ export function InstallBanner() {
 
   return (
     <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
-      This is a website until you install it.{" "}
+      Install Aether on this phone so it opens from the home screen, not a
+      browser tab.{" "}
       <Link href="/download" className="text-lime">
         Put it on the phone
       </Link>
@@ -122,8 +124,8 @@ export function PhoneInstallCard() {
     <div className="rounded-[28px] border border-lime/30 bg-lime/10 p-5">
       <h2 className="font-display text-xl text-paper">Install on this device</h2>
       <p className="mt-2 text-sm text-paper/80">
-        Do not keep using Aether as a laptop dashboard. Add it to the phone home
-        screen, then always open the Aether icon.
+        Do not keep using Aether in a browser tab. Add it to the phone home
+        screen, then always open the Aether icon — that is the app.
       </p>
       {promptEvent ? (
         <button

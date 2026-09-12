@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildAtlas } from "@/lib/atlas";
+import { estimateBioAge } from "@/lib/bio-age";
 import {
   DEFAULT_ATHLETE,
   loadAthlete,
   saveAthlete,
+  sanitizeAthlete,
   type Athlete,
 } from "@/lib/athlete";
 import { analyzeDashboard } from "@/lib/intelligence";
@@ -37,7 +39,7 @@ export function useLab() {
 
   const updateAthlete = useCallback((patch: Partial<Athlete>) => {
     setAthlete((current) => {
-      const next = { ...current, ...patch };
+      const next = sanitizeAthlete({ ...current, ...patch });
       saveAthlete(next);
       return next;
     });
@@ -53,6 +55,8 @@ export function useLab() {
     [data, journal, athlete],
   );
 
+  const bioAge = useMemo(() => estimateBioAge(data, athlete), [data, athlete]);
+
   return {
     data,
     loading,
@@ -62,5 +66,6 @@ export function useLab() {
     updateAthlete,
     report,
     atlas,
+    bioAge,
   };
 }

@@ -1,11 +1,12 @@
 "use client";
 
+import { AgeCard } from "./AgeCard";
 import { AtlasPanel } from "./AtlasPanel";
 import { SourceBanner } from "./SourceBanner";
 import { useLab } from "./useLab";
 
 export function AtlasView() {
-  const { atlas } = useLab();
+  const { atlas, bioAge } = useLab();
   return (
     <div className="px-5 pt-6 pb-8">
       <SourceBanner />
@@ -16,9 +17,11 @@ export function AtlasView() {
       <p className="mt-2 text-sm text-muted">
         Every formula this band, journal, and body stats can drive, with
         citations. Metrics that need ECG, GPS, power, or blood are listed as
-        unavailable instead of guessed. Age and HRmax live in Settings.
+        unavailable instead of guessed. Age, height, weight, and HRmax live in Settings.
+        Biological age is Klemera–Doubal from those plus the band — not WHOOP Healthspan.
       </p>
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
+        <AgeCard report={bioAge} />
         <AtlasPanel atlas={atlas} />
       </div>
     </div>
