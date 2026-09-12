@@ -30,9 +30,11 @@ function confidenceCopy(level: BioAgeReport["confidence"]): string {
 export function AgeCard({
   report,
   variant = "full",
+  sample = false,
 }: {
   report: BioAgeReport;
   variant?: "compact" | "full";
+  sample?: boolean;
 }) {
   const ba =
     report.biological == null ? null : Math.round(report.biological * 10) / 10;
@@ -58,6 +60,7 @@ export function AgeCard({
       <p className="mt-1 text-xs text-muted">
         {confidenceCopy(report.confidence)} · {report.markersUsed}/
         {report.markersPossible} markers · Klemera–Doubal
+        {sample ? " · sample nights" : ""}
       </p>
     </>
   );

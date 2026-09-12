@@ -260,44 +260,12 @@ export function LiveHeartRateButton() {
   );
 }
 
-export function BluetoothPanel() {
+export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
   const hr = useLiveHeartRate();
   const device = useDevice();
   const live = hr.status === "live";
 
-  return (
-    <section
-      id="bluetooth"
-      className="rounded-[28px] border border-white/8 bg-panel p-5"
-    >
-      <p className="text-xs uppercase tracking-widest text-muted">Connection</p>
-      <h2 className="font-display mt-1 text-xl text-paper">Connect over Bluetooth</h2>
-      <p className="mt-2 text-sm text-paper/80">
-        This is how Aether talks to your WHOOP on the web: the public Bluetooth
-        Heart Rate service (live bpm). Polar, Garmin, and Wahoo straps use the
-        same profile. Overnight recovery and sleep packets stay on WHOOP’s
-        private radio — a native iOS app can parse those; this website cannot.
-      </p>
-      {live && (
-        <p className="font-display mt-4 text-5xl leading-none tracking-tight text-lime">
-          {hr.bpm ?? "—"}
-          <span className="ml-2 text-lg text-paper">bpm live</span>
-        </p>
-      )}
-      {hr.deviceName && live && (
-        <p className="mt-2 text-sm text-muted">{hr.deviceName}</p>
-      )}
-      <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-muted">
-        <li>Install Aether on the phone (home-screen icon), then open that icon.</li>
-        <li>Put on the WHOOP band (or a Polar / Garmin / Wahoo strap). Wake it. Turn phone Bluetooth on.</li>
-        <li>Tap Connect over Bluetooth, pick WHOOP, keep this screen open.</li>
-        {device.ios ? (
-          <li>iPhone browsers have no Web Bluetooth. Pair the WHOOP in Chrome on Android, or Practice pulse here.</li>
-        ) : (
-          <li>If the strap is missing from the list, tap Scan all devices.</li>
-        )}
-      </ol>
-      {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
+  const actions = (
       <div className="mt-4 grid gap-2">
         <button
           type="button"
@@ -308,7 +276,7 @@ export function BluetoothPanel() {
             ? `${hr.bpm ?? "--"} bpm · tap to re-pair`
             : hr.status === "connecting"
               ? "Look at the Bluetooth picker…"
-              : "Connect over Bluetooth"}
+              : "Connect WHOOP over Bluetooth"}
         </button>
         {!device.ios && (
           <button
@@ -336,6 +304,70 @@ export function BluetoothPanel() {
           </button>
         )}
       </div>
+  );
+
+  if (compact) {
+    return (
+      <section
+        id="whoop-connect"
+        className="rounded-[28px] border border-lime/30 bg-lime/10 p-5"
+      >
+        <p className="text-xs uppercase tracking-widest text-lime">WHOOP</p>
+        <h2 className="font-display mt-1 text-xl text-paper">Connect your band</h2>
+        <p className="mt-2 text-sm text-paper/80">
+          {device.ios
+            ? "iPhone browsers cannot pair Bluetooth. Use Chrome on Android or a laptop, or Practice pulse."
+            : "Tap Connect, pick WHOOP, keep this screen open. That is live bpm. Overnight numbers on this page are a sample until you run a self-hosted copy with WHOOP’s official API."}
+        </p>
+        {live && (
+          <p className="font-display mt-4 text-5xl leading-none tracking-tight text-lime">
+            {hr.bpm ?? "—"}
+            <span className="ml-2 text-lg text-paper">bpm live</span>
+          </p>
+        )}
+        {hr.deviceName && live && (
+          <p className="mt-2 text-sm text-muted">{hr.deviceName}</p>
+        )}
+        {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
+        {actions}
+      </section>
+    );
+  }
+
+  return (
+    <section
+      id="bluetooth"
+      className="rounded-[28px] border border-white/8 bg-panel p-5"
+    >
+      <p className="text-xs uppercase tracking-widest text-muted">Connection</p>
+      <h2 className="font-display mt-1 text-xl text-paper">Connect over Bluetooth</h2>
+      <p className="mt-2 text-sm text-paper/80">
+        This is how Aether talks to your WHOOP on the web: the public Bluetooth
+        Heart Rate service (live bpm). Polar, Garmin, and Wahoo straps use the
+        same profile. Overnight recovery and sleep packets stay on WHOOP’s
+        private radio — a native iOS app can parse those; this website cannot.
+      </p>
+      {live && (
+        <p className="font-display mt-4 text-5xl leading-none tracking-tight text-lime">
+          {hr.bpm ?? "—"}
+          <span className="ml-2 text-lg text-paper">bpm live</span>
+        </p>
+      )}
+      {hr.deviceName && live && (
+        <p className="mt-2 text-sm text-muted">{hr.deviceName}</p>
+      )}
+      <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-muted">
+        <li>Install Aether on the phone (home-screen icon), then open that icon.</li>
+        <li>Put on the WHOOP band (or a Polar / Garmin / Wahoo strap). Wake it. Turn phone Bluetooth on.</li>
+        <li>Tap Connect WHOOP over Bluetooth, pick WHOOP, keep this screen open.</li>
+        {device.ios ? (
+          <li>iPhone browsers have no Web Bluetooth. Pair the WHOOP in Chrome on Android, or Practice pulse here.</li>
+        ) : (
+          <li>If the strap is missing from the list, tap Scan all devices.</li>
+        )}
+      </ol>
+      {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
+      {actions}
     </section>
   );
 }

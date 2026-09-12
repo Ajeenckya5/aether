@@ -30,9 +30,11 @@ const COPY: Record<
 export function CallCard({
   report,
   extraNotes,
+  sample = false,
 }: {
   report: LabReport;
   extraNotes?: string[];
+  sample?: boolean;
 }) {
   const tone = COPY[report.call];
   const notes = [...report.callWhy, ...(extraNotes ?? [])];
@@ -54,7 +56,9 @@ export function CallCard({
           <p className="font-display text-2xl">{Math.round(report.aether)}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted">WHOOP</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted">
+            {sample ? "Sample" : "WHOOP"}
+          </p>
           <p className="font-display text-2xl">
             {report.whoop == null ? "—" : Math.round(report.whoop)}
           </p>

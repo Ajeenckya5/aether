@@ -42,6 +42,9 @@ export function LabView() {
         Every published algorithm this band, journal, and body stats can
         actually drive — with the formula and paper on each row. Methods the
         WHOOP API cannot feed stay listed as unavailable instead of guessed.
+        {data.connected
+          ? ""
+          : " Overnight numbers here are a sample until a WHOOP account is connected."}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-2">
@@ -63,14 +66,14 @@ export function LabView() {
 
       {tab === "atlas" ? (
         <div className="mt-6 space-y-4">
-          <AgeCard report={bioAge} />
+          <AgeCard report={bioAge} sample={!data.connected} />
           <EnvironmentCard midsleepHour={midsleepHour} />
           <AtlasPanel atlas={atlas} />
         </div>
       ) : !report ? (
         <>
           <div className="mt-6">
-            <AgeCard report={bioAge} />
+            <AgeCard report={bioAge} sample={!data.connected} />
           </div>
           <p className="mt-6 text-sm text-muted">
             Need a few scored days before Lab can run the daily call.
@@ -80,11 +83,15 @@ export function LabView() {
         <>
 
       <div className="mt-6">
-        <CallCard report={report} extraNotes={outdoorNotes} />
+        <CallCard
+          report={report}
+          extraNotes={outdoorNotes}
+          sample={!data.connected}
+        />
       </div>
 
       <div className="mt-4">
-        <AgeCard report={bioAge} />
+            <AgeCard report={bioAge} sample={!data.connected} />
       </div>
 
       <div className="mt-4">

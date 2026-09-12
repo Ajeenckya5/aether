@@ -10,7 +10,7 @@ import {
 } from "react";
 import { buildDemoDashboard } from "@/lib/mock";
 import { appPath, isStaticSite } from "@/lib/site";
-import { EMPTY_DASHBOARD, type Dashboard } from "@/lib/types";
+import type { Dashboard } from "@/lib/types";
 
 type DataContextValue = {
   data: Dashboard;
@@ -29,9 +29,7 @@ function demoOnly(): Dashboard {
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<Dashboard>(() =>
-    isStaticSite() ? demoOnly() : EMPTY_DASHBOARD,
-  );
+  const [data, setData] = useState<Dashboard>(demoOnly);
   const [loading, setLoading] = useState(!isStaticSite());
 
   const refresh = useCallback(async (opts?: { quiet?: boolean }) => {

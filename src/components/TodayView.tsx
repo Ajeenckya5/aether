@@ -12,6 +12,7 @@ import { JournalChips } from "./JournalChips";
 import { SleepStages } from "./SleepStages";
 import { SourceBanner } from "./SourceBanner";
 import { InstallBanner, useDevice } from "./DeviceChrome";
+import { BluetoothPanel } from "./LiveHeartRate";
 import { WorkoutCard } from "./WorkoutCard";
 import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
@@ -92,6 +93,10 @@ export function TodayView() {
         </div>
       </header>
 
+      <div className="mb-4">
+        <BluetoothPanel compact />
+      </div>
+
       <WeekStrip recoveries={data.recoveries} />
 
       <div
@@ -103,7 +108,11 @@ export function TodayView() {
 
       {report && (
         <div className="mt-6">
-          <CallCard report={report} extraNotes={outdoorNotes} />
+          <CallCard
+            report={report}
+            extraNotes={outdoorNotes}
+            sample={!data.connected}
+          />
         </div>
       )}
 
@@ -111,7 +120,7 @@ export function TodayView() {
         <JournalChips journal={journal} onChange={updateJournal} />
       </div>
 
-      <AgeCard report={bioAge} variant="compact" />
+      <AgeCard report={bioAge} variant="compact" sample={!data.connected} />
 
       <section className="mt-6 rounded-[32px] border border-white/8 bg-panel px-2 pb-6 pt-4">
         <ArcMeter
@@ -121,7 +130,7 @@ export function TodayView() {
           label="Aether readiness"
           sub={
             report
-              ? `WHOOP ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
+              ? `${data.connected ? "WHOOP" : "Sample"} ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
               : recovery?.score
                 ? `HRV ${Math.round(recovery.score.hrv_rmssd_milli)} · RHR ${recovery.score.resting_heart_rate}`
                 : "Calibrating"
@@ -200,7 +209,7 @@ export function TodayView() {
         </div>
         {todayWorkouts.length === 0 ? (
           <p className="rounded-[24px] border border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted">
-            No WHOOP sessions yet today.{" "}
+            No sessions yet today.{" "}
             <Link href="/coach/live" className="text-lime">
               Track live
             </Link>{" "}
