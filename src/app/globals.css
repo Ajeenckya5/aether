@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0e0d0b;
+  --fog: #17150f;
+  --panel: #1f1c16;
+  --line: rgba(244, 239, 230, 0.1);
+  --paper: #f4efe6;
+  --muted: #a89f90;
+  --lime: #d6ff4b;
+  --ember: #ff5c2a;
+  --violet: #9d8cff;
+  --aqua: #7ad7ff;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-fog: var(--fog);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-paper: var(--paper);
+  --color-muted: var(--muted);
+  --color-lime: var(--lime);
+  --color-ember: var(--ember);
+  --color-violet: var(--violet);
+  --color-aqua: var(--aqua);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-syne);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: #070706;
+  color: var(--paper);
+  min-height: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+.font-display {
+  font-family: var(--font-syne), var(--font-manrope), sans-serif;
+}
+
+.grain {
+  position: relative;
+}
+
+.grain::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.meter-glow {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--lime) 50%, transparent));
+}
