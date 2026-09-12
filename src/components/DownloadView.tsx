@@ -1,6 +1,6 @@
 "use client";
 
-import { Apple, Download, Github, Smartphone } from "lucide-react";
+import { Apple, Download, FolderGit2, Smartphone } from "lucide-react";
 import {
   installHref,
   publicDownloadUrls,
@@ -35,7 +35,7 @@ export function DownloadView() {
         className="mt-6 flex items-center gap-4 rounded-[28px] border border-lime/35 bg-lime/12 p-5"
       >
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-lime text-ink">
-          <Github size={22} />
+          <FolderGit2 size={22} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-display text-xl text-paper">GitHub</span>
