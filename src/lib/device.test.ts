@@ -62,7 +62,7 @@ describe("device copy for phone and laptop", () => {
     expect(detectBrowser(ANDROID_CHROME)).toBe("chrome");
     const android = probeNavigator({ userAgent: ANDROID_CHROME, bluetooth: {} });
     expect(android.ios).toBe(false);
-    expect(installGuideHref(android)).toBe("/download#android");
+    expect(installGuideHref(android)).toBe("/download#android-apk");
     expect(describeHrSupport(android)).toMatch(/Chrome or Edge on Android/);
   });
 
@@ -74,9 +74,26 @@ describe("device copy for phone and laptop", () => {
     });
     expect(shell.browser).toBe("aether");
     expect(shell.nativeShell).toBe(true);
+    expect(shell.ios).toBe(true);
     expect(shell.bluetooth).toBe(true);
     expect(shell.standalone).toBe(true);
     expect(describeHrSupport(shell)).toMatch(/Core Bluetooth/);
+    expect(whoopGuideHref(shell)).toBe("/download#ios-native");
+  });
+
+  it("lets the Aether Android app pair without Chrome Web Bluetooth", () => {
+    const shell = probeNavigator({
+      userAgent:
+        "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36 AetherBand/1",
+      coarse: true,
+    });
+    expect(shell.browser).toBe("aether");
+    expect(shell.nativeShell).toBe(true);
+    expect(shell.ios).toBe(false);
+    expect(shell.bluetooth).toBe(true);
+    expect(describeHrSupport(shell)).toMatch(/native Bluetooth/);
+    expect(whoopGuideHref(shell)).toBe("/download#android-apk");
+    expect(installGuideHref(shell)).toBe("/download#android-apk");
   });
 
   it("lets Bluefy on iPhone pair like Chrome on Android", () => {

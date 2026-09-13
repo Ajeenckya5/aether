@@ -41,7 +41,8 @@ export function PrivacyView() {
             <strong className="font-medium text-paper">Bluetooth</strong> — live
             heart-rate stays on this phone. Live WHOOP bpm uses the public Heart
             Rate Bluetooth service. The iPhone app uses Core Bluetooth on this
-            device — still public Heart Rate only, never WHOOP’s private radio.
+            device; the Android APK uses native GATT — still public Heart Rate
+            only, never WHOOP’s private radio.
             Aether also asks for standard pulse-oximeter and thermometer GATT.
             Overnight Aether sleep (wake, quiet, deep rest, active rest) is
             scored on this phone from that public HR stream. WHOOP’s private

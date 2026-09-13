@@ -8,6 +8,7 @@ export type DownloadUrls = {
   zipUrl: string;
   cloneUrl: string;
   releasesUrl: string;
+  apkUrl: string;
   playStoreUrl: string;
   appStoreUrl: string;
 };
@@ -35,6 +36,7 @@ export function buildDownloadUrls(input: {
     zipUrl: `${repoUrl}/archive/refs/heads/${branch}.zip`,
     cloneUrl: `${repoUrl}.git`,
     releasesUrl: `${repoUrl}/releases`,
+    apkUrl: `${repoUrl}/releases/download/android-sideload/Aether.apk`,
     playStoreUrl: nonempty(input.playStoreUrl) ?? "",
     appStoreUrl: nonempty(input.appStoreUrl) ?? "",
   };

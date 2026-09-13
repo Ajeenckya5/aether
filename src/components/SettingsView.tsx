@@ -97,7 +97,8 @@ export function SettingsView() {
           Tap Connect WHOOP over Bluetooth and pick the band. After that,
           Aether keeps the WHOOP connected on this phone until you tap
           Disconnect. Live bpm uses the public Heart Rate service. On iPhone,
-          Safari cannot pair — use the Aether iPhone app (Xcode) or Bluefy.
+          Safari cannot pair — use the Aether iPhone app (Xcode) or Bluefy. On
+          Android, prefer the sideload APK so overnight Bluetooth can stay up.
           Leave Aether open overnight to score Aether sleep from that stream.
           WHOOP’s own recovery score, official REM/deep, SpO2, and skin temp
           still need their private radio or official API.
@@ -234,7 +235,7 @@ export function SettingsView() {
         </p>
         <ul className="mt-3 list-disc space-y-2 pl-4">
           <li>iPhone: Safari or Chrome → Share → Add to Home Screen. Pair WHOOP in Bluefy so the band stays connected.</li>
-          <li>Android: Chrome Install app, or another browser’s Add to Home Screen. Then Connect WHOOP — Aether keeps that link.</li>
+          <li>Android: sideload the Aether APK (not Play Store) for overnight Bluetooth, or Chrome Install app for live bpm. Then Connect WHOOP.</li>
           <li>After the icon is on the phone, open that — not a browser tab.</li>
         </ul>
         <div className="mt-3">

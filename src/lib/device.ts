@@ -48,10 +48,11 @@ export function probeNavigator(input: {
     nativeShell: input.nativeShell,
     userAgent: ua,
   });
+  const android = /Android/i.test(ua);
   const ios =
-    nativeShell ||
-    /iP(hone|ad|od)/.test(ua) ||
-    (/(Mac OS X)/.test(ua) && input.coarse === true);
+    !android &&
+    (/iP(hone|ad|od)/.test(ua) ||
+      (/(Mac OS X)/.test(ua) && input.coarse === true));
   return {
     bluetooth: Boolean(input.bluetooth) || nativeShell,
     geolocation: Boolean(input.geolocation),
@@ -68,6 +69,9 @@ export function describeHrSupport(
   device: Pick<DeviceProbe, "bluetooth" | "ios" | "browser" | "nativeShell">,
 ): string {
   if (device.nativeShell || device.browser === "aether") {
+    if (!device.ios) {
+      return "This Aether Android app pairs your WHOOP with native Bluetooth. Chrome is not the Bluetooth stack. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
+    }
     return "This Aether iPhone app pairs your WHOOP with Core Bluetooth. Safari is not involved. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
   }
   if (device.ios && device.bluetooth) {
@@ -102,13 +106,14 @@ export function installGuideHref(
   if (device.ios && device.browser === "chrome") return "/download#ios-chrome";
   if (device.ios) return "/download#ios";
   if (device.browser === "safari") return "/download#android-safari";
-  return "/download#android";
+  return "/download#android-apk";
 }
 
 export function whoopGuideHref(
   device: Pick<DeviceProbe, "ios" | "bluetooth" | "nativeShell">,
 ): string {
-  if (device.nativeShell) return "/download#ios-native";
+  if (device.nativeShell && device.ios) return "/download#ios-native";
+  if (device.nativeShell) return "/download#android-apk";
   if (device.ios && !device.bluetooth) return "/download#ios-native";
   return "/download#bluetooth";
 }
@@ -119,7 +124,7 @@ export function installGuideLabel(
   if (device.ios && device.browser === "chrome") return "Show Chrome iPhone steps";
   if (device.ios) return "Show Safari iPhone steps";
   if (device.browser === "safari") return "Show Android Safari steps";
-  return "Show Android Chrome steps";
+  return "Show Android APK steps";
 }
 
 export function installBannerCopy(
@@ -134,7 +139,7 @@ export function installBannerCopy(
   if (device.browser === "safari") {
     return "Apple does not ship Safari on Android. In this Safari-like browser: menu → Add to Home Screen, then open the Aether icon.";
   }
-  return "Install Aether on this phone so it opens from the home screen, not a browser tab.";
+  return "Install the Aether APK from GitHub (not Play Store) so Bluetooth can stay up overnight. Chrome Install app is the website-only fallback.";
 }
 
 export function readDevice(): DeviceProbe {

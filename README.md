@@ -13,6 +13,7 @@ Your live connection is **Bluetooth on this phone**. Pick the WHOOP band (public
 Aether is a **phone app**. After you install it, open the home-screen icon. Do not keep using it as a laptop dashboard.
 
 **App:** [https://ajeenckya5.github.io/aether](https://ajeenckya5.github.io/aether)  
+**Android APK (sideload, not Play Store):** [Aether.apk](https://github.com/Ajeenckya5/aether/releases/download/android-sideload/Aether.apk)  
 **Source (optional):** [github.com/Ajeenckya5/aether](https://github.com/Ajeenckya5/aether) · [ZIP](https://github.com/Ajeenckya5/aether/archive/refs/heads/master.zip)
 
 ### iPhone
@@ -24,9 +25,20 @@ Aether is a **phone app**. After you install it, open the home-screen icon. Do n
 3. Tap **Add to Home Screen**, then **Add**.
 4. Tap the **Aether** icon.
 
-Live WHOOP Bluetooth does not work in iPhone browsers. Use **Practice pulse**, or pair in Chrome on Android or a laptop.
+Live WHOOP Bluetooth does not work in iPhone browsers. Install the Aether iPhone app from Xcode (`native/ios/AetherBand`) or use Bluefy. Practice pulse still works in Safari.
 
 ### Android
+
+**APK (sideload — not Play Store):**
+
+1. On the phone, download [Aether.apk](https://github.com/Ajeenckya5/aether/releases/download/android-sideload/Aether.apk).
+2. Allow install from Chrome or Files if Android asks.
+3. Open the **Aether** icon. Allow Bluetooth (and notifications for overnight keep-alive).
+4. Disconnect the official WHOOP app, then Connect WHOOP.
+
+There is no Play Store listing. Play Protect may warn because this is a GitHub sideload build.
+
+**Chrome website app:**
 
 1. On the phone, open [https://ajeenckya5.github.io/aether](https://ajeenckya5.github.io/aether) in **Chrome**.
 2. Tap **Install** / Chrome menu → **Install app** or **Add to Home screen**.
@@ -34,9 +46,11 @@ Live WHOOP Bluetooth does not work in iPhone browsers. Use **Practice pulse**, o
 4. Open **Download** or **Settings** → **Connect over Bluetooth**.
 5. Wear the WHOOP band (or a Polar / Garmin / Wahoo strap). Pick it in the list. Live BPM uses the public Heart Rate service.
 
+Chrome can do live bpm. Overnight Aether sleep is more reliable in the APK (native GATT + a keep-alive notice) than in a paused Chrome tab.
+
 ### Live Bluetooth
 
-Aether connects over Bluetooth. Live bpm is the public Bluetooth Heart Rate profile (WHOOP, Polar, Garmin, Wahoo) on Android Chrome or laptop Chrome, from the home-screen app. Overnight recovery/sleep packets use WHOOP’s private radio — a native iOS companion can parse those; this website cannot.
+Aether connects over Bluetooth. Live bpm is the public Bluetooth Heart Rate profile (WHOOP, Polar, Garmin, Wahoo). Overnight **Aether sleep** (wake / quiet / deep rest / active rest) is scored on the phone from that public HR stream if you leave the native app connected. It is not WHOOP REM/deep or WHOOP recovery. WHOOP’s private radio stays private.
 
 ### Run the source (only if you need files)
 
@@ -65,13 +79,13 @@ WHOOP 5.0 still does not expose fitness-fatigue or ACWR. Healthspan and Stress s
 
 WHOOP exposes a **public** Heart Rate GATT service for live bpm. Aether uses that.
 
-Overnight recovery, sleep, and strain history use a **private** encrypted WHOOP radio. Native iOS apps (CoreBluetooth + a custom parser) can talk to that. A website cannot, and Aether will not copy that unpublished protocol.
+Overnight recovery, sleep, and strain history use a **private** encrypted WHOOP radio. Aether does not speak that unpublished protocol. The iPhone Xcode app and the Android sideload APK use **public Heart Rate GATT** only, then score **Aether sleep** from overnight bpm/HRV if you leave them connected.
 
 1. Install the phone app (home screen) or open Chrome on a laptop/Android.
 2. Wear the WHOOP band.
 3. Settings → **Connect over Bluetooth**, pick WHOOP.
 
-If the band does not offer public Heart Rate in the picker, tap **Scan all devices**. iPhone Safari/Chrome have no Web Bluetooth — pair from Android Chrome or a laptop.
+If the band does not offer public Heart Rate in the picker, tap **Scan all devices**. iPhone Safari/Chrome have no Web Bluetooth — use the Xcode Aether app, Bluefy, or the Android APK / Chrome.
 
 ## Run it
 

@@ -945,7 +945,9 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
         <h2 className="font-display mt-1 text-xl text-paper">Connect your band</h2>
         <p className="mt-2 text-sm text-paper/80">
           {device.nativeShell
-            ? "This is the Aether iPhone app. Tap Connect — iOS Core Bluetooth talks to the band. Safari is not in the path. Leave the app open overnight to log Aether sleep from public heart rate."
+            ? device.ios
+              ? "This is the Aether iPhone app. Tap Connect — iOS Core Bluetooth talks to the band. Safari is not in the path. Leave the app open overnight to log Aether sleep from public heart rate."
+              : "This is the Aether Android app. Tap Connect — native Bluetooth talks to the band. Chrome is not the Bluetooth stack. Leave the app open overnight to log Aether sleep from public heart rate."
             : canBle
             ? "Tap Connect once. Aether remembers the band and keeps it connected — including after you switch tabs or reopen the app. Leave this page open overnight for Aether sleep from public heart rate. SpO2 and skin temp appear only if the band exposes those standard Bluetooth services. If they stay blank, tap Connect once more so the browser can grant them."
             : "Safari cannot pair the band. Install the Aether iPhone app (Xcode on a Mac) so Bluetooth runs in our app. Bluefy is the no-Mac fallback. Camera pulse is optical bpm from this phone, not the WHOOP."}

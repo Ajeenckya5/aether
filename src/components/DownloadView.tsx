@@ -20,9 +20,10 @@ export function DownloadView() {
       <h1 className="font-display mt-2 text-4xl">Install Aether on this phone</h1>
       <p className="mt-3 max-w-xl text-sm text-muted">
         After install, open the home-screen icon. That is the website app.
-        Connect your WHOOP over Bluetooth for live bpm. Safari and Chrome on
-        iPhone cannot do Bluetooth — install the Aether iPhone app (below) or
-        use Bluefy.
+        Connect your WHOOP over Bluetooth for live bpm. On Android, sideload
+        the Aether APK (not Play Store) so overnight Bluetooth can stay up.
+        Safari and Chrome on iPhone cannot do Bluetooth — install the Aether
+        iPhone app (below) or use Bluefy.
       </p>
 
       {device.standalone && (
@@ -207,6 +208,50 @@ export function DownloadView() {
       </section>
 
       <section
+        id="android-apk"
+        className={`mt-4 rounded-[28px] border bg-panel p-5 ${
+          !device.ios ? "border-lime/40" : "border-white/8"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/8">
+            <Smartphone size={20} />
+          </span>
+          <div>
+            <h2 className="font-display text-xl">Android — Aether APK</h2>
+            <p className="text-xs uppercase tracking-widest text-muted">
+              Sideload · native Bluetooth · not Play Store
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted">
+          There is no Play Store listing. This is our own Android app: native
+          Bluetooth GATT talks to the WHOOP (public Heart Rate only), then
+          shows Aether inside that app. Leave it connected overnight for Aether
+          sleep. Chrome Install app still works for live bpm, but the WebView
+          can pause — the APK keeps a foreground keep-alive.
+        </p>
+        <a
+          href={urls.apkUrl}
+          className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
+        >
+          <Download size={16} />
+          Get Aether.apk
+        </a>
+        <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
+          <li>On the Android phone, tap <strong className="font-medium text-paper">Get Aether.apk</strong> (GitHub Release, not Google Play).</li>
+          <li>If Chrome or Files blocks it, allow the download, then allow install from that app in Settings.</li>
+          <li>Open the <strong className="font-medium text-paper">Aether</strong> icon. Allow Bluetooth. Allow notifications if you want overnight keep-alive.</li>
+          <li>Disconnect the official WHOOP app, then tap Connect WHOOP.</li>
+        </ol>
+        <p className="mt-3 text-xs text-muted">
+          Play Protect may warn because this is a sideload build, not a store
+          listing. The APK is built by GitHub Actions from this repo. Uninstall
+          any older Aether sideload first if Android refuses to update.
+        </p>
+      </section>
+
+      <section
         id="android"
         className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5"
       >
@@ -215,14 +260,14 @@ export function DownloadView() {
             <Smartphone size={20} />
           </span>
           <div>
-            <h2 className="font-display text-xl">Android — the app</h2>
+            <h2 className="font-display text-xl">Android — Chrome website app</h2>
             <p className="text-xs uppercase tracking-widest text-muted">
               Chrome Install app · not Play Store
             </p>
           </div>
         </div>
         <p className="mt-3 text-sm text-muted">
-          There is no Play Store listing. Chrome&apos;s <strong className="font-medium text-paper">Install app</strong> puts Aether on the home screen like any other app.
+          There is no Play Store listing. Chrome&apos;s <strong className="font-medium text-paper">Install app</strong> puts the website on the home screen. Live bpm works in Chrome. For overnight Aether sleep, prefer the APK above so Bluetooth is not paused with the tab.
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
           <li>On the Android phone, open this page in <strong className="font-medium text-paper">Chrome</strong>.</li>

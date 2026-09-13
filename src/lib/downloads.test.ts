@@ -13,6 +13,9 @@ describe("download links", () => {
       "https://github.com/Ajeenckya5/aether/archive/refs/heads/master.zip",
     );
     expect(urls.cloneUrl).toBe("https://github.com/Ajeenckya5/aether.git");
+    expect(urls.apkUrl).toBe(
+      "https://github.com/Ajeenckya5/aether/releases/download/android-sideload/Aether.apk",
+    );
   });
 
   it("uses GitHub as source, and the live app URL for phone install until stores exist", () => {

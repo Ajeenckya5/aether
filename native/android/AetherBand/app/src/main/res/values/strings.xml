@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Aether</string>
+  <color name="ink">#0e0d0b</color>
+  <color name="lime">#d6ff4b</color>
+</resources>
