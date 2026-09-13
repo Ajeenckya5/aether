@@ -13,6 +13,13 @@ const overnight: OvernightSummary = {
   end: Date.parse("2026-09-11T09:40:00.000Z"),
   restMs: 6.5 * 3600_000,
   awakeMs: 40 * 60_000,
+  quietMs: 6.5 * 3600_000,
+  deepMs: 0,
+  activeMs: 0,
+  cycles: 0,
+  disturbances: 0,
+  staged: false,
+  epochs: [],
   rmssd: 91,
   restHr: 51,
   recovery: 74,
@@ -77,7 +84,7 @@ describe("live WHOOP physiology from public Heart Rate GATT", () => {
     expect(next.sleeps[0]?.id).toBe(AETHER_OVERNIGHT_SLEEP_ID);
     expect(next.sleeps[0]?.score?.stage_summary.total_rem_sleep_time_milli).toBe(0);
     expect(next.sleeps[0]?.score?.stage_summary.total_light_sleep_time_milli).toBe(
-      overnight.restMs,
+      overnight.quietMs,
     );
     expect(next.recoveries[0]?.sleep_id).toBe(AETHER_OVERNIGHT_SLEEP_ID);
     expect(next.recoveries[0]?.score?.spo2_percentage).toBe(97.1);
@@ -85,6 +92,39 @@ describe("live WHOOP physiology from public Heart Rate GATT", () => {
     expect(next.recoveries[0]?.score?.recovery_score).toBe(
       demo.recoveries[0]?.score?.recovery_score,
     );
+  });
+
+  it("maps Aether sleep architecture when the overnight log is staged", () => {
+    const demo = buildDemoDashboard();
+    const staged: OvernightSummary = {
+      ...overnight,
+      quietMs: 3 * 3600_000,
+      deepMs: 2 * 3600_000,
+      activeMs: 1.5 * 3600_000,
+      restMs: 6.5 * 3600_000,
+      cycles: 3,
+      disturbances: 1,
+      staged: true,
+      epochs: [{ t: overnight.start, durMs: 2 * 3600_000, phase: "deep" }],
+    };
+    const next = overlayDashboard(demo, {
+      rmssd: 91,
+      sdnn: 72,
+      restHr: 51,
+      bpm: 52,
+      batteryPct: 80,
+      rrCount: 40,
+      deviceName: "WHOOP 4.0",
+      spo2: null,
+      skinTempC: null,
+      overnight: staged,
+      at: 1,
+    });
+    expect(next.sleeps[0]?.id).toBe(AETHER_OVERNIGHT_SLEEP_ID);
+    expect(next.sleeps[0]?.score?.stage_summary.total_light_sleep_time_milli).toBe(staged.quietMs);
+    expect(next.sleeps[0]?.score?.stage_summary.total_slow_wave_sleep_time_milli).toBe(staged.deepMs);
+    expect(next.sleeps[0]?.score?.stage_summary.total_rem_sleep_time_milli).toBe(staged.activeMs);
+    expect(next.sleeps[0]?.score?.stage_summary.sleep_cycle_count).toBe(3);
   });
 
   it("does not replace official WHOOP sleep when the account is connected", () => {

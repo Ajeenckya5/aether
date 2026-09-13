@@ -98,9 +98,9 @@ export function SettingsView() {
           Aether keeps the WHOOP connected on this phone until you tap
           Disconnect. Live bpm uses the public Heart Rate service. On iPhone,
           Safari cannot pair — use the Aether iPhone app (Xcode) or Bluefy.
-          Leave Aether open overnight to log rest vs wake from that stream. WHOOP’s own
-          recovery score, REM/deep, SpO2, and skin temp still need their
-          private radio or official API.
+          Leave Aether open overnight to score Aether sleep from that stream.
+          WHOOP’s own recovery score, official REM/deep, SpO2, and skin temp
+          still need their private radio or official API.
         </p>
       </section>
 

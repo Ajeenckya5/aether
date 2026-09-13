@@ -118,7 +118,7 @@ function withOvernightVitals(live: BandLive): BandLive {
   return overnight === live.overnight ? live : { ...live, overnight };
 }
 
-/** Put live-band vitals onto today. Overnight rest/wake replaces sample sleep only. */
+/** Put live-band vitals onto today. Overnight Aether sleep replaces sample sleep only. */
 export function overlayDashboard(data: Dashboard, live: BandLive | null): Dashboard {
   if (!hasBandPhysiology(live) || !live) return data;
   const band = withOvernightVitals(live);

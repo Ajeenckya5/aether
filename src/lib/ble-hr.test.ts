@@ -92,6 +92,6 @@ describe("Web Bluetooth chooser", () => {
     expect(isWhoopBandName("Polar H10")).toBe(false);
     expect(WHOOP_PUBLIC_HR).toMatch(/public Heart Rate/);
     expect(WHOOP_PUBLIC_HR).toMatch(/pulse-oximeter/);
-    expect(WHOOP_PUBLIC_HR).toMatch(/rest\/wake/);
+    expect(WHOOP_PUBLIC_HR).toMatch(/Aether sleep/);
   });
 });

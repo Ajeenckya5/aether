@@ -33,7 +33,7 @@ export function SourceBanner() {
   if (hr.overnight) {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
-        Aether overnight · rest from public HR · not WHOOP stages
+        Aether overnight · Aether sleep from public HR · not WHOOP stages
       </p>
     );
   }
@@ -46,7 +46,7 @@ export function SourceBanner() {
   }
   return (
     <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
-      Sample recovery · pair WHOOP for live HRV, RHR, and overnight rest log
+      Sample recovery · pair WHOOP for live HRV, RHR, and Aether sleep
     </p>
   );
 }

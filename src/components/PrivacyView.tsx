@@ -29,7 +29,7 @@ export function PrivacyView() {
         <h2 className="font-display text-xl text-paper">Stays on this device</h2>
         <ul className="mt-3 list-disc space-y-2 pl-4 text-muted">
           <li>Journal tags, athlete name/age/sex, height, weight, optional systolic BP, custom workouts, live recordings, GPS tracks.</li>
-          <li>Bluetooth heart-rate samples, overnight rest log, HRV, and resting HR. They are not uploaded.</li>
+          <li>Bluetooth heart-rate samples, Aether sleep log, HRV, and resting HR. They are not uploaded.</li>
           <li>Saved city for weather (rounded, not a street pin).</li>
         </ul>
       </section>
@@ -42,9 +42,11 @@ export function PrivacyView() {
             heart-rate stays on this phone. Live WHOOP bpm uses the public Heart
             Rate Bluetooth service. The iPhone app uses Core Bluetooth on this
             device — still public Heart Rate only, never WHOOP’s private radio.
-            and thermometer GATT. Overnight rest vs wake is logged on this
-            phone from that public HR stream. WHOOP’s private overnight packets
-            never leave the band except through the official WHOOP app.
+            Aether also asks for standard pulse-oximeter and thermometer GATT.
+            Overnight Aether sleep (wake, quiet, deep rest, active rest) is
+            scored on this phone from that public HR stream. WHOOP’s private
+            overnight packets never leave the band except through the official
+            WHOOP app.
           </li>
           <li>
             <strong className="font-medium text-paper">Weather</strong> — this browser talks to Open-Meteo with a rounded lat/lon (~1 km). GitHub never sees the pin. City search sends only the letters you type.

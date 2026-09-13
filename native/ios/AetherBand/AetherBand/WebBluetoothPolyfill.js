@@ -49,11 +49,13 @@
     else wait.reject(namedError(errorName || "NetworkError", errorMessage || "Bluetooth failed."));
   };
 
-  function emitChar(uuid, data) {
+  function emitChar(uuid, data, at) {
     const key = String(uuid || "").toLowerCase();
+    const stamped = at != null && isFinite(Number(at)) ? Number(at) : Date.now();
     chars.forEach(function (char) {
       if (char._keys.indexOf(key) === -1) return;
       char.value = b64ToView(data);
+      char._aetherAt = stamped;
       const ev = new Event("characteristicvaluechanged");
       Object.defineProperty(ev, "target", { value: char });
       char._listeners.forEach(function (fn) {
@@ -69,7 +71,7 @@
   window.__aetherBleEvent = function (type, detail) {
     detail = detail || {};
     if (type === "notify") {
-      emitChar(detail.uuid, detail.data);
+      emitChar(detail.uuid, detail.data, detail.t);
       return;
     }
     if (type === "disconnected") {
@@ -87,7 +89,7 @@
 
   window.__aetherBleFlush = function (packets) {
     (packets || []).forEach(function (packet) {
-      emitChar(packet.uuid, packet.data);
+      emitChar(packet.uuid, packet.data, packet.t);
     });
   };
 

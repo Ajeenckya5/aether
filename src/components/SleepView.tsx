@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { formatDate, formatHours, formatTime } from "@/lib/format";
-import { isAetherOvernightSleep } from "@/lib/overnight";
+import { isAetherOvernightSleep, scoredSleepMs } from "@/lib/overnight";
 import { useLab } from "./useLab";
+import { useLiveHeartRate } from "./LiveHeartRate";
 import { isRestWakeStages, SleepStages } from "./SleepStages";
 import { SourceBanner } from "./SourceBanner";
 
 export function SleepView() {
   const { data } = useLab();
+  const hr = useLiveHeartRate();
   const latest = data.sleeps.find((s) => !s.nap) ?? data.sleeps[0];
   const restWake = latest?.score ? isRestWakeStages(latest.score.stage_summary) : false;
   const fromBand = isAetherOvernightSleep(latest?.id);
+  const epochs = fromBand ? (hr.overnight?.epochs ?? []) : [];
 
   return (
     <div className="px-5 pt-6 lg:px-2">
@@ -20,23 +23,31 @@ export function SleepView() {
       {latest?.score ? (
         <div className="mt-6 rounded-[32px] bg-violet/12 p-5">
           <p className="text-[11px] uppercase tracking-[0.18em] text-violet">
-            {fromBand ? "Aether overnight" : "Performance"}
+            {fromBand ? (restWake ? "Aether overnight" : "Aether sleep") : "Performance"}
           </p>
           <p className="font-display mt-2 text-6xl leading-none">
             {latest.score.sleep_performance_percentage}%
           </p>
           <p className="mt-2 text-sm text-paper/70">
-            {formatHours(latest.score.stage_summary.total_in_bed_time_milli)}{" "}
-            {fromBand ? "quiet HR window" : "in bed"} · {formatTime(latest.start)} –{" "}
+            {formatHours(
+              scoredSleepMs(latest.score.stage_summary, fromBand && !restWake),
+            )}{" "}
+            {fromBand ? (restWake ? "quiet HR window" : "asleep") : "in bed"} · {formatTime(latest.start)} –{" "}
             {formatTime(latest.end)}
           </p>
-          {restWake ? (
+          {fromBand ? (
             <p className="mt-2 text-xs text-muted">
-              Rest vs wake from public heart rate. Not WHOOP REM / light / deep.
+              {restWake
+                ? "Rest vs wake from public heart rate. Leave Aether connected longer for Aether sleep."
+                : "Aether sleep from public heart rate and HRV. Not WHOOP REM / light / deep, not a lab study."}
             </p>
           ) : null}
           <div className="mt-5">
-            <SleepStages stages={latest.score.stage_summary} />
+            <SleepStages
+              stages={latest.score.stage_summary}
+              source={fromBand ? "aether" : "whoop"}
+              epochs={epochs}
+            />
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
             <div>
@@ -62,7 +73,7 @@ export function SleepView() {
             ) : (
               <div>
                 <p className="text-muted">Stages</p>
-                <p>{restWake ? "Rest / wake" : "Full"}</p>
+                <p>{fromBand ? (restWake ? "Rest / wake" : "Aether") : "Full"}</p>
               </div>
             )}
           </div>

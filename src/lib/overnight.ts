@@ -1,3 +1,8 @@
+import {
+  analyzeAetherSleep,
+  hasAetherSleepArchitecture,
+  type AetherSleepEpoch,
+} from "./aether-sleep";
 import type { Sleep } from "./types";
 
 export const NIGHT_KEY = "aether-band-night-v1";
@@ -7,7 +12,6 @@ const MAX_AGE_MS = 16 * 3600_000;
 const SUMMARY_WINDOW_MS = 14 * 3600_000;
 const MIN_REST_MS = 45 * 60_000;
 const MIN_POINTS = 40;
-const MAX_GAP_MS = 180_000;
 const NEED_MS = 7.5 * 3600_000;
 
 export type NightPoint = {
@@ -21,6 +25,13 @@ export type OvernightSummary = {
   end: number;
   restMs: number;
   awakeMs: number;
+  quietMs: number;
+  deepMs: number;
+  activeMs: number;
+  cycles: number;
+  disturbances: number;
+  staged: boolean;
+  epochs: AetherSleepEpoch[];
   rmssd: number | null;
   restHr: number | null;
   recovery: number | null;
@@ -33,6 +44,10 @@ export type OvernightProgress = {
   restMs: number;
   durationMs: number;
   pointCount: number;
+  quietMs: number;
+  deepMs: number;
+  activeMs: number;
+  staged: boolean;
 };
 
 export function appendNightPoint(
@@ -40,37 +55,15 @@ export function appendNightPoint(
   next: NightPoint,
   minGapMs = 20_000,
 ): NightPoint[] {
-  const last = points[points.length - 1];
-  if (last && next.t - last.t < minGapMs) return points;
-  return [...points, next].filter((p) => next.t - p.t <= MAX_AGE_MS);
-}
-
-function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)] ?? 0;
-}
-
-function quietRestHr(bpmSamples: number[]): number | null {
-  const rest = bpmSamples.filter((bpm) => bpm >= 38 && bpm <= 90);
-  if (rest.length < 12) return null;
-  const sorted = [...rest].sort((a, b) => a - b);
-  return Math.round(sorted[Math.floor(sorted.length * 0.1)]!);
-}
-
-function restCutBpm(bpms: number[]): { restHr: number | null; restCut: number } {
-  const restHr = quietRestHr(bpms);
-  return { restHr, restCut: restHr != null ? restHr + 12 : 70 };
-}
-
-function splitRestAwake(window: NightPoint[], restCut: number): { restMs: number; awakeMs: number } {
-  let restMs = 0;
-  let awakeMs = 0;
-  for (let i = 1; i < window.length; i += 1) {
-    const dt = Math.min(window[i]!.t - window[i - 1]!.t, MAX_GAP_MS);
-    if (window[i]!.bpm <= restCut && window[i]!.bpm >= 38) restMs += dt;
-    else awakeMs += dt;
+  const merged = [...points, next].sort((a, b) => a.t - b.t);
+  const out: NightPoint[] = [];
+  for (const point of merged) {
+    const prev = out[out.length - 1];
+    if (prev && point.t - prev.t < minGapMs) continue;
+    out.push(point);
   }
-  return { restMs, awakeMs };
+  const newest = out[out.length - 1]?.t ?? next.t;
+  return out.filter((point) => newest - point.t <= MAX_AGE_MS);
 }
 
 /** Quiet vs active heart rate while the public HR stream stayed open — not WHOOP stages. */
@@ -78,27 +71,28 @@ export function summarizeOvernight(
   points: NightPoint[],
   now = Date.now(),
 ): OvernightSummary | null {
-  const window = points.filter((p) => now - p.t <= SUMMARY_WINDOW_MS && p.t <= now);
-  if (window.length < MIN_POINTS) return null;
-  const bpms = window.map((p) => p.bpm);
-  const { restHr, restCut } = restCutBpm(bpms);
-  const { restMs, awakeMs } = splitRestAwake(window, restCut);
-  if (restMs < MIN_REST_MS) return null;
-  const hrvSamples = window
-    .map((p) => p.rmssd)
-    .filter((v): v is number => v != null);
-  const rmssd = hrvSamples.length ? Math.round(median(hrvSamples)) : null;
+  const analysis = analyzeAetherSleep(points, now, SUMMARY_WINDOW_MS);
+  if (!analysis) return null;
+  if (analysis.pointCount < MIN_POINTS) return null;
+  if (analysis.restMs < MIN_REST_MS) return null;
   return {
-    start: window[0]!.t,
-    end: window[window.length - 1]!.t,
-    restMs,
-    awakeMs,
-    rmssd,
-    restHr,
-    recovery: overnightRecovery(rmssd, restHr, restMs),
+    start: analysis.start,
+    end: analysis.end,
+    restMs: analysis.restMs,
+    awakeMs: analysis.awakeMs,
+    quietMs: analysis.quietMs,
+    deepMs: analysis.deepMs,
+    activeMs: analysis.activeMs,
+    cycles: analysis.cycles,
+    disturbances: analysis.disturbances,
+    staged: analysis.staged,
+    epochs: analysis.epochs,
+    rmssd: analysis.rmssd,
+    restHr: analysis.restHr,
+    recovery: overnightRecovery(analysis.rmssd, analysis.restHr, analysis.restMs),
     spo2: null,
     skinTempC: null,
-    pointCount: window.length,
+    pointCount: analysis.pointCount,
   };
 }
 
@@ -106,16 +100,27 @@ export function overnightProgress(
   points: NightPoint[],
   now = Date.now(),
 ): OvernightProgress {
-  const window = points.filter((p) => now - p.t <= SUMMARY_WINDOW_MS && p.t <= now);
-  if (window.length < 2) {
-    return { restMs: 0, durationMs: 0, pointCount: window.length };
+  const analysis = analyzeAetherSleep(points, now, SUMMARY_WINDOW_MS);
+  if (!analysis) {
+    return {
+      restMs: 0,
+      durationMs: 0,
+      pointCount: points.filter((p) => now - p.t <= SUMMARY_WINDOW_MS && p.t <= now)
+        .length,
+      quietMs: 0,
+      deepMs: 0,
+      activeMs: 0,
+      staged: false,
+    };
   }
-  const { restCut } = restCutBpm(window.map((p) => p.bpm));
-  const { restMs, awakeMs } = splitRestAwake(window, restCut);
   return {
-    restMs,
-    durationMs: restMs + awakeMs,
-    pointCount: window.length,
+    restMs: analysis.restMs,
+    durationMs: analysis.restMs + analysis.awakeMs,
+    pointCount: analysis.pointCount,
+    quietMs: analysis.quietMs,
+    deepMs: analysis.deepMs,
+    activeMs: analysis.activeMs,
+    staged: analysis.staged,
   };
 }
 
@@ -164,11 +169,21 @@ export function parseOvernightSummary(raw: unknown): OvernightSummary | null {
   const row = raw as Partial<OvernightSummary>;
   if (typeof row.start !== "number" || typeof row.end !== "number") return null;
   if (typeof row.restMs !== "number" || typeof row.awakeMs !== "number") return null;
+  const quietMs = typeof row.quietMs === "number" ? row.quietMs : row.restMs;
+  const deepMs = typeof row.deepMs === "number" ? row.deepMs : 0;
+  const activeMs = typeof row.activeMs === "number" ? row.activeMs : 0;
   return {
     start: row.start,
     end: row.end,
     restMs: row.restMs,
     awakeMs: row.awakeMs,
+    quietMs,
+    deepMs,
+    activeMs,
+    cycles: typeof row.cycles === "number" ? row.cycles : 0,
+    disturbances: typeof row.disturbances === "number" ? row.disturbances : 0,
+    staged: Boolean(row.staged) || hasAetherSleepArchitecture({ deepMs, activeMs, staged: row.staged }),
+    epochs: parseEpochs(row.epochs),
     rmssd: numOrNull(row.rmssd),
     restHr: numOrNull(row.restHr),
     recovery: numOrNull(row.recovery),
@@ -231,11 +246,11 @@ export function sleepFromOvernight(
         total_in_bed_time_milli: inBed,
         total_awake_time_milli: summary.awakeMs,
         total_no_data_time_milli: 0,
-        total_light_sleep_time_milli: summary.restMs,
-        total_slow_wave_sleep_time_milli: 0,
-        total_rem_sleep_time_milli: 0,
-        sleep_cycle_count: 0,
-        disturbance_count: 0,
+        total_light_sleep_time_milli: summary.quietMs,
+        total_slow_wave_sleep_time_milli: summary.deepMs,
+        total_rem_sleep_time_milli: summary.activeMs,
+        sleep_cycle_count: summary.cycles,
+        disturbance_count: summary.disturbances,
       },
       sleep_needed: {
         baseline_milli: NEED_MS,
@@ -253,6 +268,36 @@ export function sleepFromOvernight(
 
 export function isAetherOvernightSleep(id: string | null | undefined): boolean {
   return id === AETHER_OVERNIGHT_SLEEP_ID;
+}
+
+export function scoredSleepMs(stages: {
+  total_in_bed_time_milli: number;
+  total_light_sleep_time_milli: number;
+  total_slow_wave_sleep_time_milli: number;
+  total_rem_sleep_time_milli: number;
+  total_awake_time_milli: number;
+}, asleep: boolean): number {
+  if (!asleep) return stages.total_in_bed_time_milli;
+  const tst =
+    stages.total_light_sleep_time_milli +
+    stages.total_slow_wave_sleep_time_milli +
+    stages.total_rem_sleep_time_milli;
+  return tst > 0 ? tst : stages.total_in_bed_time_milli - stages.total_awake_time_milli;
+}
+
+function parseEpochs(raw: unknown): AetherSleepEpoch[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const epoch = row as Partial<AetherSleepEpoch>;
+    if (typeof epoch.t !== "number" || typeof epoch.durMs !== "number") return [];
+    if (!isPhase(epoch.phase)) return [];
+    return [{ t: epoch.t, durMs: epoch.durMs, phase: epoch.phase }];
+  });
+}
+
+function isPhase(value: unknown): value is AetherSleepEpoch["phase"] {
+  return value === "wake" || value === "quiet" || value === "deep" || value === "active";
 }
 
 function numOrNull(value: unknown): number | null {

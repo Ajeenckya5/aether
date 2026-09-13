@@ -18,7 +18,7 @@ import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
 import { greetingName, hasPersonalBody } from "@/lib/athlete";
 import { preferPhoneShell } from "@/lib/device";
-import { isAetherOvernightSleep } from "@/lib/overnight";
+import { isAetherOvernightSleep, scoredSleepMs } from "@/lib/overnight";
 import { isRestWakeStages } from "./SleepStages";
 
 function recoveryColor(score: number) {
@@ -136,7 +136,9 @@ export function TodayView() {
           label="Aether readiness"
           sub={
             hr.overnight
-              ? `Overnight from your WHOOP HR · rest ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
+              ? hr.overnight.staged
+                ? `Aether sleep · ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
+                : `Overnight from your WHOOP HR · rest ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
               : fromBand
               ? `Your WHOOP · HRV ${hr.rmssd ?? "…"} · RHR ${hr.restHr ?? "…"}`
               : report
@@ -161,9 +163,11 @@ export function TodayView() {
           <p className="font-display mt-2 text-4xl leading-none">{sleepPct}%</p>
           <p className="mt-2 text-xs text-paper/70">
             {sleep?.score
-              ? formatHours(sleep.score.stage_summary.total_in_bed_time_milli)
+              ? formatHours(
+                  scoredSleepMs(sleep.score.stage_summary, overnightSleep && !restWake),
+                )
               : "—"}{" "}
-            {overnightSleep ? "quiet HR window" : "in bed"}
+            {overnightSleep ? (restWake ? "quiet HR window" : "asleep") : "in bed"}
           </p>
         </Link>
       </div>
@@ -237,12 +241,18 @@ export function TodayView() {
               Open
             </Link>
           </div>
-          {restWake ? (
+          {overnightSleep ? (
             <p className="mb-3 text-xs text-muted">
-              Rest vs wake from your WHOOP’s public heart rate. Not WHOOP REM / light / deep.
+              {restWake
+                ? "Rest vs wake from your WHOOP’s public heart rate. Leave Aether connected overnight for Aether sleep."
+                : "Aether sleep from public heart rate and HRV. Not WHOOP REM / light / deep."}
             </p>
           ) : null}
-          <SleepStages stages={sleep.score.stage_summary} />
+          <SleepStages
+            stages={sleep.score.stage_summary}
+            source={overnightSleep ? "aether" : "whoop"}
+            epochs={overnightSleep ? (hr.overnight?.epochs ?? []) : undefined}
+          />
         </section>
       )}
 
@@ -281,7 +291,9 @@ export function TodayView() {
         <p className="mt-6 pb-4 text-center text-xs text-muted">
           {kcalFromKj(cycle.score.kilojoule)} kcal · avg {cycle.score.average_heart_rate} bpm
           {sleep?.score
-            ? ` · ${formatHours(sleep.score.stage_summary.total_in_bed_time_milli)} asleep window`
+            ? ` · ${formatHours(
+                scoredSleepMs(sleep.score.stage_summary, overnightSleep && !restWake),
+              )} ${overnightSleep && !restWake ? "asleep" : "asleep window"}`
             : ""}
         </p>
       )}

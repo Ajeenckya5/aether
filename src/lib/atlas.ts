@@ -13,6 +13,7 @@ import {
 import { estimateBioAge, friendFitnessAge } from "./bio-age";
 import { buildDaySeries, edwardsTrimp } from "./intelligence";
 import type { JournalFlags } from "./journal";
+import { isAetherOvernightSleep } from "./overnight";
 import type { Dashboard, Sleep, Workout } from "./types";
 
 export type MetricConfidence = "measured" | "derived" | "estimated" | "unavailable";
@@ -462,6 +463,10 @@ export function buildAtlas(
     .slice()
     .sort((a, b) => +new Date(b.end) - +new Date(a.end));
   const lastSleep = nights[0];
+  const aetherNight = isAetherOvernightSleep(lastSleep?.id);
+  const stageCite = aetherNight
+    ? "Aether sleep from public Heart Rate + HRV — not WHOOP stages, not PSG"
+    : "AASM scoring; WHOOP stage_summary";
   const stages = lastSleep?.score?.stage_summary;
   const tstMs = stages
     ? stages.total_light_sleep_time_milli +
@@ -1689,9 +1694,11 @@ export function buildAtlas(
       name: "Total sleep time",
       value: tstMs != null ? tstMs / 3600000 : null,
       unit: "h",
-      formula: "light + SWS + REM (excludes WASO)",
-      citation: "AASM scoring; WHOOP stage_summary",
-      confidence: tstMs != null ? "measured" : "unavailable",
+      formula: aetherNight
+        ? "quiet + deep rest + active rest (excludes wake)"
+        : "light + SWS + REM (excludes WASO)",
+      citation: stageCite,
+      confidence: tstMs != null ? (aetherNight ? "estimated" : "measured") : "unavailable",
       digits: 2,
     }),
     metric({
@@ -1722,9 +1729,13 @@ export function buildAtlas(
       name: "Sleep performance",
       value: lastSleep?.score?.sleep_performance_percentage ?? null,
       unit: "%",
-      formula: "WHOOP sleep_performance_percentage",
-      citation: "WHOOP sleep score (proprietary ratio of TST to need)",
-      confidence: "measured",
+      formula: aetherNight
+        ? "100 × Aether TST / in-bed window from public HR"
+        : "WHOOP sleep_performance_percentage",
+      citation: aetherNight
+        ? "Aether sleep performance vs 7.5h need from public HR"
+        : "WHOOP sleep score (proprietary ratio of TST to need)",
+      confidence: aetherNight ? "estimated" : "measured",
       digits: 0,
     }),
     metric({
@@ -1884,34 +1895,34 @@ export function buildAtlas(
     metric({
       id: "rem-pct",
       group: "Sleep architecture",
-      name: "REM fraction",
+      name: aetherNight ? "Active rest fraction" : "REM fraction",
       value: remPct,
       unit: "% TST",
-      formula: "100 × REM / TST",
-      citation: "AASM; adult REM typically ~20–25%",
-      confidence: remPct != null ? "derived" : "unavailable",
+      formula: aetherNight ? "100 × active rest / Aether TST" : "100 × REM / TST",
+      citation: aetherNight ? stageCite : "AASM; adult REM typically ~20–25%",
+      confidence: remPct != null ? (aetherNight ? "estimated" : "derived") : "unavailable",
       digits: 1,
     }),
     metric({
       id: "sws-pct",
       group: "Sleep architecture",
-      name: "Slow-wave fraction",
+      name: aetherNight ? "Deep rest fraction" : "Slow-wave fraction",
       value: swsPct,
       unit: "% TST",
-      formula: "100 × SWS / TST",
-      citation: "AASM N3; typically ~15–25% in young adults",
-      confidence: swsPct != null ? "derived" : "unavailable",
+      formula: aetherNight ? "100 × deep rest / Aether TST" : "100 × SWS / TST",
+      citation: aetherNight ? stageCite : "AASM N3; typically ~15–25% in young adults",
+      confidence: swsPct != null ? (aetherNight ? "estimated" : "derived") : "unavailable",
       digits: 1,
     }),
     metric({
       id: "light-pct",
       group: "Sleep architecture",
-      name: "Light fraction",
+      name: aetherNight ? "Quiet rest fraction" : "Light fraction",
       value: lightPct,
       unit: "% TST",
-      formula: "100 × light / TST",
-      citation: "AASM N1+N2 collapsed by WHOOP as light",
-      confidence: lightPct != null ? "derived" : "unavailable",
+      formula: aetherNight ? "100 × quiet / Aether TST" : "100 × light / TST",
+      citation: aetherNight ? stageCite : "AASM N1+N2 collapsed by WHOOP as light",
+      confidence: lightPct != null ? (aetherNight ? "estimated" : "derived") : "unavailable",
       digits: 1,
     }),
     metric({
@@ -1931,9 +1942,13 @@ export function buildAtlas(
       name: "Sleep cycles",
       value: stages?.sleep_cycle_count ?? null,
       unit: "count",
-      formula: "WHOOP sleep_cycle_count",
-      citation: "Ultradian ~90 min cycles, Aserinsky & Kleitman 1953",
-      confidence: "measured",
+      formula: aetherNight
+        ? "Active-rest bouts after quiet/deep rest in the public-HR hypnogram"
+        : "WHOOP sleep_cycle_count",
+      citation: aetherNight
+        ? stageCite
+        : "Ultradian ~90 min cycles, Aserinsky & Kleitman 1953",
+      confidence: aetherNight ? "estimated" : "measured",
       digits: 0,
     }),
     metric({

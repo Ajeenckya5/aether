@@ -112,6 +112,8 @@ final class HeartRateCentral: NSObject, ObservableObject {
       cancelPicker()
     }
   }
+
+  func cancelPicker() {
     central.stopScan()
     showPicker = false
     if let pickContinuation {
@@ -386,8 +388,9 @@ extension HeartRateCentral: CBPeripheralDelegate {
     let now = Date().timeIntervalSince1970
     if now - lastBufferAt >= 20 {
       lastBufferAt = now
-      buffer.append(["uuid": key, "data": b64])
-      if buffer.count > 800 { buffer.removeFirst(buffer.count - 800) }
+      let ms = String(Int(now * 1000))
+      buffer.append(["uuid": key, "data": b64, "t": ms])
+      if buffer.count > 2600 { buffer.removeFirst(buffer.count - 2600) }
     }
   }
 }
