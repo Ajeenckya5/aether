@@ -14,7 +14,10 @@ describe("download links", () => {
     );
     expect(urls.cloneUrl).toBe("https://github.com/Ajeenckya5/aether.git");
     expect(urls.apkUrl).toBe(
-      "https://github.com/Ajeenckya5/aether/releases/download/android-sideload/Aether.apk",
+      "https://github.com/Ajeenckya5/aether/releases/download/v1.0.0/aether.apk",
+    );
+    expect(urls.apkChecksumUrl).toBe(
+      "https://github.com/Ajeenckya5/aether/releases/download/v1.0.0/SHA256SUMS",
     );
   });
 

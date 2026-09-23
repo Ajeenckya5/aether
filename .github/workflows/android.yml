@@ -1,4 +1,4 @@
-name: Android sideload APK
+name: Android release APK
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: android-sideload
+  group: android-release
   cancel-in-progress: true
 
 jobs:
@@ -31,29 +31,48 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Assemble sideload APK
+      - name: Decode the release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 is not set"
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/aether-release.p12"
+      - name: Assemble the signed release APK
         working-directory: native/android/AetherBand
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/aether-release.p12
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle assembleRelease --no-daemon
-      - name: Name the sideload file
+      - name: Name the Obtainium asset and write SHA-256
         run: |
           mkdir -p dist
-          cp native/android/AetherBand/app/build/outputs/apk/release/app-release.apk dist/Aether.apk
-          shasum -a 256 dist/Aether.apk > dist/SHA256SUMS
+          cp native/android/AetherBand/app/build/outputs/apk/release/app-release.apk dist/aether.apk
+          shasum -a 256 dist/aether.apk > dist/SHA256SUMS
+          cat dist/SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-sideload
-          name: Aether Android (sideload)
+          tag_name: v1.0.0
+          name: Aether 1.0.0
           body: |
-            Sideload APK. **Not on Google Play.**
+            Signed Android sideload build. **Not on Google Play.**
 
-            1. On the Android phone, download `Aether.apk` from this release.
+            The asset name `aether.apk` stays the same so Obtainium can track this GitHub repo. `SHA256SUMS` is the checksum for that file.
+
+            The older `android-sideload` release is unchanged.
+
+            1. On the Android phone, download `aether.apk` from this release.
             2. Allow install from the browser / Files if Android asks.
             3. Open Aether. Allow Bluetooth (and notifications so the overnight keep-alive can stay up).
             4. Disconnect the official WHOOP app, then tap Connect WHOOP.
 
-            Public Heart Rate GATT only. Aether sleep needs the app left connected overnight. iPhone still uses the Xcode app or Bluefy — this APK is Android. `SHA256SUMS` is next to the APK.
+            Public Heart Rate GATT only. Aether sleep needs the app left connected overnight. iPhone still uses the Xcode app or Bluefy — this APK is Android.
           files: |
-            dist/Aether.apk
+            dist/aether.apk
             dist/SHA256SUMS
           fail_on_unmatched_files: true
           make_latest: true

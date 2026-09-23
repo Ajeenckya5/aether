@@ -9,6 +9,7 @@ export type DownloadUrls = {
   cloneUrl: string;
   releasesUrl: string;
   apkUrl: string;
+  apkChecksumUrl: string;
   playStoreUrl: string;
   appStoreUrl: string;
 };
@@ -36,7 +37,8 @@ export function buildDownloadUrls(input: {
     zipUrl: `${repoUrl}/archive/refs/heads/${branch}.zip`,
     cloneUrl: `${repoUrl}.git`,
     releasesUrl: `${repoUrl}/releases`,
-    apkUrl: `${repoUrl}/releases/download/android-sideload/Aether.apk`,
+    apkUrl: `${repoUrl}/releases/download/v1.0.0/aether.apk`,
+    apkChecksumUrl: `${repoUrl}/releases/download/v1.0.0/SHA256SUMS`,
     playStoreUrl: nonempty(input.playStoreUrl) ?? "",
     appStoreUrl: nonempty(input.appStoreUrl) ?? "",
   };

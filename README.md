@@ -13,7 +13,7 @@ Your live connection is **Bluetooth on this phone**. Pick the WHOOP band (public
 Aether is a **phone app**. After you install it, open the home-screen icon. Do not keep using it as a laptop dashboard.
 
 **App:** [https://ajeenckya5.github.io/aether](https://ajeenckya5.github.io/aether)  
-**Android APK (sideload, not Play Store):** [Aether.apk](https://github.com/Ajeenckya5/aether/releases/download/android-sideload/Aether.apk)  
+**Android APK (sideload, not Play Store):** [aether.apk](https://github.com/Ajeenckya5/aether/releases/download/v1.0.0/aether.apk) · [SHA-256](https://github.com/Ajeenckya5/aether/releases/download/v1.0.0/SHA256SUMS)  
 **Source (optional):** [github.com/Ajeenckya5/aether](https://github.com/Ajeenckya5/aether) · [ZIP](https://github.com/Ajeenckya5/aether/archive/refs/heads/master.zip)
 
 ### iPhone
@@ -31,7 +31,7 @@ Live WHOOP Bluetooth does not work in iPhone browsers. Install the Aether iPhone
 
 **APK (sideload — not Play Store):**
 
-1. On the phone, download [Aether.apk](https://github.com/Ajeenckya5/aether/releases/download/android-sideload/Aether.apk).
+1. On the phone, download [aether.apk](https://github.com/Ajeenckya5/aether/releases/download/v1.0.0/aether.apk) and check [SHA256SUMS](https://github.com/Ajeenckya5/aether/releases/download/v1.0.0/SHA256SUMS). Obtainium can follow the repo; the asset name stays `aether.apk`.
 2. Allow install from Chrome or Files if Android asks.
 3. Open the **Aether** icon. Allow Bluetooth (and notifications for overnight keep-alive).
 4. Disconnect the official WHOOP app, then Connect WHOOP.
