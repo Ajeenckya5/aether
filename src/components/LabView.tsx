@@ -10,10 +10,12 @@ import { EnvironmentCard } from "./EnvironmentCard";
 import { JournalChips } from "./JournalChips";
 import { SourceBanner } from "./SourceBanner";
 import { useEnvironment } from "./useEnvironment";
+import { useAtlas } from "./useAtlas";
 import { useLab } from "./useLab";
 
 export function LabView() {
-  const { report, journal, updateJournal, atlas, data, bioAge } = useLab();
+  const { report, journal, updateJournal, data, bioAge, athlete } = useLab();
+  const atlas = useAtlas(data, journal, athlete);
   const { env } = useEnvironment();
   const [tab, setTab] = useState<"call" | "atlas">("call");
 

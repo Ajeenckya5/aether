@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -27,9 +28,22 @@ const types = {
 };
 
 function fileFor(urlPath) {
-  const decoded = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
-  let target = path.resolve(serveRoot, decoded);
-  if (target !== serveRoot && !target.startsWith(serveRoot + path.sep)) return null;
+  let decoded = "/";
+  try {
+    decoded = decodeURIComponent((urlPath || "/").split("?")[0]);
+  } catch {
+    return null;
+  }
+  const parts = [];
+  for (const part of decoded.split("/")) {
+    if (!part || part === ".") continue;
+    if (part === ".." || part.includes("\\") || part.includes("\0")) return null;
+    if (!/^[\w.~-]+$/.test(part)) return null;
+    parts.push(part);
+  }
+  let target = path.join(serveRoot, ...parts);
+  const relative = path.relative(serveRoot, target);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) return null;
   if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
     target = path.join(target, "index.html");
   }
@@ -37,7 +51,10 @@ function fileFor(urlPath) {
     const html = `${target}.html`;
     if (fs.existsSync(html)) target = html;
   }
-  return fs.existsSync(target) && fs.statSync(target).isFile() ? target : null;
+  if (!fs.existsSync(target) || !fs.statSync(target).isFile()) return null;
+  const fileRelative = path.relative(serveRoot, target);
+  if (fileRelative.startsWith("..") || path.isAbsolute(fileRelative)) return null;
+  return target;
 }
 
 const server = http.createServer((request, response) => {
@@ -48,7 +65,16 @@ const server = http.createServer((request, response) => {
     return;
   }
   const type = types[path.extname(target)] || "application/octet-stream";
-  response.writeHead(200, { "Content-Type": type, "Cache-Control": "no-cache" });
+  const compressible = /\b(javascript|css|html|json|svg|text|manifest)/.test(type);
+  const headers = { "Content-Type": type, "Cache-Control": "no-cache" };
+  const encoding = request.headers["accept-encoding"] || "";
+  if (compressible && encoding.includes("gzip")) {
+    headers["Content-Encoding"] = "gzip";
+    response.writeHead(200, headers);
+    fs.createReadStream(target).pipe(zlib.createGzip()).pipe(response);
+    return;
+  }
+  response.writeHead(200, headers);
   fs.createReadStream(target).pipe(response);
 });
 

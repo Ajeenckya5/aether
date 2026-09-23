@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { buildAtlas } from "@/lib/atlas";
 import { estimateBioAge } from "@/lib/bio-age";
 import { useLiveHeartRate } from "./LiveHeartRate";
 import {
@@ -82,11 +81,6 @@ export function useLab() {
     [data, journal],
   );
 
-  const atlas = useMemo(
-    () => buildAtlas(data, journal, athlete),
-    [data, journal, athlete],
-  );
-
   const bioAge = useMemo(
     () =>
       estimateBioAge(data, athlete, {
@@ -104,7 +98,6 @@ export function useLab() {
     athlete,
     updateAthlete,
     report,
-    atlas,
     bioAge,
   };
 }
