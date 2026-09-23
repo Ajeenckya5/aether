@@ -141,15 +141,30 @@ test.describe("static export", () => {
       return Boolean(ready.active);
     });
     await page.reload();
-    const url = page.url();
+    await page.waitForFunction(async () => {
+      const names = await caches.keys();
+      for (const name of names) {
+        const cache = await caches.open(name);
+        if (await cache.match(location.href)) return true;
+      }
+      return false;
+    });
     await page.context().setOffline(true);
     if (browserName === "webkit") {
-      // Playwright's WebKit crashes on page.reload while a service worker is offline.
-      const title = await page.evaluate(async (target) => {
-        const response = await fetch(target);
-        const html = await response.text();
-        return /<title>([^<]+)/.exec(html)?.[1] ?? "";
-      }, url);
+      // Playwright's WebKit crashes on page.reload while a service worker is offline,
+      // and fetch() rejects even when the document is already in the Cache API.
+      const title = await page.evaluate(async () => {
+        const names = await caches.keys();
+        for (const name of names) {
+          const cache = await caches.open(name);
+          const response = await cache.match(location.href);
+          if (!response) continue;
+          const html = await response.text();
+          const found = /<title>([^<]+)/.exec(html)?.[1] ?? "";
+          if (found) return found;
+        }
+        return "";
+      });
       expect(title).toMatch(/Aether|Offline/);
       return;
     }

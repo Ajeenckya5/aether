@@ -44,7 +44,6 @@ export function HomeFrame({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="relative mx-auto flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-ink">
-        <div className="pointer-events-none absolute inset-0 grain" />
         <div
           tabIndex={0}
           aria-label="Page content"

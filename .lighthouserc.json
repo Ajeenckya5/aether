@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "numberOfRuns": 1,
+      "numberOfRuns": 3,
       "settings": {
         "formFactor": "mobile",
         "screenEmulation": { "mobile": true, "width": 390, "height": 844, "deviceScaleFactor": 2 }
