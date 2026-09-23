@@ -52,7 +52,7 @@ jobs:
         run: |
           mkdir -p dist
           cp native/android/AetherBand/app/build/outputs/apk/release/app-release.apk dist/aether.apk
-          shasum -a 256 dist/aether.apk > dist/SHA256SUMS
+          (cd dist && shasum -a 256 aether.apk > SHA256SUMS)
           cat dist/SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
