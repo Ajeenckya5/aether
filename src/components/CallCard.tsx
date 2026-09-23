@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { LabReport } from "@/lib/intelligence";
+import { siteHref } from "@/lib/site";
 
 const COPY: Record<
   LabReport["call"],
@@ -70,12 +70,12 @@ export function CallCard({
           </p>
         </div>
       </div>
-      <Link prefetch={false}
-        href={`/coach/${report.coachSlug}`}
+      <a
+        href={siteHref(`/coach/${report.coachSlug}`)}
         className="mt-5 block rounded-full bg-paper px-4 py-3 text-center text-sm font-medium text-ink"
       >
         Do this: {report.coachLabel}
-      </Link>
+      </a>
     </section>
   );
 }

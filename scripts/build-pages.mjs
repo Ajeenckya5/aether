@@ -42,6 +42,7 @@ try {
   code = result.status ?? 1;
   if (code === 0) {
     fs.writeFileSync(path.join(root, "out", ".nojekyll"), "");
+    stripHomeRuntime(path.join(root, "out", "index.html"));
   }
 } catch (error) {
   restoreApi();
@@ -50,3 +51,23 @@ try {
 
 restoreApi();
 process.exit(code);
+
+/** The app router always emits the React runtime. The homepage HTML is already complete. */
+function stripHomeRuntime(file) {
+  if (!fs.existsSync(file)) return;
+  const before = fs.readFileSync(file, "utf8");
+  const after = before
+    .replace(/<link[^>]*rel="preload"[^>]*as="script"[^>]*>/g, "")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, (tag) => {
+      if (tag.includes("__next_f") || /src="[^"]*\/_next\/static\//.test(tag)) return "";
+      return tag;
+    });
+  if (!after.includes("Connect your band") || !after.includes("aether-greeting")) {
+    throw new Error("Homepage strip removed the visible page.");
+  }
+  fs.writeFileSync(file, after);
+  const scripts = [...after.matchAll(/<script\b([^>]*)>/g)].map((match) => match[1]);
+  if (scripts.some((attrs) => attrs.includes("src="))) {
+    throw new Error(`Homepage still loads a script: ${scripts.join(" | ")}`);
+  }
+}

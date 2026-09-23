@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { BioAgeReport } from "@/lib/bio-age";
+import { siteHref } from "@/lib/site";
 
 function deltaCopy(delta: number | null): { text: string; className: string } {
   if (delta == null) return { text: "Need more markers", className: "text-muted" };
@@ -100,12 +100,12 @@ export function AgeCard({
           </p>
         )}
         <div className="mt-3 flex flex-col gap-2 text-xs">
-          <Link prefetch={false} href="/settings" className="text-paper/80">
+          <a href={siteHref("/settings")} className="text-paper/80">
             Change actual age in Settings
-          </Link>
-          <Link prefetch={false} href="/lab" className="text-lime">
+          </a>
+          <a href={siteHref("/lab")} className="text-lime">
             Open Lab for the breakdown →
-          </Link>
+          </a>
         </div>
       </section>
     );
@@ -140,9 +140,9 @@ export function AgeCard({
       )}
       <p className="mt-4 text-xs leading-relaxed text-muted">{report.notes[0]}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted">{report.notes[1]}</p>
-      <Link prefetch={false} href="/settings" className="mt-3 block text-xs text-lime">
+      <a href={siteHref("/settings")} className="mt-3 block text-xs text-lime">
         Change actual age in Settings
-      </Link>
+      </a>
     </section>
   );
 }

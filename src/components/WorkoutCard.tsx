@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { formatDuration, formatTime } from "@/lib/format";
+import { siteHref } from "@/lib/site";
 import { mediaForSport } from "@/lib/media";
 import { sportLabel } from "@/lib/sports";
 import type { Workout } from "@/lib/types";
@@ -11,8 +11,8 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
   const strain = workout.score?.strain ?? 0;
 
   return (
-    <Link prefetch={false}
-      href={`/workouts/view?id=${encodeURIComponent(workout.id)}`}
+    <a
+      href={siteHref(`/workouts/view?id=${encodeURIComponent(workout.id)}`)}
       className="block overflow-hidden rounded-[28px] border border-white/8 bg-panel"
     >
       <div className="relative h-36 overflow-hidden" style={{ background: media.tint }}>
@@ -49,6 +49,6 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
       <div className="px-4 py-3">
         <ZoneBar zones={workout.score?.zone_durations} compact />
       </div>
-    </Link>
+    </a>
   );
 }
