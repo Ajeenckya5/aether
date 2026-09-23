@@ -55,19 +55,47 @@ process.exit(code);
 /** The app router always emits the React runtime. The homepage HTML is already complete. */
 function stripHomeRuntime(file) {
   if (!fs.existsSync(file)) return;
-  const before = fs.readFileSync(file, "utf8");
-  const after = before
-    .replace(/<link[^>]*rel="preload"[^>]*as="script"[^>]*>/g, "")
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, (tag) => {
-      if (tag.includes("__next_f") || /src="[^"]*\/_next\/static\//.test(tag)) return "";
-      return tag;
-    });
+  const html = fs.readFileSync(file, "utf8");
+  const lower = html.toLowerCase();
+  const pieces = [];
+  let cursor = 0;
+  while (cursor < html.length) {
+    const scriptAt = lower.indexOf("<script", cursor);
+    const linkAt = lower.indexOf("<link", cursor);
+    const nextAt = earliest(scriptAt, linkAt);
+    if (nextAt < 0) {
+      pieces.push(html.slice(cursor));
+      break;
+    }
+    pieces.push(html.slice(cursor, nextAt));
+    const openEnd = html.indexOf(">", nextAt);
+    if (openEnd < 0) throw new Error("Homepage HTML has an unclosed tag.");
+    if (nextAt === linkAt) {
+      const tag = html.slice(nextAt, openEnd + 1);
+      if (!tag.toLowerCase().includes('as="script"')) pieces.push(tag);
+      cursor = openEnd + 1;
+      continue;
+    }
+    const close = lower.indexOf("</script>", openEnd);
+    if (close < 0) throw new Error("Homepage HTML has an unclosed script.");
+    const end = close + "</script>".length;
+    const tag = html.slice(nextAt, end);
+    const runtime = tag.includes("/_next/static/") || tag.includes("__next_f");
+    if (!runtime) pieces.push(tag);
+    cursor = end;
+  }
+  const after = pieces.join("");
   if (!after.includes("Connect your band") || !after.includes("aether-greeting")) {
     throw new Error("Homepage strip removed the visible page.");
   }
-  fs.writeFileSync(file, after);
-  const scripts = [...after.matchAll(/<script\b([^>]*)>/g)].map((match) => match[1]);
-  if (scripts.some((attrs) => attrs.includes("src="))) {
-    throw new Error(`Homepage still loads a script: ${scripts.join(" | ")}`);
+  if (/\/_next\/static\/chunks\/[^"' ]+\.js/.test(after) || !after.includes("serviceWorker.register")) {
+    throw new Error("Homepage strip left the client runtime or dropped the service worker.");
   }
+  fs.writeFileSync(file, after);
+}
+
+function earliest(left, right) {
+  if (left < 0) return right;
+  if (right < 0) return left;
+  return Math.min(left, right);
 }
