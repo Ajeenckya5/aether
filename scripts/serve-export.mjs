@@ -38,7 +38,7 @@ function fileFor(urlPath) {
   for (const part of decoded.split("/")) {
     if (!part || part === ".") continue;
     if (part === ".." || part.includes("\\") || part.includes("\0")) return null;
-    if (!/^[\w.~-]+$/.test(part)) return null;
+    if (!/^[\w.~!$()+,@-]+$/.test(part)) return null;
     parts.push(part);
   }
   let target = path.join(serveRoot, ...parts);
