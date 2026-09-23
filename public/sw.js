@@ -1,5 +1,5 @@
 const CACHE = "aether-shell-v1";
-const SHELL = ["./offline.html", "./icon-192.png", "./icon-512.png", "./media/route.svg"];
+const SHELL = ["./offline.html", "./icons/icon-192.png", "./icons/icon-512.png", "./media/route.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

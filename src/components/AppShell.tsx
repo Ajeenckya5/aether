@@ -9,6 +9,7 @@ import { HeartRateProvider } from "./LiveHeartRate";
 import { InstallBanner, useDevice } from "./DeviceChrome";
 import { preferPhoneShell } from "@/lib/device";
 import { appPath } from "@/lib/site";
+import { startMonitoring } from "@/lib/monitor";
 
 const NAV = [
   { href: "/", label: "Today", icon: House },
@@ -30,6 +31,7 @@ export function AppShell({
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   useEffect(() => {
+    startMonitoring();
     if (navigator.storage?.persist) void navigator.storage.persist();
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
@@ -89,6 +91,8 @@ export function AppShell({
               </div>
             )}
             <div
+              tabIndex={0}
+              aria-label="Page content"
               className={`relative flex-1 overflow-y-auto no-scrollbar ${
                 hideMobileNav
                   ? "pb-4"

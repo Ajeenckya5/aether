@@ -17,16 +17,26 @@ import { BluetoothPanel, useLiveHeartRate } from "./LiveHeartRate";
 import { WorkoutCard } from "./WorkoutCard";
 import { useEnvironment } from "./useEnvironment";
 import { useLab } from "./useLab";
+import { useNow } from "./useNow";
 import { greetingName, hasPersonalBody } from "@/lib/athlete";
+import { appPath } from "@/lib/site";
 import { preferPhoneShell } from "@/lib/device";
 import { isAetherOvernightSleep, scoredSleepMs } from "@/lib/overnight";
 import { isRestWakeStages } from "./SleepStages";
 
 function recoveryColor(score: number) {
   const tone = recoveryTone(score);
-  if (tone === "high") return "#d6ff4b";
-  if (tone === "ok") return "#f0c14b";
-  return "#ff5c2a";
+  if (tone === "high") return "var(--lime)";
+  if (tone === "ok") return "var(--gold)";
+  return "var(--ember)";
+}
+
+function recoveryTextClass(score: number | null) {
+  if (score == null) return "text-muted";
+  const tone = recoveryTone(score);
+  if (tone === "high") return "text-lime";
+  if (tone === "ok") return "text-gold";
+  return "text-ember";
 }
 
 export function TodayView() {
@@ -34,7 +44,8 @@ export function TodayView() {
   const hr = useLiveHeartRate();
   const fromBand = hr.fromBand;
   const { env } = useEnvironment();
-  const phoneApp = preferPhoneShell(useDevice());
+  const device = useDevice();
+  const phoneApp = preferPhoneShell(device);
   const recovery = data.recoveries[0];
   const cycle = data.cycles[0];
   const sleep = data.sleeps[0];
@@ -45,7 +56,7 @@ export function TodayView() {
   const sleepPct = sleep?.score?.sleep_performance_percentage ?? 0;
   const name = greetingName(athlete, data.profile.first_name, data.connected);
   const personal = name === "there" ? null : name;
-  const clock = new Date();
+  const clock = useNow();
   const mid = sleep
     ? new Date(
         (new Date(sleep.start).getTime() + new Date(sleep.end).getTime()) / 2,
@@ -59,9 +70,6 @@ export function TodayView() {
 
   return (
     <div className="px-5 pt-6 lg:px-2">
-      <div className="mb-4">
-        <InstallBanner />
-      </div>
       {!hasPersonalBody(athlete) && (
         <Link
           href="/settings"
@@ -77,11 +85,8 @@ export function TodayView() {
       <header className="mb-6 flex items-start justify-between">
         <div>
           <SourceBanner />
-          <h1
-            className="font-display mt-2 text-[34px] leading-none tracking-tight"
-            suppressHydrationWarning
-          >
-            {timeOfDayGreeting(clock.getHours())}
+          <h1 className="font-display mt-2 text-[34px] leading-none tracking-tight">
+            {clock ? timeOfDayGreeting(clock.getHours()) : "Today"}
             {personal ? (
               <>
                 <br />
@@ -89,8 +94,8 @@ export function TodayView() {
               </>
             ) : null}
           </h1>
-          <p className="mt-2 text-sm text-muted" suppressHydrationWarning>
-            {formatDate(clock.toISOString())}
+          <p className="mt-2 text-sm text-muted">
+            {clock ? formatDate(clock.toISOString()) : ""}
           </p>
         </div>
         <div className="flex gap-2">
@@ -115,7 +120,11 @@ export function TodayView() {
         <BluetoothPanel compact />
       </div>
 
-      <WeekStrip recoveries={data.recoveries} todayScore={hr.overnight?.recovery ?? null} />
+      <WeekStrip
+        now={clock}
+        recoveries={data.recoveries}
+        todayScore={hr.overnight?.recovery ?? null}
+      />
 
       <div
         className={
@@ -134,6 +143,17 @@ export function TodayView() {
         </div>
       )}
 
+      <div className="mt-4 space-y-3">
+        <InstallBanner />
+        {!device.ios && !device.coarse && (
+          <div className="flex items-center gap-3 rounded-[24px] border border-white/8 p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={appPath("/qr.svg")} alt="QR code to open Aether on a phone" width={88} height={88} />
+            <p className="text-sm text-muted">Open Aether on the phone that wears the strap.</p>
+          </div>
+        )}
+      </div>
+
       <div className="mt-4">
         <JournalChips journal={journal} onChange={updateJournal} />
       </div>
@@ -150,11 +170,11 @@ export function TodayView() {
             hr.overnight
               ? hr.overnight.staged
                 ? `Aether sleep · ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
-                : `Overnight from your WHOOP HR · rest ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
+                : `Overnight from the strap · rest ${formatHours(hr.overnight.restMs)} · Aether ${hr.overnight.recovery}`
               : fromBand
-              ? `Your WHOOP · HRV ${hr.rmssd ?? "…"} · RHR ${hr.restHr ?? "…"}`
+              ? `Strap · HRV ${hr.rmssd ?? "…"} · RHR ${hr.restHr ?? "…"}`
               : report
-                ? `${data.connected ? "WHOOP" : "Sample"} ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
+                ? `${data.connected ? "Account" : "Sample"} ${report.whoop ?? "—"} · HRV z ${report.hrvZ >= 0 ? "+" : ""}${report.hrvZ.toFixed(1)}`
                 : recovery?.score
                   ? `HRV ${Math.round(recovery.score.hrv_rmssd_milli)} · RHR ${recovery.score.resting_heart_rate}`
                   : "Calibrating"
@@ -332,14 +352,25 @@ function Mini({
 }
 
 function WeekStrip({
+  now,
   recoveries,
   todayScore,
 }: {
+  now: Date | null;
   recoveries: Recovery[];
   todayScore?: number | null;
 }) {
+  if (!now) {
+    return (
+      <div className="flex gap-2" aria-hidden="true">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div key={i} className="h-16 flex-1 rounded-2xl bg-white/4" />
+        ))}
+      </div>
+    );
+  }
   const days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
+    const date = new Date(now);
     date.setDate(date.getDate() - (6 - i));
     const rec = recoveries.find((r) => isSameDay(r.created_at, date));
     const isToday = i === 6;
@@ -358,12 +389,7 @@ function WeekStrip({
           className="flex flex-1 flex-col items-center gap-2 rounded-2xl bg-white/4 py-2"
         >
           <span className="text-[10px] uppercase text-muted">{day.label}</span>
-          <span
-            className="font-display text-sm"
-            style={{
-              color: day.score == null ? "#a89f90" : recoveryColor(day.score),
-            }}
-          >
+          <span className={`font-display text-sm ${recoveryTextClass(day.score)}`}>
             {day.score ?? "–"}
           </span>
         </div>

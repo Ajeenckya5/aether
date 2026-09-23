@@ -1,4 +1,4 @@
-export { heatIndexC, bomWbgtC } from "@ajeenckya/engine";
+export { bestTrainingWindow, heatIndexC, bomWbgtC } from "@ajeenckya/engine";
 
 /** Canadian humidex. Environment Canada. */
 export function humidexC(tempC: number, rh: number): number {

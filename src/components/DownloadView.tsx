@@ -163,9 +163,9 @@ export function DownloadView() {
           <li>Open the Aether icon. Allow Bluetooth. Disconnect the official WHOOP app, then tap Connect WHOOP.</li>
         </ol>
         <p className="mt-3 text-xs text-muted">
-          A free Apple ID install lasts 7 days, then press Run again. A paid
-          Apple Developer account lasts a year. Bluefy remains the path if you
-          do not have a Mac.
+          A free Apple ID install lasts 7 days, then press Run again. It has no
+          push notifications. A paid Apple Developer account lasts a year.
+          Bluefy remains the path if you do not have a Mac.
         </p>
       </section>
 

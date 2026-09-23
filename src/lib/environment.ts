@@ -1,5 +1,6 @@
 import {
   altitudeVo2PenaltyPct,
+  bestTrainingWindow,
   bomWbgtC,
   clockHourFromIso,
   heatIndexC,
@@ -165,31 +166,18 @@ function overnightTemps(
 }
 
 function pickBestWindow(hours: HourPoint[], now: Date): EnvironmentSnapshot["bestWindow"] {
-  const candidates = hours.filter((h) => {
-    const d = new Date(h.iso);
-    const hour = d.getHours();
-    if (hour < 6 || hour > 20) return false;
-    return d.getTime() >= now.getTime() - 30 * 60000;
-  });
-  const pool = candidates.length
-    ? candidates.filter((h) => new Date(h.iso).getTime() <= now.getTime() + 36 * 3600000)
-    : hours.filter((h) => {
-        const d = new Date(h.iso);
-        return d.getHours() >= 6 && d.getHours() <= 20;
-      });
-  if (!pool.length) return null;
-  let best = pool[0];
-  let bestScore = Infinity;
-  for (const h of pool) {
-    const heat = h.tempC ?? 20;
-    const uv = h.uv ?? 0;
-    const rain = h.precipChance ?? 0;
-    const score = Math.abs(heat - 16) + uv * 0.35 + rain * 0.08;
-    if (score < bestScore) {
-      bestScore = score;
-      best = h;
-    }
-  }
+  const best = bestTrainingWindow(
+    hours.map((hour) => {
+      const when = new Date(hour.iso);
+      return {
+        ...hour,
+        hour: when.getHours(),
+        atMs: when.getTime(),
+      };
+    }),
+    now.getTime(),
+  );
+  if (!best) return null;
   const when = new Date(best.iso);
   return {
     iso: best.iso,

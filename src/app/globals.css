@@ -8,6 +8,7 @@
   --paper: #f4efe6;
   --muted: #a89f90;
   --lime: #d6ff4b;
+  --gold: #f0c14b;
   --ember: #ff5c2a;
   --violet: #9d8cff;
   --aqua: #7ad7ff;
@@ -21,6 +22,7 @@
   --color-paper: var(--paper);
   --color-muted: var(--muted);
   --color-lime: var(--lime);
+  --color-gold: var(--gold);
   --color-ember: var(--ember);
   --color-violet: var(--violet);
   --color-aqua: var(--aqua);
@@ -46,13 +48,21 @@ body {
 
 button,
 a {
+  min-height: 44px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+p a,
+li a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 input,
 select,
 textarea {
+  min-height: 44px;
   font-size: 16px;
 }
 
@@ -101,7 +111,8 @@ textarea {
     --paper: #1a1814;
     --muted: #5c564c;
     --lime: #3f5c00;
-    --ember: #c2410c;
+    --gold: #7a4e00;
+    --ember: #9a3412;
     --violet: #5b4db8;
     --aqua: #0e7490;
   }

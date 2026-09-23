@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bestTrainingWindow,
   bomWbgtC,
   decideCall,
   gateRecoveryAge,
@@ -70,6 +71,20 @@ describe("@ajeenckya/engine", () => {
   it("weights zone minutes from 0.5 through 5", () => {
     expect(strainFromZoneMinutes([10, 0, 0, 0, 0, 0])).toBe(5);
     expect(strainFromZoneMinutes([0, 0, 0, 0, 0, 2])).toBe(10);
+  });
+
+  it("picks the cooler daylight hour inside the next 36 hours", () => {
+    const now = Date.parse("2026-06-01T12:00:00Z");
+    const chosen = bestTrainingWindow(
+      [
+        { iso: "hot", hour: 14, atMs: now + 3_600_000, tempC: 32, uv: 8, precipChance: 10 },
+        { iso: "cool", hour: 7, atMs: now + 20 * 3_600_000, tempC: 16, uv: 1, precipChance: 0 },
+        { iso: "night", hour: 2, atMs: now + 4 * 3_600_000, tempC: 16, uv: 0, precipChance: 0 },
+      ],
+      now,
+    );
+    expect(chosen?.iso).toBe("cool");
+    expect(bestTrainingWindow([], now)).toBeNull();
   });
 
   it("keeps heat and WBGT finite inside normal outdoor ranges", () => {

@@ -90,7 +90,7 @@ export function LocationFields() {
     setNote(null);
   }
 
-  async function useGps() {
+  async function locateFromGps() {
     if (!navigator.geolocation) {
       setNote(explainGeoError(undefined, place?.name));
       return;
@@ -146,7 +146,7 @@ export function LocationFields() {
 
       <button
         type="button"
-        onClick={() => void useGps()}
+        onClick={() => void locateFromGps()}
         disabled={busy != null}
         className="mt-3 w-full rounded-full bg-lime px-3 py-2 text-sm text-ink disabled:opacity-40"
       >
@@ -156,6 +156,7 @@ export function LocationFields() {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        aria-label="Search city"
         placeholder="Search city — Open-Meteo geocoding"
         className="mt-3 w-full rounded-2xl border border-white/10 bg-ink px-3 py-2 text-sm text-paper outline-none placeholder:text-muted"
       />

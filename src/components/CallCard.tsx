@@ -10,19 +10,19 @@ const COPY: Record<
   push: {
     title: "Push",
     kicker: "Quality intensity is on the table",
-    color: "#ff5c2a",
+    color: "var(--ember)",
     bg: "bg-ember/15",
   },
   build: {
     title: "Build",
     kicker: "Aerobic or skill work — not a breakthrough",
-    color: "#d6ff4b",
+    color: "var(--lime)",
     bg: "bg-lime/12",
   },
   recover: {
     title: "Recover",
     kicker: "Protect the next 36 hours",
-    color: "#9d8cff",
+    color: "var(--violet)",
     bg: "bg-violet/15",
   },
 };
@@ -57,7 +57,7 @@ export function CallCard({
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted">
-            {sample ? "Sample" : "WHOOP"}
+            {sample ? "Sample" : "Strap"}
           </p>
           <p className="font-display text-2xl">
             {report.whoop == null ? "—" : Math.round(report.whoop)}

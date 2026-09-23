@@ -26,6 +26,50 @@ export function heatIndexC(tempC: number, rh: number): number {
   return (hi - 32) * (5 / 9);
 }
 
+export type TrainingWindowHour = {
+  iso: string;
+  /** Local hour 0–23. */
+  hour: number;
+  atMs: number;
+  tempC: number | null;
+  uv: number | null;
+  /** Precipitation probability 0–100. */
+  precipChance: number | null;
+};
+
+/**
+ * Best outdoor training hour over the next 36 hours.
+ * Prefers daylight (06:00–20:00) closest to 16°C, with lower UV and rain chance.
+ * Score = |tempC − 16| + 0.35·UV + 0.08·precipChance. Returns null when no hour qualifies.
+ */
+export function bestTrainingWindow<T extends TrainingWindowHour>(
+  hours: readonly T[],
+  nowMs: number,
+): T | null {
+  if (!Number.isFinite(nowMs)) return null;
+  const daylight = hours.filter((hour) => hour.hour >= 6 && hour.hour <= 20);
+  const upcoming = daylight.filter((hour) => hour.atMs >= nowMs - 30 * 60_000);
+  const pool = (
+    upcoming.length
+      ? upcoming.filter((hour) => hour.atMs <= nowMs + 36 * 3_600_000)
+      : daylight
+  );
+  if (!pool.length) return null;
+  let best = pool[0];
+  let bestScore = Infinity;
+  for (const hour of pool) {
+    const heat = hour.tempC ?? 20;
+    const uv = hour.uv ?? 0;
+    const rain = hour.precipChance ?? 0;
+    const score = Math.abs(heat - 16) + uv * 0.35 + rain * 0.08;
+    if (score < bestScore) {
+      bestScore = score;
+      best = hour;
+    }
+  }
+  return best;
+}
+
 /**
  * Australian Bureau of Meteorology outdoor WBGT approximation (full sun).
  * WBGT ≈ 0.567 Ta + 0.393 e + 3.94, with e in hPa from temperature and humidity.

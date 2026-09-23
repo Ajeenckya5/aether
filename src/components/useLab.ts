@@ -37,7 +37,7 @@ export function useLab() {
         spo2: hr.spo2,
         skinTempC: hr.skinTempC,
         overnight: hr.overnight,
-        at: Date.now(),
+        at: 0,
       }),
     [
       hr.batteryPct,
@@ -93,7 +93,7 @@ export function useLab() {
         rmssdMs: hr.rmssd,
         restHr: hr.restHr,
       }),
-    [athlete, data, hr.restHr, hr.rmssd, hr.status],
+    [athlete, data, hr.restHr, hr.rmssd],
   );
 
   return {

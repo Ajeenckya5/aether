@@ -1,0 +1,30 @@
+name: Personas
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/build-pages.mjs
+      - run: node personas/replay.mjs
+        env:
+          PERSONA_COUNT: "1200"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: persona-report
+          path: personas/report.html

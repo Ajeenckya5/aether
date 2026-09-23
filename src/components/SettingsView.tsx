@@ -88,7 +88,7 @@ export function SettingsView() {
       </section>
 
       <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
-        <h2 className="font-display text-xl">Connect your WHOOP</h2>
+        <h2 className="font-display text-xl">Any heart-rate strap</h2>
         <p className="mt-2 text-sm text-muted">
           Tap Connect WHOOP over Bluetooth and pick the band. After that,
           Aether keeps the WHOOP connected on this phone until you tap
@@ -154,7 +154,7 @@ export function SettingsView() {
       )}
 
       <section className="mt-4 rounded-[28px] border border-white/8 p-5 text-sm text-muted">
-        <h2 className="font-display text-lg text-paper">Aether Lab vs WHOOP 5.0</h2>
+        <h2 className="font-display text-lg text-paper">Aether Lab</h2>
         <p className="mt-2">
           WHOOP 5.0 added Healthspan and Stress behind membership tiers, and still
           does not show Banister fitness/fatigue, Gabbett ACWR, or why recovery

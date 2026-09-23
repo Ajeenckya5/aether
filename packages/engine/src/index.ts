@@ -17,4 +17,4 @@ export {
   sleepEfficiencyPct,
   sleepPerformancePct,
 } from "./sleep";
-export { bomWbgtC, heatIndexC } from "./weather";
+export { bestTrainingWindow, bomWbgtC, heatIndexC, type TrainingWindowHour } from "./weather";

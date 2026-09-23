@@ -23,6 +23,7 @@ if (!fs.existsSync(api)) {
 if (fs.existsSync(backup)) fs.rmSync(backup, { recursive: true, force: true });
 fs.cpSync(api, backup, { recursive: true });
 fs.rmSync(api, { recursive: true, force: true });
+fs.rmSync(path.join(root, ".next"), { recursive: true, force: true });
 
 let code = 0;
 try {
@@ -33,8 +34,9 @@ try {
       ...process.env,
       STATIC_EXPORT: "1",
       NEXT_PUBLIC_STATIC: "1",
-      NEXT_PUBLIC_BASE_PATH: "/aether",
-      NEXT_PUBLIC_SITE_URL: "https://ajeenckya5.github.io/aether",
+      NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH ?? "/aether",
+      NEXT_PUBLIC_SITE_URL:
+        process.env.NEXT_PUBLIC_SITE_URL || "https://ajeenckya5.github.io/aether",
     },
   });
   code = result.status ?? 1;

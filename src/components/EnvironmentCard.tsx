@@ -49,7 +49,7 @@ export function EnvironmentCard({
     env.outdoor.level === "indoor"
       ? "bg-ember/15 text-ember"
       : env.outdoor.level === "caution"
-        ? "bg-[#f0c14b]/12 text-[#f0c14b]"
+        ? "bg-gold/12 text-gold"
         : "bg-lime/12 text-lime";
   const align = solarAlignmentHours(midsleepHour ?? null, env.sun.solarNoonHour);
 
