@@ -1,5 +1,3 @@
-"use client";
-
 import type { AetherSleepEpoch } from "@/lib/aether-sleep";
 import {
   AETHER_SLEEP_PHASES,

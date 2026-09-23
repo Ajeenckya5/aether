@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboard } from "./DataProvider";
-import { useLiveHeartRate } from "./LiveHeartRate";
+import { useLiveHeartRate } from "./heart-rate-context";
 
 export function SourceBanner() {
   const hr = useLiveHeartRate();

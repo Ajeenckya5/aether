@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { formatDate, formatHours, formatTime } from "@/lib/format";
 import { isAetherOvernightSleep, scoredSleepMs } from "@/lib/overnight";
 import { useLab } from "./useLab";
-import { useLiveHeartRate } from "./LiveHeartRate";
+import { useLiveHeartRate } from "./heart-rate-context";
 import { isRestWakeStages, SleepStages } from "./SleepStages";
 
 export function SleepDetailView({ id }: { id: string }) {

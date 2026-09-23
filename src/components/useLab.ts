@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { estimateBioAge } from "@/lib/bio-age";
-import { useLiveHeartRate } from "./LiveHeartRate";
+import { useLiveHeartRate } from "./heart-rate-context";
 import {
   DEFAULT_ATHLETE,
   loadAthlete,

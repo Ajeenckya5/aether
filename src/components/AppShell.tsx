@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, Download, FlaskConical, House, Moon, PlayCircle, Settings, Watch } from "lucide-react";
 import { DataProvider } from "./DataProvider";
-import { HeartRateProvider } from "./LiveHeartRate";
+import { HeartRateSlot } from "./heart-rate-context";
 import { InstallBanner, useDevice } from "./DeviceChrome";
 import { preferPhoneShell } from "@/lib/device";
 import { appPath } from "@/lib/site";
@@ -45,7 +45,7 @@ export function AppShell({
 
   return (
     <DataProvider>
-      <HeartRateProvider>
+      <HeartRateSlot active={pathname !== "/"}>
         <div className={`min-h-dvh bg-[#070706] ${phoneApp ? "" : "lg:flex"}`}>
           <aside
             className={`h-dvh w-60 shrink-0 flex-col border-r border-white/8 bg-ink px-4 py-6 sticky top-0 ${
@@ -141,7 +141,7 @@ export function AppShell({
             )}
           </div>
         </div>
-      </HeartRateProvider>
+      </HeartRateSlot>
     </DataProvider>
   );
 }

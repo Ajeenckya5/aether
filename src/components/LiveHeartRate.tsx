@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Bluetooth, BluetoothOff } from "lucide-react";
 import {
@@ -60,31 +52,15 @@ import { describeHrSupport, readDevice, whoopGuideHref } from "@/lib/device";
 import { aetherPageUrl, BLUEFY_APP_STORE, bluefyOpenHref } from "@/lib/ios-ble";
 import { PUBLIC_SITE } from "@/lib/site";
 import { useDevice } from "./DeviceChrome";
+import {
+  HeartRateContext,
+  publishHeartRate,
+  useLiveHeartRate,
+  type HrStatus,
+  type HrValue,
+} from "./heart-rate-context";
 
-export type HrStatus = "off" | "connecting" | "live" | "camera" | "practice" | "error";
-
-type HrValue = {
-  bpm: number | null;
-  rmssd: number | null;
-  sdnn: number | null;
-  restHr: number | null;
-  batteryPct: number | null;
-  rrCount: number;
-  spo2: number | null;
-  skinTempC: number | null;
-  overnight: OvernightSummary | null;
-  nightProgress: OvernightProgress | null;
-  fromBand: boolean;
-  status: HrStatus;
-  message: string | null;
-  deviceName: string | null;
-  connect: (opts?: { scanAll?: boolean }) => Promise<void>;
-  startCamera: () => Promise<void>;
-  startPractice: () => void;
-  disconnect: () => void;
-};
-
-const HrContext = createContext<HrValue | null>(null);
+export { useLiveHeartRate };
 
 const LIVE_COPY =
   "Live Bluetooth on this phone. Public Heart Rate service: bpm, R-R/HRV when sent, battery if exposed. Standard pulse-ox and thermometer if this strap exposes them. Leave the page open overnight for Aether sleep from that stream.";
@@ -745,13 +721,11 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
-  return <HrContext.Provider value={value}>{children}</HrContext.Provider>;
-}
+  useEffect(() => {
+    publishHeartRate(value);
+  }, [value]);
 
-export function useLiveHeartRate(): HrValue {
-  const ctx = useContext(HrContext);
-  if (!ctx) throw new Error("useLiveHeartRate must be used inside HeartRateProvider");
-  return ctx;
+  return <HeartRateContext.Provider value={value}>{children}</HeartRateContext.Provider>;
 }
 
 export function LiveHeartRateButton() {

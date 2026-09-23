@@ -134,14 +134,25 @@ test.describe("static export", () => {
     await expect(page.getByText(/Madison/)).toBeVisible();
   });
 
-  test("reloads from the cache while offline", async ({ page }) => {
+  test("reloads from the cache while offline", async ({ page, browserName }) => {
     await page.goto(pathFor("/"));
     await page.waitForFunction(async () => {
       const ready = await navigator.serviceWorker.ready;
       return Boolean(ready.active);
     });
     await page.reload();
+    const url = page.url();
     await page.context().setOffline(true);
+    if (browserName === "webkit") {
+      // Playwright's WebKit crashes on page.reload while a service worker is offline.
+      const title = await page.evaluate(async (target) => {
+        const response = await fetch(target);
+        const html = await response.text();
+        return /<title>([^<]+)/.exec(html)?.[1] ?? "";
+      }, url);
+      expect(title).toMatch(/Aether|Offline/);
+      return;
+    }
     await page.reload();
     await expect(page).toHaveTitle(/Aether|Offline/);
   });

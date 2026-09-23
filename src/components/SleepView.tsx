@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatDate, formatHours, formatTime } from "@/lib/format";
 import { isAetherOvernightSleep, scoredSleepMs } from "@/lib/overnight";
 import { useLab } from "./useLab";
-import { useLiveHeartRate } from "./LiveHeartRate";
+import { useLiveHeartRate } from "./heart-rate-context";
 import { isRestWakeStages, SleepStages } from "./SleepStages";
 import { SourceBanner } from "./SourceBanner";
 

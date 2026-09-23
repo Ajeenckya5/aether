@@ -124,6 +124,16 @@ textarea {
   }
 }
 
+@media (pointer: coarse) {
+  .aether-desk-only {
+    display: none;
+  }
+}
+
+.ble-only {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

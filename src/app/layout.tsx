@@ -66,7 +66,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${manrope.variable} ${syne.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#070706] text-paper">{children}</body>
+      <body className="min-h-full bg-[#070706] text-paper">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'if("bluetooth"in navigator){var s=document.createElement("style");s.textContent=".no-ble{display:none}.ble-only{display:grid}";document.head.appendChild(s)}',
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
