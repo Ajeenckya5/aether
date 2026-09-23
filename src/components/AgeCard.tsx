@@ -100,10 +100,10 @@ export function AgeCard({
           </p>
         )}
         <div className="mt-3 flex flex-col gap-2 text-xs">
-          <Link href="/settings" className="text-paper/80">
+          <Link prefetch={false} href="/settings" className="text-paper/80">
             Change actual age in Settings
           </Link>
-          <Link href="/lab" className="text-lime">
+          <Link prefetch={false} href="/lab" className="text-lime">
             Open Lab for the breakdown →
           </Link>
         </div>
@@ -140,7 +140,7 @@ export function AgeCard({
       )}
       <p className="mt-4 text-xs leading-relaxed text-muted">{report.notes[0]}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted">{report.notes[1]}</p>
-      <Link href="/settings" className="mt-3 block text-xs text-lime">
+      <Link prefetch={false} href="/settings" className="mt-3 block text-xs text-lime">
         Change actual age in Settings
       </Link>
     </section>

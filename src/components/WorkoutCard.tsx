@@ -11,7 +11,7 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
   const strain = workout.score?.strain ?? 0;
 
   return (
-    <Link
+    <Link prefetch={false}
       href={`/workouts/view?id=${encodeURIComponent(workout.id)}`}
       className="block overflow-hidden rounded-[28px] border border-white/8 bg-panel"
     >

@@ -81,7 +81,7 @@ export function AppShell({
                 className={`absolute left-3 z-30 ${phoneApp ? "" : "lg:left-5"}`}
                 style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
               >
-                <Link
+                <Link prefetch={false}
                   href={backTo}
                   aria-label="Back"
                   className="grid h-11 w-11 place-items-center rounded-full bg-black/45 text-paper backdrop-blur"
@@ -124,7 +124,7 @@ export function AppShell({
                     const Icon = item.icon;
                     return (
                       <li key={item.href}>
-                        <Link
+                        <Link prefetch={false}
                           href={item.href}
                           className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] tracking-wide ${
                             active ? "text-lime" : "text-muted"
@@ -159,7 +159,7 @@ function SideLink({
       : pathname.startsWith(item.href);
   const Icon = item.icon;
   return (
-    <Link
+    <Link prefetch={false}
       href={item.href}
       className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm ${
         active ? "bg-white/8 text-lime" : "text-muted hover:bg-white/5 hover:text-paper"

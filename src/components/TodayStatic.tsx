@@ -61,7 +61,7 @@ export function TodayStatic() {
     <LiveToday>
       <div className="px-5 pt-6 lg:px-2">
         <HideWithoutBody>
-          <Link
+          <Link prefetch={false}
             href="/settings"
             className="mb-4 block rounded-[24px] border border-lime/25 bg-lime/8 px-4 py-3"
           >
@@ -79,14 +79,14 @@ export function TodayStatic() {
             <TodayHeading />
           </div>
           <div className="flex gap-2">
-            <Link
+            <Link prefetch={false}
               href="/download"
               className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5"
               aria-label="Download Aether"
             >
               <Download size={16} />
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/settings"
               className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5"
               aria-label="Settings"
@@ -109,7 +109,7 @@ export function TodayStatic() {
               Camera pulse is optical bpm from this phone, not the WHOOP.
             </p>
             <div className="no-ble mt-4 grid gap-2">
-              <Link
+              <Link prefetch={false}
                 href="/download#ios-native"
                 className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
               >
@@ -121,7 +121,7 @@ export function TodayStatic() {
               >
                 No Mac? Use Bluefy (free) instead
               </a>
-              <Link href="/download#ios-native" className="mt-1 block text-xs text-lime">
+              <Link prefetch={false} href="/download#ios-native" className="mt-1 block text-xs text-lime">
                 iPhone WHOOP steps →
               </Link>
             </div>
@@ -168,14 +168,14 @@ export function TodayStatic() {
             </section>
 
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <Link href="/lab" className="rounded-[28px] bg-ember/15 p-4">
+              <Link prefetch={false} href="/lab" className="rounded-[28px] bg-ember/15 p-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-ember">Lab</p>
                 <p className="font-display mt-2 text-4xl leading-none">
                   {report ? report.acwr.toFixed(2) : "—"}
                 </p>
                 <p className="mt-2 text-xs text-paper/70">Acute:chronic load</p>
               </Link>
-              <Link href="/sleep" className="rounded-[28px] bg-violet/15 p-4">
+              <Link prefetch={false} href="/sleep" className="rounded-[28px] bg-violet/15 p-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-violet">Sleep</p>
                 <p className="font-display mt-2 text-4xl leading-none">{sleepPct}%</p>
                 <p className="mt-2 text-xs text-paper/70">
@@ -222,7 +222,7 @@ export function TodayStatic() {
                   <p className="mt-1 text-xs text-muted">
                     Open-Meteo is free and needs no key. Set a location to turn it on.
                   </p>
-                  <Link
+                  <Link prefetch={false}
                     href="/settings"
                     className="mt-3 inline-block rounded-full bg-white/8 px-4 py-2 text-sm text-lime"
                   >
@@ -236,7 +236,7 @@ export function TodayStatic() {
               <section className="mt-6">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="font-display text-lg">Last night</h2>
-                  <Link href={`/sleep/view?id=${encodeURIComponent(sleep.id)}`} className="text-xs text-lime">
+                  <Link prefetch={false} href={`/sleep/view?id=${encodeURIComponent(sleep.id)}`} className="text-xs text-lime">
                     Open
                   </Link>
                 </div>
@@ -250,18 +250,18 @@ export function TodayStatic() {
             <section className="mt-7">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-display text-lg">Today&apos;s films</h2>
-                <Link href="/workouts" className="flex items-center text-xs text-lime">
+                <Link prefetch={false} href="/workouts" className="flex items-center text-xs text-lime">
                   All workouts <ChevronRight size={14} />
                 </Link>
               </div>
               {todayWorkouts.length === 0 ? (
                 <p className="rounded-[24px] border border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted">
                   No sessions yet today.{" "}
-                  <Link href="/coach/live" className="text-lime">
+                  <Link prefetch={false} href="/coach/live" className="text-lime">
                     Track live
                   </Link>{" "}
                   or{" "}
-                  <Link href="/coach/build" className="text-lime">
+                  <Link prefetch={false} href="/coach/build" className="text-lime">
                     build a workout
                   </Link>
                   .

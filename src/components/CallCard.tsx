@@ -70,7 +70,7 @@ export function CallCard({
           </p>
         </div>
       </div>
-      <Link
+      <Link prefetch={false}
         href={`/coach/${report.coachSlug}`}
         className="mt-5 block rounded-full bg-paper px-4 py-3 text-center text-sm font-medium text-ink"
       >
