@@ -54,7 +54,7 @@ jobs:
           cp native/android/AetherBand/app/build/outputs/apk/release/app-release.apk dist/aether.apk
           (cd dist && shasum -a 256 aether.apk > SHA256SUMS)
           cat dist/SHA256SUMS
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: v1.0.0
           name: Aether 1.0.0
