@@ -46,3 +46,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android release keystores stay in GitHub Actions secrets
+*.p12
+*.jks
+*.keystore

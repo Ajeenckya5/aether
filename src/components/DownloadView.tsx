@@ -236,10 +236,17 @@ export function DownloadView() {
           className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
         >
           <Download size={16} />
-          Get Aether.apk
+          Get aether.apk
         </a>
+        <a href={urls.apkChecksumUrl} className="mt-3 block text-sm text-lime">
+          SHA-256 checksum
+        </a>
+        <p className="mt-3 text-xs text-muted">
+          Obtainium can track this repo. The release file name stays{" "}
+          <span className="text-paper">aether.apk</span> on tag v1.0.0.
+        </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
-          <li>On the Android phone, tap <strong className="font-medium text-paper">Get Aether.apk</strong> (GitHub Release, not Google Play).</li>
+          <li>On the Android phone, tap <strong className="font-medium text-paper">Get aether.apk</strong> (GitHub Release v1.0.0, not Google Play).</li>
           <li>If Chrome or Files blocks it, allow the download, then allow install from that app in Settings.</li>
           <li>Open the <strong className="font-medium text-paper">Aether</strong> icon. Allow Bluetooth. Allow notifications if you want overnight keep-alive.</li>
           <li>Disconnect the official WHOOP app, then tap Connect WHOOP.</li>

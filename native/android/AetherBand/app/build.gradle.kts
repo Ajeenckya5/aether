@@ -23,19 +23,20 @@ android {
     applicationId = "app.aether.band"
     minSdk = 26
     targetSdk = 35
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 2
+    versionName = "1.0.0"
   }
 
+  val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+
   signingConfigs {
-    create("sideload") {
-      val store = rootProject.file("../sideload.p12")
-      if (store.exists()) {
-        storeFile = store
-        storeType = "pkcs12"
-        storePassword = "aether-sideload"
-        keyAlias = "aether"
-        keyPassword = "aether-sideload"
+    create("release") {
+      if (keystorePath != null) {
+        storeFile = file(keystorePath)
+        storeType = System.getenv("ANDROID_KEYSTORE_TYPE")?.takeIf { it.isNotBlank() } ?: "pkcs12"
+        storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+        keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+        keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
       }
     }
   }
@@ -43,11 +44,12 @@ android {
   buildTypes {
     debug {
       isMinifyEnabled = false
-      signingConfig = signingConfigs.findByName("sideload") ?: signingConfigs.getByName("debug")
     }
     release {
       isMinifyEnabled = false
-      signingConfig = signingConfigs.findByName("sideload") ?: signingConfigs.getByName("debug")
+      if (keystorePath != null) {
+        signingConfig = signingConfigs.getByName("release")
+      }
     }
   }
 
@@ -72,6 +74,14 @@ android {
 
   lint {
     abortOnError = false
+  }
+}
+
+tasks.matching { it.name == "assembleRelease" || it.name == "packageRelease" }.configureEach {
+  doFirst {
+    if (System.getenv("ANDROID_KEYSTORE_PATH").isNullOrBlank()) {
+      throw GradleException("ANDROID_KEYSTORE_PATH is required to sign the release APK.")
+    }
   }
 }
 
