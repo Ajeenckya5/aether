@@ -18,6 +18,7 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - run: npx next typegen
       - run: npx tsc --noEmit
       - run: npm test
       - run: node personas/check.mjs
