@@ -8,6 +8,7 @@ import { DataProvider } from "./DataProvider";
 import { HeartRateProvider } from "./LiveHeartRate";
 import { InstallBanner, useDevice } from "./DeviceChrome";
 import { preferPhoneShell } from "@/lib/device";
+import { appPath } from "@/lib/site";
 
 const NAV = [
   { href: "/", label: "Today", icon: House },

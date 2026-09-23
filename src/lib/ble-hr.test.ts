@@ -3,6 +3,7 @@ import {
   WHOOP_NO_PUBLIC_HR,
   WHOOP_PUBLIC_HR,
   explainBleError,
+  explainCameraError,
   heartRateRequestOptions,
   isPlausibleHr,
   isWhoopBandName,
@@ -85,6 +86,14 @@ describe("Web Bluetooth chooser", () => {
     expect(explainBleError(null, false)).toMatch(/Bluefy/);
     expect(explainBleError({ name: "NotFoundError" }, true)).toMatch(/WHOOP band/);
     expect(explainBleError(new Error(WHOOP_NO_PUBLIC_HR), true)).toBe(WHOOP_NO_PUBLIC_HR);
+  });
+
+  it("maps camera failures to the actual cause", () => {
+    expect(explainCameraError({ name: "NotAllowedError" })).toMatch(/permission/i);
+    expect(explainCameraError({ name: "NotFoundError" })).toMatch(/No camera/);
+    expect(explainCameraError({ name: "NotReadableError" })).toMatch(/in use/);
+    expect(explainCameraError({ name: "SecurityError" })).toMatch(/secure/);
+    expect(explainCameraError(new Error("nope"))).not.toMatch(/Bluefy/);
   });
 
   it("recognizes WHOOP names so live copy can mention the public HR profile", () => {

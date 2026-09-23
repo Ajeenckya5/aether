@@ -155,6 +155,26 @@ export const WHOOP_PUBLIC_HR =
 export const WHOOP_NO_PUBLIC_HR =
   "This WHOOP did not expose the public Heart Rate service in this browser. Aether only uses that open GATT for live bpm. Full band history needs a native iOS companion, not a website. Keep the band in the official WHOOP app for recovery/sleep, or tap Scan all devices and pick it again.";
 
+export function explainCameraError(err: unknown): string {
+  const name =
+    err && typeof err === "object" && "name" in err
+      ? String((err as { name: string }).name)
+      : "";
+  if (name === "NotAllowedError") {
+    return "Camera permission was denied. Allow the camera for this site, then try again.";
+  }
+  if (name === "NotFoundError" || name === "OverconstrainedError") {
+    return "No camera is available on this device.";
+  }
+  if (name === "NotReadableError" || name === "AbortError") {
+    return "The camera is in use by another app. Close that app and try again.";
+  }
+  if (name === "SecurityError") {
+    return "The camera needs a secure page. Open the installed app or https.";
+  }
+  return "Could not start the camera.";
+}
+
 export function explainBleError(
   err: unknown,
   bluetoothAvailable: boolean,

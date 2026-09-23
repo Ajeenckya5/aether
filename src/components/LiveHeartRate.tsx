@@ -19,6 +19,7 @@ import {
   WHOOP_NO_PUBLIC_HR,
   WHOOP_PUBLIC_HR,
   explainBleError,
+  explainCameraError,
   heartRateRequestOptions,
   isPlausibleHr,
   isWhoopBandName,
@@ -609,7 +610,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const startCamera = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus("error");
-      setMessage("This browser cannot use the camera. Open Aether in Bluefy to pair the WHOOP instead.");
+      setMessage("This browser cannot use the camera.");
       return;
     }
     wantLiveRef.current = false;
@@ -678,12 +679,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       stopCamera();
       setStatus("error");
-      const name = err && typeof err === "object" && "name" in err ? String((err as { name: string }).name) : "";
-      if (name === "NotAllowedError") {
-        setMessage("Camera permission was denied. Enable it in Settings, or open Aether in Bluefy to pair the WHOOP.");
-        return;
-      }
-      setMessage("Could not start the camera. Open Aether in Bluefy to pair the WHOOP on this iPhone.");
+      setMessage(explainCameraError(err));
     }
   }, [clearReconnectTimer, detachDevice, resetLiveStats, stopCamera, stopPractice]);
 
