@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { buildHrCurve, workoutDurationMs } from "@/lib/hr-curve";
 import { formatMillis, kcalFromKj } from "@/lib/format";
@@ -14,7 +14,6 @@ export function SessionCinema({ workout }: { workout: Workout }) {
   const media = mediaForSport(workout.sport_name);
   const curve = useMemo(() => buildHrCurve(workout), [workout]);
   const duration = workoutDurationMs(workout);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
 
@@ -55,20 +54,12 @@ export function SessionCinema({ workout }: { workout: Workout }) {
         <div className="absolute inset-0">
           <SportArt sport={workout.sport_name} />
         </div>
-        <video
-          ref={videoRef}
-          className="absolute inset-0 h-full w-full object-cover opacity-55"
-          poster={media.poster}
-          muted
-          playsInline
-          loop
-          autoPlay
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
-        >
-          <source src={media.video} type="video/mp4" />
-        </video>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={media.poster}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-80"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-black/25 to-black/20" />
         <div className="absolute left-4 top-4 right-4 flex items-start justify-between">
           <div>
@@ -81,18 +72,9 @@ export function SessionCinema({ workout }: { workout: Workout }) {
           </div>
           <button
             type="button"
-            onClick={() => {
-              const video = videoRef.current;
-              setPlaying((p) => {
-                const next = !p;
-                if (video) {
-                  if (next) void video.play();
-                  else video.pause();
-                }
-                return next;
-              });
-            }}
+            onClick={() => setPlaying((p) => !p)}
             className="grid h-11 w-11 place-items-center rounded-full bg-paper text-ink"
+            aria-label={playing ? "Pause replay" : "Play replay"}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>

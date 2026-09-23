@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { buildAtlas } from "@/lib/atlas";
 import { estimateBioAge } from "@/lib/bio-age";
-import { useLiveHeartRate } from "./LiveHeartRate";
+import { useLiveHeartRate } from "./heart-rate-context";
 import {
   DEFAULT_ATHLETE,
   loadAthlete,
@@ -37,7 +36,7 @@ export function useLab() {
         spo2: hr.spo2,
         skinTempC: hr.skinTempC,
         overnight: hr.overnight,
-        at: Date.now(),
+        at: 0,
       }),
     [
       hr.batteryPct,
@@ -82,18 +81,13 @@ export function useLab() {
     [data, journal],
   );
 
-  const atlas = useMemo(
-    () => buildAtlas(data, journal, athlete),
-    [data, journal, athlete],
-  );
-
   const bioAge = useMemo(
     () =>
       estimateBioAge(data, athlete, {
         rmssdMs: hr.rmssd,
         restHr: hr.restHr,
       }),
-    [athlete, data, hr.restHr, hr.rmssd, hr.status],
+    [athlete, data, hr.restHr, hr.rmssd],
   );
 
   return {
@@ -104,7 +98,6 @@ export function useLab() {
     athlete,
     updateAthlete,
     report,
-    atlas,
     bioAge,
   };
 }

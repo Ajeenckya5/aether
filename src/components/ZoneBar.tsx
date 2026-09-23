@@ -1,5 +1,3 @@
-"use client";
-
 import { zonePercents } from "@/lib/hr-curve";
 import type { ZoneDurations } from "@/lib/types";
 

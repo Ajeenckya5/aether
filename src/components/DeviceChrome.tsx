@@ -85,7 +85,7 @@ export function InstallBanner() {
     return (
       <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
         {installBannerCopy(device)}{" "}
-        <Link href={installGuideHref(device)} className="text-lime">
+        <Link prefetch={false} href={installGuideHref(device)} className="text-lime">
           Step by step
         </Link>
         <button type="button" className="ml-2 text-lime" onClick={() => setHidden(true)}>
@@ -98,7 +98,7 @@ export function InstallBanner() {
   return (
     <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
       {installBannerCopy(device)}{" "}
-      <Link href={installGuideHref(device)} className="text-lime">
+      <Link prefetch={false} href={installGuideHref(device)} className="text-lime">
         Put it on the phone
       </Link>
     </p>
@@ -136,7 +136,7 @@ export function PhoneInstallCard() {
           Install Aether on this phone
         </button>
       ) : (
-        <Link
+        <Link prefetch={false}
           href={installGuideHref(device)}
           className="mt-4 flex w-full items-center justify-center rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
         >

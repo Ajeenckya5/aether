@@ -38,6 +38,7 @@ jobs:
         run: |
           mkdir -p dist
           cp native/android/AetherBand/app/build/outputs/apk/release/app-release.apk dist/Aether.apk
+          shasum -a 256 dist/Aether.apk > dist/SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: android-sideload
@@ -50,8 +51,10 @@ jobs:
             3. Open Aether. Allow Bluetooth (and notifications so the overnight keep-alive can stay up).
             4. Disconnect the official WHOOP app, then tap Connect WHOOP.
 
-            Public Heart Rate GATT only. Aether sleep needs the app left connected overnight. iPhone still uses the Xcode app or Bluefy — this APK is Android.
-          files: dist/Aether.apk
+            Public Heart Rate GATT only. Aether sleep needs the app left connected overnight. iPhone still uses the Xcode app or Bluefy — this APK is Android. `SHA256SUMS` is next to the APK.
+          files: |
+            dist/Aether.apk
+            dist/SHA256SUMS
           fail_on_unmatched_files: true
           make_latest: true
           overwrite_files: true

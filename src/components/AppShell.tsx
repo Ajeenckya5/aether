@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, Download, FlaskConical, House, Moon, PlayCircle, Settings, Watch } from "lucide-react";
 import { DataProvider } from "./DataProvider";
-import { HeartRateProvider } from "./LiveHeartRate";
+import { HeartRateSlot } from "./heart-rate-context";
 import { InstallBanner, useDevice } from "./DeviceChrome";
 import { preferPhoneShell } from "@/lib/device";
+import { appPath } from "@/lib/site";
+import { startMonitoring } from "@/lib/monitor";
 
 const NAV = [
   { href: "/", label: "Today", icon: House },
@@ -28,13 +30,22 @@ export function AppShell({
   const device = useDevice();
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
+  useEffect(() => {
+    startMonitoring();
+    if (navigator.storage?.persist) void navigator.storage.persist();
+    if (process.env.NODE_ENV !== "production") return;
+    if (!("serviceWorker" in navigator)) return;
+    void navigator.serviceWorker.register(appPath("/sw.js"), {
+      scope: appPath("/") || "/",
+    });
+  }, []);
   const phoneApp = !ready || preferPhoneShell(device);
   const backTo = backHref(pathname);
   const hideMobileNav = hideNav || Boolean(backTo && pathname !== "/settings");
 
   return (
     <DataProvider>
-      <HeartRateProvider>
+      <HeartRateSlot active={pathname !== "/"}>
         <div className={`min-h-dvh bg-[#070706] ${phoneApp ? "" : "lg:flex"}`}>
           <aside
             className={`h-dvh w-60 shrink-0 flex-col border-r border-white/8 bg-ink px-4 py-6 sticky top-0 ${
@@ -70,7 +81,7 @@ export function AppShell({
                 className={`absolute left-3 z-30 ${phoneApp ? "" : "lg:left-5"}`}
                 style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
               >
-                <Link
+                <Link prefetch={false}
                   href={backTo}
                   aria-label="Back"
                   className="grid h-11 w-11 place-items-center rounded-full bg-black/45 text-paper backdrop-blur"
@@ -80,6 +91,8 @@ export function AppShell({
               </div>
             )}
             <div
+              tabIndex={0}
+              aria-label="Page content"
               className={`relative flex-1 overflow-y-auto no-scrollbar ${
                 hideMobileNav
                   ? "pb-4"
@@ -111,7 +124,7 @@ export function AppShell({
                     const Icon = item.icon;
                     return (
                       <li key={item.href}>
-                        <Link
+                        <Link prefetch={false}
                           href={item.href}
                           className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] tracking-wide ${
                             active ? "text-lime" : "text-muted"
@@ -128,7 +141,7 @@ export function AppShell({
             )}
           </div>
         </div>
-      </HeartRateProvider>
+      </HeartRateSlot>
     </DataProvider>
   );
 }
@@ -146,7 +159,7 @@ function SideLink({
       : pathname.startsWith(item.href);
   const Icon = item.icon;
   return (
-    <Link
+    <Link prefetch={false}
       href={item.href}
       className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm ${
         active ? "bg-white/8 text-lime" : "text-muted hover:bg-white/5 hover:text-paper"

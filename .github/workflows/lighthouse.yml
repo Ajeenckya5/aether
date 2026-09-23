@@ -1,0 +1,30 @@
+name: Lighthouse
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: node scripts/build-pages.mjs
+      - name: Serve the export
+        run: node scripts/serve-export.mjs &
+      - name: Wait for the export
+        run: node -e "const u='http://127.0.0.1:4173/aether/'; const start=Date.now(); (async()=>{while(Date.now()-start<60000){try{const r=await fetch(u); if(r.ok) process.exit(0);}catch{} await new Promise(r=>setTimeout(r,500));} process.exit(1);})()"
+      - uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: http://127.0.0.1:4173/aether/
+          configPath: .lighthouserc.json
+          uploadArtifacts: true

@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Bluetooth, BluetoothOff } from "lucide-react";
 import {
@@ -19,9 +11,11 @@ import {
   WHOOP_NO_PUBLIC_HR,
   WHOOP_PUBLIC_HR,
   explainBleError,
+  explainCameraError,
   heartRateRequestOptions,
   isPlausibleHr,
   isWhoopBandName,
+  bandConnectionPhase,
   parseHeartRateMeasurement,
 } from "@/lib/ble-hr";
 import {
@@ -58,31 +52,15 @@ import { describeHrSupport, readDevice, whoopGuideHref } from "@/lib/device";
 import { aetherPageUrl, BLUEFY_APP_STORE, bluefyOpenHref } from "@/lib/ios-ble";
 import { PUBLIC_SITE } from "@/lib/site";
 import { useDevice } from "./DeviceChrome";
+import {
+  HeartRateContext,
+  publishHeartRate,
+  useLiveHeartRate,
+  type HrStatus,
+  type HrValue,
+} from "./heart-rate-context";
 
-export type HrStatus = "off" | "connecting" | "live" | "camera" | "practice" | "error";
-
-type HrValue = {
-  bpm: number | null;
-  rmssd: number | null;
-  sdnn: number | null;
-  restHr: number | null;
-  batteryPct: number | null;
-  rrCount: number;
-  spo2: number | null;
-  skinTempC: number | null;
-  overnight: OvernightSummary | null;
-  nightProgress: OvernightProgress | null;
-  fromBand: boolean;
-  status: HrStatus;
-  message: string | null;
-  deviceName: string | null;
-  connect: (opts?: { scanAll?: boolean }) => Promise<void>;
-  startCamera: () => Promise<void>;
-  startPractice: () => void;
-  disconnect: () => void;
-};
-
-const HrContext = createContext<HrValue | null>(null);
+export { useLiveHeartRate };
 
 const LIVE_COPY =
   "Live Bluetooth on this phone. Public Heart Rate service: bpm, R-R/HRV when sent, battery if exposed. Standard pulse-ox and thermometer if this strap exposes them. Leave the page open overnight for Aether sleep from that stream.";
@@ -608,7 +586,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const startCamera = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus("error");
-      setMessage("This browser cannot use the camera. Open Aether in Bluefy to pair the WHOOP instead.");
+      setMessage("This browser cannot use the camera.");
       return;
     }
     wantLiveRef.current = false;
@@ -677,12 +655,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       stopCamera();
       setStatus("error");
-      const name = err && typeof err === "object" && "name" in err ? String((err as { name: string }).name) : "";
-      if (name === "NotAllowedError") {
-        setMessage("Camera permission was denied. Enable it in Settings, or open Aether in Bluefy to pair the WHOOP.");
-        return;
-      }
-      setMessage("Could not start the camera. Open Aether in Bluefy to pair the WHOOP on this iPhone.");
+      setMessage(explainCameraError(err));
     }
   }, [clearReconnectTimer, detachDevice, resetLiveStats, stopCamera, stopPractice]);
 
@@ -748,31 +721,69 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
-  return <HrContext.Provider value={value}>{children}</HrContext.Provider>;
-}
+  useEffect(() => {
+    publishHeartRate(value);
+  }, [value]);
 
-export function useLiveHeartRate(): HrValue {
-  const ctx = useContext(HrContext);
-  if (!ctx) throw new Error("useLiveHeartRate must be used inside HeartRateProvider");
-  return ctx;
+  return <HeartRateContext.Provider value={value}>{children}</HeartRateContext.Provider>;
 }
 
 export function LiveHeartRateButton() {
-  const { bpm, status, connect } = useLiveHeartRate();
-  const live = status === "live" || status === "camera";
+  const hr = useLiveHeartRate();
+  const phase = bandConnectionPhase(hr.status, hr.message);
+  const live = phase === "connected";
   return (
-    <button
-      type="button"
-      onClick={() => void connect()}
-      className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-paper"
-    >
-      {live ? <Bluetooth size={14} /> : <BluetoothOff size={14} />}
-      {live
-        ? `${bpm ?? "--"} bpm live`
-        : status === "connecting"
-          ? "Pairing…"
-          : "Connect BT"}
-    </button>
+    <div className="text-right">
+      <button
+        type="button"
+        onClick={() => void hr.connect()}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-paper"
+      >
+        {live ? <Bluetooth size={14} /> : <BluetoothOff size={14} />}
+        {live
+          ? `${hr.bpm ?? "--"} bpm live`
+          : phase === "requesting"
+            ? "Connecting…"
+            : phase === "cancelled"
+              ? "Pairing cancelled"
+              : phase === "unavailable"
+                ? "Bluetooth unavailable"
+                : "Connect a heart-rate strap"}
+      </button>
+      {hr.message && !live ? <p className="mt-1 max-w-xs text-xs text-muted">{hr.message}</p> : null}
+    </div>
+  );
+}
+
+export function SessionHrStatus() {
+  const hr = useLiveHeartRate();
+  const phase = bandConnectionPhase(hr.status, hr.message);
+  if (phase === "connected") {
+    return (
+      <p className="mt-4 text-sm text-muted">
+        Heart rate from {hr.deviceName || "your strap"}. Pairing stays in Settings.
+      </p>
+    );
+  }
+  const label =
+    phase === "requesting"
+      ? "Connecting…"
+      : phase === "cancelled"
+        ? "Pairing cancelled"
+        : phase === "unavailable"
+          ? "Bluetooth unavailable"
+          : "Connect a heart-rate strap";
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => void hr.connect()}
+        className="min-h-11 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
+      >
+        {label}
+      </button>
+      {hr.message ? <p className="mt-2 text-sm text-muted">{hr.message}</p> : null}
+    </div>
   );
 }
 

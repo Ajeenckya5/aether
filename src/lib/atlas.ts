@@ -588,7 +588,7 @@ export function buildAtlas(
   const weekWorkouts = data.workouts.filter(
     (w) => nowMs - new Date(w.start).getTime() < 7 * 86400000,
   );
-  let zMins = [0, 0, 0, 0, 0, 0];
+  const zMins = [0, 0, 0, 0, 0, 0];
   let luciaWeek = 0;
   let edwardsWeek = 0;
   let stagnoWeek = 0;

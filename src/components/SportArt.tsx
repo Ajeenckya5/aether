@@ -1,5 +1,3 @@
-"use client";
-
 import { sportKey } from "@/lib/sports";
 
 const TINTS: Record<string, [string, string]> = {

@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const staticExport = process.env.STATIC_EXPORT === "1";
-const basePath = staticExport ? "/aether" : process.env.NEXT_PUBLIC_BASE_PATH || "";
+const configuredBase = process.env.NEXT_PUBLIC_BASE_PATH;
+const basePath =
+  configuredBase !== undefined ? configuredBase : staticExport ? "/aether" : "";
 
 const nextConfig: NextConfig = {
   ...(staticExport

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import Link from "next/link";
 import { COACH_SESSIONS } from "@/lib/coach";
+import { mediaForSport } from "@/lib/media";
 import {
   deleteCustomWorkout,
   loadCustomWorkouts,
@@ -61,16 +62,12 @@ export function CoachView() {
         href={`/coach/${featured.slug}`}
         className="relative mt-6 block overflow-hidden rounded-[32px]"
       >
-        <video
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={mediaForSport(featured.sport).poster}
+          alt=""
           className="h-56 w-full object-cover"
-          poster={featured.poster}
-          muted
-          playsInline
-          loop
-          autoPlay
-        >
-          <source src={featured.video} type="video/mp4" />
-        </video>
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-black/20 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <p className="text-[11px] uppercase tracking-widest text-lime">
@@ -136,7 +133,7 @@ export function CoachView() {
             <div className="relative h-24 w-24 shrink-0" style={{ background: "#1a1914" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={session.poster}
+                src={mediaForSport(session.sport).poster}
                 alt=""
                 className="h-full w-full object-cover"
                 onError={(event) => {

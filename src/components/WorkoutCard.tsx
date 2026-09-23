@@ -1,7 +1,5 @@
-"use client";
-
-import Link from "next/link";
 import { formatDuration, formatTime } from "@/lib/format";
+import { siteHref } from "@/lib/site";
 import { mediaForSport } from "@/lib/media";
 import { sportLabel } from "@/lib/sports";
 import type { Workout } from "@/lib/types";
@@ -13,8 +11,8 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
   const strain = workout.score?.strain ?? 0;
 
   return (
-    <Link
-      href={`/workouts/view?id=${encodeURIComponent(workout.id)}`}
+    <a
+      href={siteHref(`/workouts/view?id=${encodeURIComponent(workout.id)}`)}
       className="block overflow-hidden rounded-[28px] border border-white/8 bg-panel"
     >
       <div className="relative h-36 overflow-hidden" style={{ background: media.tint }}>
@@ -24,9 +22,6 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
           src={media.poster}
           alt=""
           className="relative h-full w-full object-cover opacity-50"
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-transparent" />
         <div className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1 text-[11px] uppercase tracking-widest text-paper backdrop-blur">
@@ -54,6 +49,6 @@ export function WorkoutCard({ workout }: { workout: Workout }) {
       <div className="px-4 py-3">
         <ZoneBar zones={workout.score?.zone_durations} compact />
       </div>
-    </Link>
+    </a>
   );
 }

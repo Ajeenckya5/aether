@@ -1,3 +1,4 @@
+import { gateRecoveryAge, type RecoveryAgeGate } from "@ajeenckya/engine";
 import {
   bodyMassIndex,
   resolvedHeightCm,
@@ -43,6 +44,7 @@ export type BioAgeReport = {
   method: string;
   citation: string;
   notes: string[];
+  recoveryAge: RecoveryAgeGate;
 };
 
 type Marker = {
@@ -400,19 +402,27 @@ export function estimateBioAge(
     else confidence = "low";
   }
 
+  const recoveryAge = gateRecoveryAge({
+    sample: !data.connected,
+    realNights: data.sleeps.length,
+    markerCount: markers.length,
+  });
+  const publish = recoveryAge.publish;
+
   return {
     chronological,
-    biological,
-    unconstrained,
-    delta,
-    confidence,
+    biological: publish ? biological : null,
+    unconstrained: publish ? unconstrained : null,
+    delta: publish ? delta : null,
+    confidence: publish ? confidence : "unavailable",
     markersUsed: markers.length,
     markersPossible: 10,
-    systems,
+    systems: publish ? systems : systems.map((system) => ({ ...system, age: null })),
     rows,
     missing,
-    method: "Klemera–Doubal KDM (CA as a biomarker; 7-night means)",
+    method: "Recovery age estimate (Klemera–Doubal, gated on real nights)",
     citation: BIO_AGE_CITATION,
     notes: BIO_AGE_NOTES,
+    recoveryAge,
   };
 }

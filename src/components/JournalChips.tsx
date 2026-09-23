@@ -43,7 +43,7 @@ export function JournalChips({
             type="button"
             onClick={() => onChange({ soreness: n as JournalFlags["soreness"] })}
             className={`rounded-full px-3 py-1.5 text-xs ${
-              journal.soreness === n ? "bg-ember text-white" : "bg-white/6 text-paper"
+              journal.soreness === n ? "bg-ember text-ink" : "bg-white/6 text-paper"
             }`}
           >
             {n === 0 ? "Fresh" : `Sore ${n}`}

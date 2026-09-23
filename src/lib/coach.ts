@@ -28,9 +28,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "A slow joint sequence for stiff mornings. Hips, T-spine, and breath before any load.",
     video:
-      "https://videos.pexels.com/video-files/3822145/3822145-sd_640_360_30fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/3822622/pexels-photo-3822622.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Breath", seconds: 90, cue: "Nasal inhale for 4, long exhale for 6." },
       { title: "Cat-cow", seconds: 120, cue: "Move with the breath. Keep the neck long." },
@@ -50,9 +50,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Conversational pace only. You should be able to speak a full sentence. Heart rate stays in zone 2.",
     video:
-      "https://videos.pexels.com/video-files/4753989/4753989-sd_640_360_30fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/2803158/pexels-photo-2803158.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Easy roll-in", seconds: 300, cue: "Shuffle. Let cadence find you." },
       { title: "Zone two", seconds: 1500, cue: "Nose breathing if you can. Unclench the jaw." },
@@ -70,9 +70,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Five rounds. Hinge, squat, push, pull. Leave two reps in the tank on every set.",
     video:
-      "https://videos.pexels.com/video-files/5327468/5327468-sd_640_360_25fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Warm the pattern", seconds: 180, cue: "Bodyweight squat, hip hinge, scap push-up." },
       { title: "Goblet squat", seconds: 240, cue: "Elbows inside the knees. Pause one second." },
@@ -93,9 +93,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Down-regulation after a hard day. No strain target. Longer exhales, heavy limbs.",
     video:
-      "https://videos.pexels.com/video-files/3822145/3822145-sd_640_360_30fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/3822622/pexels-photo-3822622.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Arrive", seconds: 120, cue: "Lie down. Feel the weight of the skull." },
       { title: "Box breath", seconds: 240, cue: "In 4, hold 4, out 4, hold 4." },
@@ -114,9 +114,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Short climbs at a hard but repeatable effort. Walk the downs. Don't sprint the first rep.",
     video:
-      "https://videos.pexels.com/video-files/4828054/4828054-sd_640_360_24fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Warm jog", seconds: 360, cue: "Easy until you feel a light sweat." },
       { title: "Repeat 1", seconds: 90, cue: "Strong posture. Drive the knee, don't collapse." },
@@ -139,9 +139,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Easy outdoor walk. Phone in a pocket. Let yesterday's strain drain out of the legs.",
     video:
-      "https://videos.pexels.com/video-files/4322002/4322002-sd_640_360_25fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/1571939/pexels-photo-1571939.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Loosen", seconds: 180, cue: "Ankles, shoulders, unclench the hands." },
       { title: "Easy walk", seconds: 1020, cue: "Look farther ahead than usual." },
@@ -158,9 +158,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Push-ups, split squats, hollow holds. For hotel rooms, living rooms, and bad weather.",
     video:
-      "https://videos.pexels.com/video-files/8093156/8093156-sd_640_360_25fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/416778/pexels-photo-416778.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Prep", seconds: 120, cue: "Shoulder circles, glute bridges, dead bugs." },
       { title: "Split squat", seconds: 240, cue: "Back knee kisses the floor. Front heel heavy." },
@@ -181,9 +181,9 @@ export const COACH_SESSIONS: CoachSession[] = [
     summary:
       "Lights low. No strain. Forward folds and longer exhales so sleep onset is easier.",
     video:
-      "https://videos.pexels.com/video-files/3822145/3822145-sd_640_360_30fps.mp4",
+      "",
     poster:
-      "https://images.pexels.com/photos/3822622/pexels-photo-3822622.jpeg?auto=compress&cs=tinysrgb&w=1400",
+      "/media/route.svg",
     blocks: [
       { title: "Dim", seconds: 60, cue: "Sit. Drop the shoulders." },
       { title: "Seated fold", seconds: 150, cue: "Bend the knees as much as you need." },

@@ -32,7 +32,7 @@ import {
 } from "@/lib/sessions";
 import { DeviceStrip, useDevice } from "./DeviceChrome";
 import { useLab } from "./useLab";
-import { useLiveHeartRate } from "./LiveHeartRate";
+import { useLiveHeartRate } from "./heart-rate-context";
 import { ZoneBar } from "./ZoneBar";
 import { preferPhoneShell } from "@/lib/device";
 

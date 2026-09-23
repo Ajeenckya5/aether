@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      "@ajeenckya/engine": path.resolve(__dirname, "packages/engine/src/index.ts"),
     },
   },
 });

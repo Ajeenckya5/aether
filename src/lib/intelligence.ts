@@ -3,7 +3,9 @@ import type { JournalFlags } from "./journal";
 import { scoreReadiness, type Attribution } from "./model";
 import type { Dashboard, Sleep, Workout, ZoneDurations } from "./types";
 
-export type TrainingCall = "push" | "build" | "recover";
+import { decideCall, strainFromZoneMinutes, type TrainingCall } from "@ajeenckya/engine";
+
+export type { TrainingCall };
 
 export type DayPoint = {
   key: string;
@@ -129,14 +131,7 @@ export function edwardsTrimp(zones: ZoneDurations | null | undefined): number {
     zones.zone_four_milli,
     zones.zone_five_milli,
   ].map((ms) => ms / 60000);
-  return (
-    mins[0] * 0.5 +
-    mins[1] * 1 +
-    mins[2] * 2 +
-    mins[3] * 3 +
-    mins[4] * 4 +
-    mins[5] * 5
-  );
+  return strainFromZoneMinutes(mins);
 }
 
 function workoutLoad(workout: Workout): number {
@@ -300,43 +295,6 @@ function featuresFor(
     sleep_regularity: regularity,
     soreness: journal.soreness / 3,
   };
-}
-
-function decideCall(input: {
-  readiness: number;
-  acwr: number;
-  hrvZ: number;
-  tsb: number;
-  risk: number;
-  overreaching: boolean;
-  illness: boolean;
-}): { call: TrainingCall; why: string[] } {
-  const why: string[] = [];
-  if (input.illness) {
-    why.push("Illness flagged — keep load near zero until symptoms clear.");
-    return { call: "recover", why };
-  }
-  if (input.overreaching) {
-    why.push("HRV has been suppressed for several days while acute load stays high.");
-    return { call: "recover", why };
-  }
-  if (input.acwr >= 1.5) {
-    why.push(`Acute:chronic ratio is ${input.acwr.toFixed(2)} — Gabbett's spike zone.`);
-    return { call: "recover", why };
-  }
-  if (input.readiness < 38 || input.hrvZ < -1.35 || input.risk > 0.55) {
-    why.push("Open readiness and HRV both say the nervous system is still paying last week's bill.");
-    if (input.tsb < 0) why.push("Training stress balance is negative (more fatigue than fitness).");
-    return { call: "recover", why };
-  }
-  if (input.readiness >= 72 && input.acwr < 1.25 && input.hrvZ > -0.25 && input.tsb >= 0) {
-    why.push("You are fresh: HRV is at or above baseline and chronic load can absorb a hard day.");
-    why.push("Keep the hard work quality — don't dump junk volume on a green day.");
-    return { call: "push", why };
-  }
-  why.push("Build day: enough recovery for aerobic or technique work, not a breakthrough session.");
-  if (input.acwr > 1.2) why.push("Ratio is climbing — bias to zone 2 so tomorrow's ACWR stays in range.");
-  return { call: "build", why };
 }
 
 function coachFor(call: TrainingCall): { slug: string; label: string } {

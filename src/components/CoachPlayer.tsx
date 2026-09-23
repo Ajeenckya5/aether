@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, SkipForward } from "lucide-react";
+import { mediaForSport } from "@/lib/media";
 import type { CoachSession } from "@/lib/coach";
 import { currentBlockIndex, formatClock, wallElapsedMs } from "@/lib/live-math";
 import { idleClock, pauseClock, resumeClock, skipClockTo, startClock } from "@/lib/session-clock";
@@ -86,20 +87,17 @@ export function CoachPlayer({
     setElapsedMs(jumpMs);
   }
 
+  const art = mediaForSport(session.sport);
   const mmss = formatClock(remaining * 1000);
 
   return (
     <div className="relative min-h-full">
-      <video
-        className="absolute inset-0 h-full w-full object-cover"
-        poster={session.poster}
-        muted
-        playsInline
-        loop
-        autoPlay
-      >
-        <source src={session.video} type="video/mp4" />
-      </video>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={art.poster}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-black/35" />
       <div className="relative flex min-h-[720px] flex-col justify-end px-5 pb-10 pt-6">
         <div className="mb-auto flex items-center justify-between pl-12">
@@ -134,6 +132,7 @@ export function CoachPlayer({
           <button
             type="button"
             onClick={toggle}
+            aria-label={playing ? "Pause session" : "Play session"}
             className="grid h-14 w-14 place-items-center rounded-full bg-lime text-ink"
           >
             {playing ? <Pause size={20} /> : <Play size={20} />}
@@ -141,6 +140,7 @@ export function CoachPlayer({
           <button
             type="button"
             onClick={skip}
+            aria-label="Skip to the next block"
             className="grid h-14 w-14 place-items-center rounded-full bg-white/10"
           >
             <SkipForward size={18} />

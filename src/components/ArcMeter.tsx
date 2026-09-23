@@ -1,5 +1,3 @@
-"use client";
-
 function polar(cx: number, cy: number, r: number, angleDeg: number) {
   const a = ((angleDeg - 90) * Math.PI) / 180;
   return {

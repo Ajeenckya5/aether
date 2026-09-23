@@ -125,6 +125,25 @@ export function isPlausibleHr(bpm: number): boolean {
   return bpm > 20 && bpm < 240;
 }
 
+export type BandConnectionPhase =
+  | "idle"
+  | "requesting"
+  | "connected"
+  | "unavailable"
+  | "cancelled";
+
+export function bandConnectionPhase(
+  status: string,
+  message: string | null,
+): BandConnectionPhase {
+  if (status === "live" || status === "camera") return "connected";
+  if (status === "connecting") return "requesting";
+  if (status === "error") {
+    return message && /cancel/i.test(message) ? "cancelled" : "unavailable";
+  }
+  return "idle";
+}
+
 export function isWhoopBandName(name: string | null | undefined): boolean {
   return Boolean(name && /whoop/i.test(name));
 }
@@ -135,6 +154,26 @@ export const WHOOP_PUBLIC_HR =
 
 export const WHOOP_NO_PUBLIC_HR =
   "This WHOOP did not expose the public Heart Rate service in this browser. Aether only uses that open GATT for live bpm. Full band history needs a native iOS companion, not a website. Keep the band in the official WHOOP app for recovery/sleep, or tap Scan all devices and pick it again.";
+
+export function explainCameraError(err: unknown): string {
+  const name =
+    err && typeof err === "object" && "name" in err
+      ? String((err as { name: string }).name)
+      : "";
+  if (name === "NotAllowedError") {
+    return "Camera permission was denied. Allow the camera for this site, then try again.";
+  }
+  if (name === "NotFoundError" || name === "OverconstrainedError") {
+    return "No camera is available on this device.";
+  }
+  if (name === "NotReadableError" || name === "AbortError") {
+    return "The camera is in use by another app. Close that app and try again.";
+  }
+  if (name === "SecurityError") {
+    return "The camera needs a secure page. Open the installed app or https.";
+  }
+  return "Could not start the camera.";
+}
 
 export function explainBleError(
   err: unknown,

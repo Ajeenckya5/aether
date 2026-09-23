@@ -3,10 +3,12 @@
 import { AgeCard } from "./AgeCard";
 import { AtlasPanel } from "./AtlasPanel";
 import { SourceBanner } from "./SourceBanner";
+import { useAtlas } from "./useAtlas";
 import { useLab } from "./useLab";
 
 export function AtlasView() {
-  const { atlas, bioAge } = useLab();
+  const { data, journal, athlete, bioAge } = useLab();
+  const atlas = useAtlas(data, journal, athlete);
   return (
     <div className="px-5 pt-6 pb-8">
       <SourceBanner />

@@ -44,33 +44,53 @@ export async function searchPlaces(query: string): Promise<PlaceHit[]> {
   });
 }
 
+export function reverseGeocodeUrl(lat: number, lon: number): string {
+  return `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+}
+
+export function labelFromReverse(
+  body: {
+    city?: string;
+    locality?: string;
+    principalSubdivision?: string;
+    countryName?: string;
+  } | null,
+  lat: number,
+  lon: number,
+): string {
+  const city = body?.city || body?.locality;
+  if (city) {
+    return [city, body?.principalSubdivision, body?.countryName].filter(Boolean).join(", ");
+  }
+  return `Near ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+}
+
 export async function reversePlace(lat: number, lon: number): Promise<PlaceHit> {
   const coarse = roundCoords(lat, lon);
   if (!validCoords(coarse.lat, coarse.lon)) {
     throw new Error("Invalid coordinates");
   }
   try {
-    const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${coarse.lat}&longitude=${coarse.lon}&language=en&format=json`;
-    const data = (await getJson(url)) as { results?: GeoHit[] };
-    const hit = data.results?.[0];
-    if (hit) {
-      const named = roundCoords(hit.latitude, hit.longitude);
-      return {
-        name: label(hit),
-        lat: named.lat,
-        lon: named.lon,
-        timezone: hit.timezone ?? null,
-      };
-    }
+    const data = (await getJson(reverseGeocodeUrl(coarse.lat, coarse.lon))) as {
+      city?: string;
+      locality?: string;
+      principalSubdivision?: string;
+      countryName?: string;
+    };
+    return {
+      name: labelFromReverse(data, coarse.lat, coarse.lon),
+      lat: coarse.lat,
+      lon: coarse.lon,
+      timezone: null,
+    };
   } catch {
-    /* fall through to coarse pin */
+    return {
+      name: labelFromReverse(null, coarse.lat, coarse.lon),
+      lat: coarse.lat,
+      lon: coarse.lon,
+      timezone: null,
+    };
   }
-  return {
-    name: `${coarse.lat.toFixed(2)}, ${coarse.lon.toFixed(2)}`,
-    lat: coarse.lat,
-    lon: coarse.lon,
-    timezone: null,
-  };
 }
 
 export async function fetchEnvironment(

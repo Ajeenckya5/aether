@@ -7,7 +7,7 @@ import type { AtlasMetric, AtlasReport } from "@/lib/atlas";
 const TONE: Record<AtlasMetric["confidence"], string> = {
   measured: "text-lime",
   derived: "text-aqua",
-  estimated: "text-[#f0c14b]",
+  estimated: "text-gold",
   unavailable: "text-muted",
 };
 

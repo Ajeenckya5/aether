@@ -1,3 +1,4 @@
+import { sleepPerformancePct } from "@ajeenckya/engine";
 import {
   analyzeAetherSleep,
   hasAetherSleepArchitecture,
@@ -226,7 +227,7 @@ export function sleepFromOvernight(
   const inBed = summary.restMs + summary.awakeMs;
   const efficiency =
     inBed > 0 ? Math.round((summary.restMs / inBed) * 1000) / 10 : 0;
-  const performance = Math.round(Math.min(100, (summary.restMs / NEED_MS) * 100));
+  const performance = sleepPerformancePct(summary.restMs, NEED_MS);
   const start = new Date(summary.start).toISOString();
   const end = new Date(summary.end).toISOString();
   return {
