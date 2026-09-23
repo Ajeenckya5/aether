@@ -95,13 +95,13 @@ try {
   page.on("console", (message) => {
     if (message.type() === "error") js.push(message.text());
   });
-  await page.route("**/api.open-meteo.com/**", (route) =>
+  await context.route("**/api.open-meteo.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "{}" }),
   );
-  await page.route("**/air-quality-api.open-meteo.com/**", (route) =>
+  await context.route("**/air-quality-api.open-meteo.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "{}" }),
   );
-  await page.route("**/api.bigdatacloud.net/**", (route) =>
+  await context.route("**/api.bigdatacloud.net/**", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -112,7 +112,7 @@ try {
       }),
     }),
   );
-  await page.route("**/geocoding-api.open-meteo.com/**", (route) => {
+  await context.route("**/geocoding-api.open-meteo.com/**", (route) => {
     const name = new URL(route.request().url()).searchParams.get("name") || "City";
     return route.fulfill({
       status: 200,
@@ -151,8 +151,9 @@ try {
       gpsChecked += 1;
       await page.goto(`${BASE}/settings/`, { waitUntil: "domcontentloaded" });
       await page.getByRole("button", { name: /Use GPS/ }).click();
-      const located = await page.getByText(/Madison/).isVisible();
-      if (!located) {
+      try {
+        await page.getByText(/Madison/).waitFor({ state: "visible", timeout: 8000 });
+      } catch {
         gpsMiss += 1;
         add(person, "gps-city", "serious");
       }
@@ -180,8 +181,11 @@ try {
     try {
       await choice.waitFor({ state: "visible", timeout: 8000 });
       await choice.click();
-      const shown = await page.getByText(city).first().isVisible();
-      if (!shown) add(person, "city-search", "serious");
+      try {
+        await page.getByText(city).first().waitFor({ state: "visible", timeout: 8000 });
+      } catch {
+        add(person, "city-search", "serious");
+      }
     } catch {
       add(person, "city-search", "serious");
     }
