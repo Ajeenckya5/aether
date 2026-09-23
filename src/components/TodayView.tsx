@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, Download, Settings } from "lucide-react";
+import { timeOfDayGreeting } from "@ajeenckya/engine";
 import { formatDate, formatHours, isSameDay, kcalFromKj, recoveryTone } from "@/lib/format";
 import type { Recovery } from "@/lib/types";
 import { AgeCard } from "./AgeCard";
@@ -43,6 +44,8 @@ export function TodayView() {
   const score = report?.aether ?? recovery?.score?.recovery_score ?? 0;
   const sleepPct = sleep?.score?.sleep_performance_percentage ?? 0;
   const name = greetingName(athlete, data.profile.first_name, data.connected);
+  const personal = name === "there" ? null : name;
+  const clock = new Date();
   const mid = sleep
     ? new Date(
         (new Date(sleep.start).getTime() + new Date(sleep.end).getTime()) / 2,
@@ -74,24 +77,33 @@ export function TodayView() {
       <header className="mb-6 flex items-start justify-between">
         <div>
           <SourceBanner />
-          <h1 className="font-display mt-2 text-[34px] leading-none tracking-tight">
-            Good hours,
-            <br />
-            {name}.
+          <h1
+            className="font-display mt-2 text-[34px] leading-none tracking-tight"
+            suppressHydrationWarning
+          >
+            {timeOfDayGreeting(clock.getHours())}
+            {personal ? (
+              <>
+                <br />
+                {personal}.
+              </>
+            ) : null}
           </h1>
-          <p className="mt-2 text-sm text-muted">{formatDate(new Date().toISOString())}</p>
+          <p className="mt-2 text-sm text-muted" suppressHydrationWarning>
+            {formatDate(clock.toISOString())}
+          </p>
         </div>
         <div className="flex gap-2">
           <Link
             href="/download"
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5"
+            className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5"
             aria-label="Download Aether"
           >
             <Download size={16} />
           </Link>
           <Link
             href="/settings"
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5"
+            className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5"
             aria-label="Settings"
           >
             <Settings size={16} />

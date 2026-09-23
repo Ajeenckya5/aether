@@ -41,7 +41,7 @@ export function CallCard({
   return (
     <section className={`rounded-[32px] p-5 ${tone.bg}`}>
       <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: tone.color }}>
-        Aether call · not a WHOOP score
+        {"Today's call"}
       </p>
       <h2 className="font-display mt-2 text-5xl leading-none">{tone.title}</h2>
       <p className="mt-2 text-sm text-paper/75">{tone.kicker}</p>

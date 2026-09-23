@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { parseLocaleNumber } from "@ajeenckya/engine";
 import type { Athlete, Units } from "@/lib/athlete";
 import {
   bodyMassIndex,
@@ -14,7 +15,7 @@ import {
 import { useLab } from "./useLab";
 
 const fieldClass =
-  "mt-1 w-full rounded-2xl border border-white/10 bg-ink px-3 py-2 text-sm text-paper";
+  "mt-1 min-h-11 w-full rounded-2xl border border-white/10 bg-ink px-3 py-2 text-sm text-paper";
 
 export function AthleteFields() {
   const { athlete, updateAthlete } = useLab();
@@ -186,21 +187,22 @@ export function AthleteFields() {
           <label className="col-span-2 text-xs text-muted">
             Weight (lb)
             <input
-              type="number"
-              min={66}
-              max={550}
-              step={0.1}
+              type="text"
               inputMode="decimal"
+              autoComplete="off"
+              aria-label="Weight in pounds"
               placeholder="154"
               value={weightText}
               onChange={(e) => {
                 const next = e.target.value;
                 setWeightText(next);
-                if (next === "") {
+                if (next.trim() === "") {
                   updateAthlete({ weightKg: null });
                   return;
                 }
-                const kg = lbToKg(Number(next));
+                const pounds = parseLocaleNumber(next);
+                if (pounds == null) return;
+                const kg = lbToKg(pounds);
                 if (validWeightKg(kg)) updateAthlete({ weightKg: kg });
               }}
               className={fieldClass}
@@ -212,22 +214,21 @@ export function AthleteFields() {
           <label className="text-xs text-muted">
             Height (cm)
             <input
-              type="number"
-              min={120}
-              max={230}
-              step={0.5}
+              type="text"
               inputMode="decimal"
+              autoComplete="off"
+              aria-label="Height in centimeters"
               placeholder="175"
               value={heightText}
               onChange={(e) => {
                 const next = e.target.value;
                 setHeightText(next);
-                if (next === "") {
+                if (next.trim() === "") {
                   updateAthlete({ heightCm: null });
                   return;
                 }
-                const cm = Number(next);
-                if (validHeightCm(cm)) updateAthlete({ heightCm: cm });
+                const cm = parseLocaleNumber(next);
+                if (cm != null && validHeightCm(cm)) updateAthlete({ heightCm: cm });
               }}
               className={fieldClass}
             />
@@ -235,22 +236,21 @@ export function AthleteFields() {
           <label className="text-xs text-muted">
             Weight (kg)
             <input
-              type="number"
-              min={30}
-              max={250}
-              step={0.1}
+              type="text"
               inputMode="decimal"
+              autoComplete="off"
+              aria-label="Weight in kilograms"
               placeholder="70"
               value={weightText}
               onChange={(e) => {
                 const next = e.target.value;
                 setWeightText(next);
-                if (next === "") {
+                if (next.trim() === "") {
                   updateAthlete({ weightKg: null });
                   return;
                 }
-                const kg = Number(next);
-                if (validWeightKg(kg)) updateAthlete({ weightKg: kg });
+                const kg = parseLocaleNumber(next);
+                if (kg != null && validWeightKg(kg)) updateAthlete({ weightKg: kg });
               }}
               className={fieldClass}
             />

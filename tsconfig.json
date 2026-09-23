@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@ajeenckya/engine": ["./packages/engine/src/index.ts"]
     }
   },
   "include": [

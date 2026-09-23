@@ -28,6 +28,14 @@ export function AppShell({
   const device = useDevice();
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
+  useEffect(() => {
+    if (navigator.storage?.persist) void navigator.storage.persist();
+    if (process.env.NODE_ENV !== "production") return;
+    if (!("serviceWorker" in navigator)) return;
+    void navigator.serviceWorker.register(appPath("/sw.js"), {
+      scope: appPath("/") || "/",
+    });
+  }, []);
   const phoneApp = !ready || preferPhoneShell(device);
   const backTo = backHref(pathname);
   const hideMobileNav = hideNav || Boolean(backTo && pathname !== "/settings");

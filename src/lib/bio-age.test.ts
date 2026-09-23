@@ -55,7 +55,7 @@ describe("Klemera–Doubal biological age", () => {
     expect(report.missing.some((line) => /height and weight/i.test(line))).toBe(true);
   });
 
-  it("computes a clock from demo nights and uses typed body, not demo kg", () => {
+  it("never gives sample nights a confidence label", () => {
     const athlete = sanitizeAthlete({
       age: 36,
       sex: "female",
@@ -64,15 +64,14 @@ describe("Klemera–Doubal biological age", () => {
       systolicMmHg: 112,
     });
     const report = estimateBioAge(buildDemoDashboard(), athlete);
-    expect(report.biological).not.toBeNull();
-    expect(report.markersUsed).toBeGreaterThanOrEqual(8);
-    expect(report.confidence).toBe("high");
-    expect(report.biological!).toBeGreaterThanOrEqual(16);
-    expect(report.biological!).toBeLessThanOrEqual(90);
-    expect(report.rows.some((row) => row.id === "bmi")).toBe(true);
-    expect(report.rows.some((row) => row.id === "sbp")).toBe(true);
-    const bmi = report.rows.find((row) => row.id === "bmi")!;
-    expect(bmi.observed).toBeCloseTo(62 / (1.68 * 1.68), 2);
+    expect(report.biological).toBeNull();
+    expect(report.confidence).toBe("unavailable");
+    expect(report.recoveryAge.publish).toBe(false);
+    expect(report.recoveryAge.nightsCollected).toBe(0);
+    const real = estimateBioAge({ ...buildDemoDashboard(), connected: true }, athlete);
+    expect(real.recoveryAge.publish).toBe(true);
+    expect(real.confidence).not.toBe("unavailable");
+    expect(real.biological).not.toBeNull();
   });
 
   it("needs three markers before publishing a number", () => {
@@ -89,8 +88,9 @@ describe("Klemera–Doubal biological age", () => {
       sanitizeAthlete({ ...athlete, systolicMmHg: 118 }),
     );
     expect(withSbp.markersUsed).toBe(3);
-    expect(withSbp.biological).not.toBeNull();
-    expect(withSbp.confidence).toBe("low");
+    expect(withSbp.biological).toBeNull();
+    expect(withSbp.confidence).toBe("unavailable");
+    expect(withSbp.recoveryAge.publish).toBe(false);
   });
 
   it("prefers live band RMSSD over overnight sample when streaming", () => {

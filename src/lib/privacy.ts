@@ -20,6 +20,29 @@ export function privateStorageKeysFrom(allKeys: string[]): string[] {
   return allKeys.filter((key) => key.startsWith("aether-"));
 }
 
+export function exportPrivateData(): string {
+  if (typeof window === "undefined") return "";
+  const data: Record<string, string> = {};
+  for (const key of privateStorageKeysFrom(Object.keys(localStorage))) {
+    const value = localStorage.getItem(key);
+    if (value != null) data[key] = value;
+  }
+  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data });
+}
+
+export function importPrivateData(raw: string): void {
+  if (typeof window === "undefined") return;
+  const parsed = JSON.parse(raw) as { version?: number; data?: Record<string, unknown> };
+  if (parsed.version !== 1 || !parsed.data || typeof parsed.data !== "object") {
+    throw new Error("That file is not an Aether export.");
+  }
+  for (const [key, value] of Object.entries(parsed.data)) {
+    if (!key.startsWith("aether-") || typeof value !== "string") continue;
+    localStorage.setItem(key, value);
+  }
+  window.dispatchEvent(new Event(LOCAL_SYNC_EVENT));
+}
+
 export function eraseLocalPrivateData() {
   if (typeof window === "undefined") return;
   const keys = privateStorageKeysFrom(Object.keys(localStorage));

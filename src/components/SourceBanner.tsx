@@ -45,8 +45,11 @@ export function SourceBanner() {
     );
   }
   return (
-    <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
-      Sample recovery · pair WHOOP for live HRV, RHR, and Aether sleep
+    <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted">
+      <span className="rounded-full border border-dashed border-white/25 px-2 py-0.5 text-paper/70">
+        Demo
+      </span>
+      Pair a heart-rate strap
     </p>
   );
 }

@@ -1,0 +1,10 @@
+{
+  "name": "@ajeenckya/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure health and training calculations for Aether. No React and no DOM.",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

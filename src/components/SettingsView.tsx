@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LocationFields } from "./LocationFields";
 import { publicDownloadUrls } from "@/lib/downloads";
-import { eraseLocalPrivateData } from "@/lib/privacy";
+import { eraseLocalPrivateData, exportPrivateData, importPrivateData } from "@/lib/privacy";
 import { appPath, isStaticSite, PUBLIC_SITE } from "@/lib/site";
 import { DeviceStrip, InstallBanner } from "./DeviceChrome";
 import { BluetoothPanel } from "./LiveHeartRate";
@@ -23,13 +23,9 @@ export function SettingsView() {
   const [busy, setBusy] = useState(false);
   const [erasing, setErasing] = useState(false);
   const params = useSearchParams();
-  const [oauthError, setOauthError] = useState<string | null>(null);
+  const oauthError = ERRORS[params.get("error") ?? ""] ?? null;
   const downloads = publicDownloadUrls();
   const staticSite = isStaticSite();
-
-  useEffect(() => {
-    setOauthError(ERRORS[params.get("error") ?? ""] ?? null);
-  }, [params]);
 
   async function disconnect() {
     setBusy(true);
@@ -195,6 +191,44 @@ export function SettingsView() {
           >
             How we keep it private
           </Link>
+          <button
+            type="button"
+            onClick={() => {
+              const blob = new Blob([exportPrivateData()], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "aether-export.json";
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="min-h-11 rounded-full border border-white/15 px-4 py-3 text-sm text-paper"
+          >
+            Export JSON
+          </button>
+          <label className="min-h-11 cursor-pointer rounded-full border border-white/15 px-4 py-3 text-center text-sm text-paper">
+            Import JSON
+            <input
+              type="file"
+              accept="application/json"
+              className="sr-only"
+              aria-label="Import Aether JSON"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                  try {
+                    importPrivateData(String(reader.result ?? ""));
+                    window.location.reload();
+                  } catch {
+                    window.alert("That file is not an Aether export.");
+                  }
+                };
+                reader.readAsText(file);
+              }}
+            />
+          </label>
           <button
             type="button"
             onClick={() => void eraseEverything()}

@@ -22,6 +22,7 @@ import {
   heartRateRequestOptions,
   isPlausibleHr,
   isWhoopBandName,
+  bandConnectionPhase,
   parseHeartRateMeasurement,
 } from "@/lib/ble-hr";
 import {
@@ -758,21 +759,61 @@ export function useLiveHeartRate(): HrValue {
 }
 
 export function LiveHeartRateButton() {
-  const { bpm, status, connect } = useLiveHeartRate();
-  const live = status === "live" || status === "camera";
+  const hr = useLiveHeartRate();
+  const phase = bandConnectionPhase(hr.status, hr.message);
+  const live = phase === "connected";
   return (
-    <button
-      type="button"
-      onClick={() => void connect()}
-      className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-paper"
-    >
-      {live ? <Bluetooth size={14} /> : <BluetoothOff size={14} />}
-      {live
-        ? `${bpm ?? "--"} bpm live`
-        : status === "connecting"
-          ? "Pairing…"
-          : "Connect BT"}
-    </button>
+    <div className="text-right">
+      <button
+        type="button"
+        onClick={() => void hr.connect()}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-paper"
+      >
+        {live ? <Bluetooth size={14} /> : <BluetoothOff size={14} />}
+        {live
+          ? `${hr.bpm ?? "--"} bpm live`
+          : phase === "requesting"
+            ? "Connecting…"
+            : phase === "cancelled"
+              ? "Pairing cancelled"
+              : phase === "unavailable"
+                ? "Bluetooth unavailable"
+                : "Connect a heart-rate strap"}
+      </button>
+      {hr.message && !live ? <p className="mt-1 max-w-xs text-xs text-muted">{hr.message}</p> : null}
+    </div>
+  );
+}
+
+export function SessionHrStatus() {
+  const hr = useLiveHeartRate();
+  const phase = bandConnectionPhase(hr.status, hr.message);
+  if (phase === "connected") {
+    return (
+      <p className="mt-4 text-sm text-muted">
+        Heart rate from {hr.deviceName || "your strap"}. Pairing stays in Settings.
+      </p>
+    );
+  }
+  const label =
+    phase === "requesting"
+      ? "Connecting…"
+      : phase === "cancelled"
+        ? "Pairing cancelled"
+        : phase === "unavailable"
+          ? "Bluetooth unavailable"
+          : "Connect a heart-rate strap";
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => void hr.connect()}
+        className="min-h-11 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
+      >
+        {label}
+      </button>
+      {hr.message ? <p className="mt-2 text-sm text-muted">{hr.message}</p> : null}
+    </div>
   );
 }
 

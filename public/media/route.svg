@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Route">
+  <rect width="640" height="360" fill="#14120e"/>
+  <path d="M40 280 C 120 260, 140 80, 240 120 S 360 300, 460 180 S 560 60, 610 90" fill="none" stroke="#d6ff4b" stroke-width="4" stroke-linecap="round" class="dash"/>
+  <circle cx="40" cy="280" r="6" fill="#f4efe6"/>
+  <circle cx="610" cy="90" r="6" fill="#d6ff4b"/>
+  <style>
+    .dash { stroke-dasharray: 10 14; animation: march 2.8s linear infinite; }
+    @keyframes march { to { stroke-dashoffset: -96; } }
+    @media (prefers-reduced-motion: reduce) { .dash { animation: none; } }
+  </style>
+</svg>

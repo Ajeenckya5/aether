@@ -1,24 +1,48 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
-import { PUBLIC_SITE } from "@/lib/site";
+import { BASE_PATH, PUBLIC_SITE } from "@/lib/site";
 import "./globals.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const syne = Syne({
   variable: "--font-syne",
   subsets: ["latin"],
+  display: "swap",
 });
 
+const metadataOrigin = BASE_PATH ? "https://ajeenckya5.github.io" : "http://127.0.0.1:3000";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(PUBLIC_SITE),
-  title: "Aether — Band companion",
+  metadataBase: new URL(metadataOrigin),
+  title: {
+    default: "Aether",
+    template: "%s · Aether",
+  },
   description:
-    "Aether is a phone app. Install it to the home screen. Journal and live workouts stay on this device.",
+    "Aether reads a heart-rate strap on this phone. Journal and live workouts stay on this device.",
   applicationName: "Aether",
+  alternates: { canonical: PUBLIC_SITE },
+  openGraph: {
+    title: "Aether",
+    description:
+      "Aether reads a heart-rate strap on this phone. Journal and live workouts stay on this device.",
+    url: PUBLIC_SITE,
+    siteName: "Aether",
+    images: [{ url: `${BASE_PATH}/og.png`, width: 1200, height: 630 }],
+    type: "website",
+  },
+  icons: {
+    icon: [
+      { url: `${BASE_PATH}/icon-192.png`, sizes: "192x192", type: "image/png" },
+      { url: `${BASE_PATH}/icon-512.png`, sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: `${BASE_PATH}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: {
     capable: true,
     title: "Aether",

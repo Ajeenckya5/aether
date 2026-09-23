@@ -36,6 +36,27 @@ export function AgeCard({
   variant?: "compact" | "full";
   sample?: boolean;
 }) {
+  const recoveryAge = report.recoveryAge;
+  if (!recoveryAge?.publish || report.biological == null) {
+    const nights = recoveryAge?.nightsCollected ?? 0;
+    const need = recoveryAge?.nightsRequired ?? 14;
+    return (
+      <section className="mt-4 rounded-[28px] border border-white/8 bg-panel p-5">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
+          Recovery age estimate
+        </p>
+        <p className="font-display mt-3 text-2xl leading-tight">
+          {nights} of {need} nights collected
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          This stays hidden until there are {need} real nights and{" "}
+          {recoveryAge?.markersRequired ?? 6} real markers. Sample history never
+          gets a confidence label.
+        </p>
+      </section>
+    );
+  }
+
   const ba =
     report.biological == null ? null : Math.round(report.biological * 10) / 10;
   const delta = deltaCopy(report.delta);
@@ -43,7 +64,9 @@ export function AgeCard({
 
   const body = (
     <>
-      <p className="text-[11px] uppercase tracking-[0.18em] text-lime">Age</p>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-lime">
+        Recovery age estimate
+      </p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="min-w-0">
           <p className="font-display text-[2.5rem] leading-none tabular-nums sm:text-5xl">
@@ -55,7 +78,7 @@ export function AgeCard({
           <p className="font-display text-[2.5rem] leading-none tabular-nums sm:text-5xl">
             {ba == null ? "—" : ba % 1 === 0 ? ba.toFixed(0) : ba.toFixed(1)}
           </p>
-          <p className="mt-1 text-xs text-muted">Biological</p>
+          <p className="mt-1 text-xs text-muted">Recovery age</p>
         </div>
       </div>
       <p className={`mt-3 text-sm ${delta.className}`}>{delta.text}</p>
