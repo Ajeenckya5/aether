@@ -41,6 +41,14 @@ function add(person, code, severity) {
   person.issues.push({ code, severity });
 }
 
+async function openLocation(page) {
+  if (await page.locator("[data-settings-layout=desktop]").count()) {
+    await page.getByRole("button", { name: "Weather", exact: true }).click();
+    return;
+  }
+  await page.getByRole("button", { name: "Location", exact: true }).click();
+}
+
 const server = spawn("node", ["scripts/serve-export.mjs"], {
   stdio: "ignore",
   detached: false,
@@ -157,8 +165,9 @@ try {
     if (person.allowGps && person.id % 25 === 0) {
       gpsChecked += 1;
       await page.goto(`${BASE}/settings/`, { waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: /Use GPS/ }).click();
       try {
+        await openLocation(page);
+        await page.getByRole("button", { name: "Use my location" }).click();
         await page.getByText(/Madison/).waitFor({ state: "visible", timeout: 8000 });
       } catch {
         gpsMiss += 1;
@@ -183,6 +192,7 @@ try {
   for (const city of ACCENTS) {
     const person = people[0];
     await page.goto(`${BASE}/settings/`, { waitUntil: "domcontentloaded" });
+    await openLocation(page);
     await page.getByLabel("Search city").fill(city);
     const choice = page.getByRole("button", { name: city });
     try {
