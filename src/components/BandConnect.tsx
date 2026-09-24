@@ -1,10 +1,12 @@
 "use client";
 
 import { useLiveHeartRate } from "./heart-rate-context";
+import { StrapConnectionStatus, strapActionLabel, useStrapConnection } from "./StrapConnection";
 
 export function BandActions() {
   const hr = useLiveHeartRate();
-  const live = hr.status === "live";
+  const strap = useStrapConnection();
+  const live = strap.state === "connected" || strap.state === "lost" || strap.state === "requesting";
 
   return (
     <>
@@ -12,13 +14,10 @@ export function BandActions() {
         <button
           type="button"
           onClick={() => void hr.connect()}
+          data-strap-state={strap.state}
           className="min-h-12 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
         >
-          {live
-            ? `${hr.bpm ?? "--"} bpm · stays connected`
-            : hr.status === "connecting"
-              ? "Keeping the strap connected…"
-              : "Connect a heart-rate strap"}
+          {strapActionLabel(strap)}
         </button>
         <button
           type="button"
@@ -55,6 +54,7 @@ export function BandActions() {
             Disconnect
           </button>
         )}
+      <StrapConnectionStatus />
       </div>
     </>
   );

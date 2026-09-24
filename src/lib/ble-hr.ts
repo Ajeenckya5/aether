@@ -125,25 +125,6 @@ export function isPlausibleHr(bpm: number): boolean {
   return bpm > 20 && bpm < 240;
 }
 
-export type BandConnectionPhase =
-  | "idle"
-  | "requesting"
-  | "connected"
-  | "unavailable"
-  | "cancelled";
-
-export function bandConnectionPhase(
-  status: string,
-  message: string | null,
-): BandConnectionPhase {
-  if (status === "live" || status === "camera") return "connected";
-  if (status === "connecting") return "requesting";
-  if (status === "error") {
-    return message && /cancel/i.test(message) ? "cancelled" : "unavailable";
-  }
-  return "idle";
-}
-
 export function isWhoopBandName(name: string | null | undefined): boolean {
   return Boolean(name && /whoop/i.test(name));
 }

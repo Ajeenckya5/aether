@@ -16,14 +16,14 @@ import { exportPrivateData, importPrivateData } from "@/lib/privacy";
 import { placeDisplayName } from "@/lib/place";
 import { loadSampleData, saveSampleData } from "@/lib/sample-data";
 import { clearAppData, formatMegabytes, measureStorage } from "@/lib/storage-budget";
-import { installRowLabel, strapStatusLine, strapTip } from "@/lib/strap";
+import { installRowLabel, strapTip } from "@/lib/strap";
 import { applyTheme, loadTheme, type ThemeChoice } from "@/lib/theme";
 import { APP_VERSION } from "@/lib/version";
 import { appPath } from "@/lib/site";
 import { useDevice } from "./DeviceChrome";
 import { LocationFields } from "./LocationFields";
 import { useLiveHeartRate } from "./heart-rate-context";
-import { loadBlePair } from "@/lib/ble-pair";
+import { StrapConnectionStatus, strapActionLabel, useStrapConnection } from "./StrapConnection";
 import { usePlace } from "./usePlace";
 
 type SectionId = "profile" | "devices" | "weather" | "advanced" | "data" | "app" | "danger";
@@ -384,12 +384,12 @@ function ProfileBlock({ formApi }: { formApi: ReturnType<typeof useAthleteForm> 
 }
 
 function DevicesBlock({ onOpen }: { onOpen: () => void }) {
-  const status = useStrapStatus();
+  const strap = useStrapConnection();
   return (
     <Group id="devices-heading" title="Devices">
       <button type="button" onClick={onOpen} className="flex min-h-11 w-full items-center gap-3 px-3 text-left">
         <span className="text-sm">Heart-rate strap</span>
-        <span className="ml-auto truncate text-sm text-muted">{status}</span>
+        <span className="ml-auto truncate text-sm text-muted">{strap.detail}</span>
         <ChevronRight size={16} aria-hidden />
       </button>
     </Group>
@@ -727,33 +727,22 @@ function Detail({ panel, onBack }: { panel: Panel; onBack: () => void }) {
   );
 }
 
-function useStrapStatus() {
-  const hr = useLiveHeartRate();
-  const [savedName, setSavedName] = useState<string | null>(null);
-  useEffect(() => {
-    setSavedName(loadBlePair()?.name ?? null);
-  }, [hr.status]);
-  return strapStatusLine({
-    connected: hr.status === "live",
-    name: hr.deviceName || savedName,
-    batteryPct: hr.batteryPct,
-  });
-}
-
 function StrapScreen() {
   const hr = useLiveHeartRate();
   const device = useDevice();
-  const status = useStrapStatus();
+  const strap = useStrapConnection();
   return (
     <Group id="strap-heading" title="Heart-rate strap">
-      <p className="px-3 py-3 text-sm">{status}</p>
+      <div className="px-3 py-3">
+        <StrapConnectionStatus />
+      </div>
       <div className="px-3 pb-3">
         <button
           type="button"
           onClick={() => void hr.connect()}
           className="min-h-11 w-full rounded-full bg-lime px-4 text-sm font-medium text-ink"
         >
-          {hr.status === "connecting" ? "Pairing…" : "Pair"}
+          {strap.state === "idle" ? "Pair" : strapActionLabel(strap)}
         </button>
         <p className="mt-3 text-sm text-muted">{strapTip(device)}</p>
         <Link href="/download" className="mt-2 inline-flex min-h-11 items-center text-sm text-lime">

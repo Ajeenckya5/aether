@@ -16,9 +16,9 @@ import {
   heartRateRequestOptions,
   isPlausibleHr,
   isWhoopBandName,
-  bandConnectionPhase,
   parseHeartRateMeasurement,
 } from "@/lib/ble-hr";
+import { StrapConnectionStatus, strapActionLabel, useStrapConnection } from "./StrapConnection";
 import {
   loadBlePair,
   pickGrantedDevice,
@@ -736,59 +736,45 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
 
 export function LiveHeartRateButton() {
   const hr = useLiveHeartRate();
-  const phase = bandConnectionPhase(hr.status, hr.message);
-  const live = phase === "connected";
+  const strap = useStrapConnection();
+  const live = strap.state === "connected";
   return (
     <div className="text-right">
       <button
         type="button"
         onClick={() => void hr.connect()}
+        data-strap-state={strap.state}
         className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-paper"
       >
         {live ? <Bluetooth size={14} /> : <BluetoothOff size={14} />}
-        {live
-          ? `${hr.bpm ?? "--"} bpm live`
-          : phase === "requesting"
-            ? "Connecting…"
-            : phase === "cancelled"
-              ? "Pairing cancelled"
-              : phase === "unavailable"
-                ? "Bluetooth unavailable"
-                : "Connect a heart-rate strap"}
+        {strapActionLabel(strap)}
       </button>
-      {hr.message && !live ? <p className="mt-1 max-w-xs text-xs text-muted">{hr.message}</p> : null}
+      {strap.state === "idle" ? null : <StrapConnectionStatus />}
     </div>
   );
 }
 
 export function SessionHrStatus() {
   const hr = useLiveHeartRate();
-  const phase = bandConnectionPhase(hr.status, hr.message);
-  if (phase === "connected") {
+  const strap = useStrapConnection();
+  if (strap.state === "connected") {
     return (
-      <p className="mt-4 text-sm text-muted">
-        Heart rate from {hr.deviceName || "your strap"}. Pairing stays in Settings.
+      <p className="mt-4 text-sm text-muted" data-strap-state="connected">
+        Heart rate from {strap.name}, {strap.batteryPct == null ? "battery not reported" : `${Math.round(strap.batteryPct)}% battery`}. Pairing stays in Settings.
       </p>
     );
   }
-  const label =
-    phase === "requesting"
-      ? "Connecting…"
-      : phase === "cancelled"
-        ? "Pairing cancelled"
-        : phase === "unavailable"
-          ? "Bluetooth unavailable"
-          : "Connect a heart-rate strap";
   return (
     <div className="mt-4">
       <button
         type="button"
         onClick={() => void hr.connect()}
+        data-strap-state={strap.state}
         className="min-h-11 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
       >
-        {label}
+        {strapActionLabel(strap)}
       </button>
-      {hr.message ? <p className="mt-2 text-sm text-muted">{hr.message}</p> : null}
+      <StrapConnectionStatus />
     </div>
   );
 }
@@ -894,7 +880,8 @@ function IosWhoopPath() {
 export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
   const hr = useLiveHeartRate();
   const device = useDevice();
-  const live = hr.status === "live";
+  const strap = useStrapConnection();
+  const live = strap.state === "connected";
   const canBle = device.bluetooth;
 
   const actions = (
@@ -904,13 +891,10 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
           <button
             type="button"
             onClick={() => void hr.connect()}
+            data-strap-state={strap.state}
             className="min-h-12 rounded-full bg-lime px-4 py-3 text-sm font-medium text-ink"
           >
-            {live
-              ? `${hr.bpm ?? "--"} bpm · stays connected`
-              : hr.status === "connecting"
-                ? "Keeping the strap connected…"
-                : "Connect a heart-rate strap"}
+            {strapActionLabel(strap)}
           </button>
           <button
             type="button"
@@ -970,7 +954,9 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
             : "Safari cannot pair the band. Install the Aether iPhone app (Xcode on a Mac) so Bluetooth runs in our app. Bluefy is the no-Mac fallback. Camera pulse is optical bpm from this phone."}
         </p>
         <LiveStats hr={hr} />
-        {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
+        <div className="mt-3">
+          <StrapConnectionStatus />
+        </div>
         {actions}
         {!canBle && (
           <Link href={whoopGuideHref(device)} className="mt-3 block text-xs text-lime">
@@ -998,6 +984,9 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
         its own radio.
       </p>
       <LiveStats hr={hr} />
+      <div className="mt-3">
+        <StrapConnectionStatus />
+      </div>
       <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-muted">
         {canBle ? (
           <>

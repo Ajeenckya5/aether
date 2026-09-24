@@ -23,6 +23,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: npm install -g npm@11
-      - name: Publish @ajeenckya/engine
+      - name: Publish the tagged version
         working-directory: packages/engine
-        run: npm publish --access public --provenance
+        run: |
+          version="${GITHUB_REF_NAME#engine-v}"
+          npm pkg set version="$version"
+          npm publish --access public --provenance

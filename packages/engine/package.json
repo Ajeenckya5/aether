@@ -11,10 +11,19 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "src"
-  ],
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node prepublish.mjs --build-only",
+    "prepublishOnly": "node prepublish.mjs"
   }
 }

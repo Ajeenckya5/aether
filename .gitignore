@@ -19,6 +19,7 @@
 /.lighthouseci
 /coverage
 /dist
+/packages/engine/dist
 
 # signing material
 *.p12
