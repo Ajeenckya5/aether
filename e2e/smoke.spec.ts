@@ -141,7 +141,7 @@ test.describe("static export", () => {
     if (await page.locator("[data-settings-layout=desktop]").count()) {
       await page.getByRole("button", { name: "Weather", exact: true }).click();
     } else {
-      await page.getByRole("button", { name: "Location", exact: true }).click();
+      await page.getByRole("button", { name: /^Location/ }).click();
     }
     await page.getByRole("button", { name: "Use my location" }).click();
     await expect(page.getByText(/Madison/)).toBeVisible();

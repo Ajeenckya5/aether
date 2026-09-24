@@ -52,7 +52,7 @@ async function openLocation(page) {
     await page.getByRole("button", { name: "Weather", exact: true }).click();
     return;
   }
-  await page.getByRole("button", { name: "Location", exact: true }).click();
+  await page.getByRole("button", { name: /^Location/ }).click();
 }
 
 const server = spawn("node", ["scripts/serve-export.mjs"], {

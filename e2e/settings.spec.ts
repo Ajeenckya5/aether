@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 test("settings fits two phone screens and saves the name", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./settings/");
-  await expect(page.locator("[data-settings-layout=phone]")).toBeVisible();
+  await expect(page.getByRole("main").locator("[data-settings-layout=phone]")).toBeVisible();
   const name = page.getByLabel("Name");
   await expect(name).toBeVisible();
   const nameBox = await name.boundingBox();
