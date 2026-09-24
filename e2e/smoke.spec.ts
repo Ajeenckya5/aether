@@ -212,6 +212,11 @@ test.describe("static export", () => {
       const ready = await navigator.serviceWorker?.ready;
       return Boolean(ready?.active);
     });
+    for (const route of routes) {
+      await page.goto(pathFor(route));
+      await expect(page).toHaveTitle(/Aether/);
+    }
+    await page.goto(pathFor("/lab"));
     await page.waitForFunction(async () => {
       const names = await caches.keys();
       for (const name of names) {
@@ -229,19 +234,23 @@ test.describe("static export", () => {
     await page.context().setOffline(true);
     for (const route of routes) {
       if (browserName === "webkit") {
-        const title = await page.evaluate(async (path) => {
-          const url = new URL(path, location.href).href;
+        const target = new URL(pathFor(route), "http://127.0.0.1:4173/aether/").href;
+        const title = await page.evaluate(async (url) => {
           const names = await caches.keys();
           for (const name of names) {
             const cache = await caches.open(name);
-            const response = await cache.match(url);
-            if (!response) continue;
-            const html = await response.text();
-            const found = /<title>([^<]+)/.exec(html)?.[1] ?? "";
-            if (found) return found;
+            const keys = await cache.keys();
+            for (const request of keys) {
+              if (request.url !== url) continue;
+              const response = await cache.match(request);
+              if (!response) continue;
+              const html = await response.text();
+              const found = /<title>([^<]+)/.exec(html)?.[1] ?? "";
+              if (found) return found;
+            }
           }
           return "";
-        }, pathFor(route));
+        }, target);
         expect(title).toMatch(/Aether|Offline/);
         continue;
       }
@@ -257,6 +266,7 @@ test.describe("static export", () => {
   test("exports and imports private JSON", async ({ page }) => {
     await page.goto(pathFor("/settings"));
     await page.getByLabel("Name").fill("Ada");
+    await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
     const desktop = page.locator("[data-settings-layout=desktop]");
     if (await desktop.count()) {
       await page.getByRole("button", { name: "Data and privacy", exact: true }).click();
