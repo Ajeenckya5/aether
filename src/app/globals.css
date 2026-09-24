@@ -36,7 +36,7 @@
 
 html,
 body {
-  background: #070706;
+  background: var(--ink);
   color: var(--paper);
   min-height: 100%;
   overscroll-behavior-y: none;
@@ -102,8 +102,28 @@ textarea {
   outline-offset: 2px;
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --ink: #f4efe6;
+  --fog: #fffdf8;
+  --panel: #fff;
+  --line: rgba(20, 16, 12, 0.12);
+  --paper: #1a1814;
+  --muted: #5c564c;
+  --lime: #3f5c00;
+  --gold: #7a4e00;
+  --ember: #9a3412;
+  --violet: #5b4db8;
+  --aqua: #0e7490;
+}
+
 @media (prefers-color-scheme: light) {
-  :root {
+  html:not([data-theme="dark"]) {
+    color-scheme: light;
     --ink: #f4efe6;
     --fog: #fffdf8;
     --panel: #fff;
@@ -116,12 +136,6 @@ textarea {
     --violet: #5b4db8;
     --aqua: #0e7490;
   }
-
-  html,
-  body {
-    background: #f4efe6;
-    color: var(--paper);
-  }
 }
 
 @media (pointer: coarse) {
@@ -132,6 +146,35 @@ textarea {
 
 .ble-only {
   display: none;
+}
+
+#aether-chips button {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--paper);
+}
+
+#aether-chips button.is-on {
+  background: var(--ember);
+  color: var(--ink);
+}
+
+.aether-call.is-swapping h2,
+.aether-call.is-swapping ul,
+.aether-call-wrap.is-swapping h2,
+.aether-call-wrap.is-swapping ul,
+.aether-banner {
+  animation: aether-call-in 420ms ease;
+}
+
+@keyframes aether-call-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

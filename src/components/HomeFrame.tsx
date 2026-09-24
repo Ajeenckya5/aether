@@ -21,7 +21,7 @@ const swScript = `if("serviceWorker"in navigator){navigator.serviceWorker.regist
 
 export function HomeFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-[#070706] lg:flex">
+    <div className="min-h-dvh bg-ink lg:flex">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-white/8 bg-ink px-4 py-6 lg:flex">
         <p className="font-display px-2 text-2xl tracking-tight">Aether</p>
         <p className="mt-1 px-2 text-[11px] uppercase tracking-widest text-muted">Phone app</p>

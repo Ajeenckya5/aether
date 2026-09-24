@@ -1,4 +1,5 @@
 import type { CoachBlock, CoachSession } from "./coach";
+import { RETENTION_MS } from "./history";
 import { mediaForSport } from "./media";
 
 export type TrainingLevel = "Recover" | "Build" | "Push";
@@ -155,8 +156,11 @@ export function loadLiveLogs(): LiveLog[] {
 export function saveLiveLog(log: LiveLog) {
   const rows = loadLiveLogs().filter((r) => r.id !== log.id);
   rows.unshift(log);
-  localStorage.setItem(LOG_KEY, JSON.stringify(rows.slice(0, 80)));
+  const now = Date.now();
+  const recent = rows.filter((row) => now - Date.parse(row.start) <= RETENTION_MS);
+  localStorage.setItem(LOG_KEY, JSON.stringify(recent));
   notifyLocal();
+  void import("./history-store").then((mod) => mod.rememberWorkout(log));
 }
 
 export function getLiveLog(id: string): LiveLog | undefined {

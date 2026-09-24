@@ -9,9 +9,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  globalSetup: "./scripts/e2e-footprint.mjs",
+  globalTeardown: "./scripts/e2e-footprint.mjs",
   use: {
     baseURL: base,
+    video: "off",
     trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
   webServer: {
     command: `node scripts/serve-export.mjs`,
@@ -36,6 +40,8 @@ export default defineConfig({
         ...(process.env.CI ? {} : { channel: "chrome" as const }),
       },
     },
-    { name: "webkit", use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } },
+    ...(process.env.CI
+      ? [{ name: "webkit", use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } }]
+      : []),
   ],
 });

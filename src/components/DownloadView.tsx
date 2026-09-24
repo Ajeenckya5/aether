@@ -20,7 +20,8 @@ export function DownloadView() {
       <h1 className="font-display mt-2 text-4xl">Install Aether on this phone</h1>
       <p className="mt-3 max-w-xl text-sm text-muted">
         After install, open the home-screen icon. That is the website app.
-        Connect your WHOOP over Bluetooth for live bpm. On Android, sideload
+        Pair any heart-rate strap for live bpm. Compatible devices: Polar,
+        Garmin, Wahoo, and WHOOP (public Heart Rate only). On Android, sideload
         the Aether APK (not Play Store) so overnight Bluetooth can stay up.
         Safari and Chrome on iPhone cannot do Bluetooth — install the Aether
         iPhone app (below) or use Bluefy.
@@ -144,8 +145,8 @@ export function DownloadView() {
         </div>
         <p className="mt-3 text-sm text-muted">
           Apple does not allow Bluetooth in Safari or Chrome. There is no
-          browser loophole. This is our own iPhone app: it talks to the WHOOP
-          with iOS Core Bluetooth (public Heart Rate only), then shows Aether
+          browser loophole. This is our own iPhone app: it talks to a heart-rate
+          strap with iOS Core Bluetooth (public Heart Rate only), then shows Aether
           inside that app. It is not on the App Store.
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">
@@ -160,7 +161,7 @@ export function DownloadView() {
           <li>Plug in the iPhone. Unlock it. Trust the computer if asked.</li>
           <li>In Xcode pick the iPhone, then the Team = your Apple ID (Signing &amp; Capabilities).</li>
           <li>Press Run. On the iPhone: Settings → General → VPN &amp; Device Management → Trust your Apple ID.</li>
-          <li>Open the Aether icon. Allow Bluetooth. Disconnect the official WHOOP app, then tap Connect WHOOP.</li>
+          <li>Open the Aether icon. Allow Bluetooth. Disconnect the strap’s own app, then tap Connect a heart-rate strap.</li>
         </ol>
         <p className="mt-3 text-xs text-muted">
           A free Apple ID install lasts 7 days, then press Run again. It has no
@@ -201,8 +202,8 @@ export function DownloadView() {
             (free).
           </li>
           <li>Open Bluefy. Go to {PUBLIC_SITE.replace("https://", "")}.</li>
-          <li>Disconnect the official WHOOP app so the band is free.</li>
-          <li>Tap Connect WHOOP over Bluetooth and pick the band.</li>
+          <li>Disconnect the strap’s own app so the band is free.</li>
+          <li>Tap Connect a heart-rate strap and pick the band.</li>
           <li>Leave Aether open in Bluefy. It reconnects if the link drops. Tap Disconnect only when you want it off.</li>
         </ol>
       </section>
@@ -226,7 +227,7 @@ export function DownloadView() {
         </div>
         <p className="mt-3 text-sm text-muted">
           There is no Play Store listing. This is our own Android app: native
-          Bluetooth GATT talks to the WHOOP (public Heart Rate only), then
+          Bluetooth GATT talks to the strap (public Heart Rate only), then
           shows Aether inside that app. Leave it connected overnight for Aether
           sleep. Chrome Install app still works for live bpm, but the WebView
           can pause — the APK keeps a foreground keep-alive.
@@ -242,7 +243,7 @@ export function DownloadView() {
           <li>On the Android phone, tap <strong className="font-medium text-paper">Get Aether.apk</strong> (GitHub Release, not Google Play).</li>
           <li>If Chrome or Files blocks it, allow the download, then allow install from that app in Settings.</li>
           <li>Open the <strong className="font-medium text-paper">Aether</strong> icon. Allow Bluetooth. Allow notifications if you want overnight keep-alive.</li>
-          <li>Disconnect the official WHOOP app, then tap Connect WHOOP.</li>
+          <li>Disconnect the strap’s own app, then tap Connect a heart-rate strap.</li>
         </ol>
         <p className="mt-3 text-xs text-muted">
           Play Protect may warn because this is a sideload build, not a store
@@ -273,7 +274,7 @@ export function DownloadView() {
           <li>On the Android phone, open this page in <strong className="font-medium text-paper">Chrome</strong>.</li>
           <li>Tap <strong className="font-medium text-paper">Install</strong> when Chrome offers it, or Chrome menu → <strong className="font-medium text-paper">Install app</strong> / Add to Home screen.</li>
           <li>Tap the <strong className="font-medium text-paper">Aether</strong> icon. That is the app on the device.</li>
-          <li>Scroll to Connect over Bluetooth and pick the WHOOP band (or Polar / Garmin / Wahoo).</li>
+          <li>Scroll to Connect over Bluetooth and pick the strap (Polar, Garmin, Wahoo, or WHOOP).</li>
         </ol>
       </section>
 
@@ -297,7 +298,7 @@ export function DownloadView() {
         <p className="mt-3 text-sm text-muted">
           Apple does not ship Safari on Android. Do not install a fake Safari
           APK. If you use Firefox, Edge, Samsung Internet, or a Safari-named
-          browser: menu → Add to Home Screen. Live WHOOP bpm needs a browser
+          browser: menu → Add to Home Screen. Live strap bpm needs a browser
           with Web Bluetooth (Chrome or Edge).
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-4 text-sm text-paper/80">

@@ -7,7 +7,6 @@ import { Pause, Play, Square } from "lucide-react";
 import { resolvedMaxHr } from "@/lib/athlete";
 import { COACH_SESSIONS } from "@/lib/coach";
 import {
-  ZONE_COLORS,
   appendSample,
   currentBlockIndex,
   formatClock,
@@ -33,6 +32,7 @@ import {
 import { DeviceStrip, useDevice } from "./DeviceChrome";
 import { useLab } from "./useLab";
 import { useLiveHeartRate } from "./heart-rate-context";
+import { LiveHrDial } from "./LiveHrDial";
 import { ZoneBar } from "./ZoneBar";
 import { preferPhoneShell } from "@/lib/device";
 
@@ -404,7 +404,7 @@ export function LiveTracker() {
         </div>
         <p className="mt-3 text-xs text-muted">
           Strain proxy {log.strainProxy.toFixed(1)} (Edwards 1993 TRIMP / 10). Zones from %HRmax.
-          WHOOP still scores the band in their app.
+          The strap’s own app still scores the band separately.
         </p>
         <div className="mt-6 grid gap-2">
           <Link href="/workouts" className="rounded-full bg-lime py-3 text-center text-sm text-ink">
@@ -448,25 +448,35 @@ export function LiveTracker() {
             className="w-full rounded-2xl border border-white/10 bg-white/4 px-3 py-2 text-base outline-none"
           />
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => void hr.connect()}
-            className="min-h-12 rounded-full bg-white/8 px-3 py-2 text-sm"
-          >
-            {hr.status === "live"
-              ? `${hr.bpm ?? "--"} bpm live`
-              : hr.status === "connecting"
-                ? "Pairing…"
-                : "Connect BT"}
-          </button>
-          <button
-            type="button"
-            onClick={() => hr.startPractice()}
-            className="min-h-12 rounded-full bg-white/8 px-3 py-2 text-sm"
-          >
-            {hr.status === "practice" ? `${hr.bpm ?? "--"} practice` : "Practice pulse"}
-          </button>
+        <button
+          type="button"
+          onClick={() => void hr.connect()}
+          className="min-h-12 w-full rounded-full bg-white/8 px-3 py-2 text-sm"
+        >
+          {hr.status === "live"
+            ? `${hr.bpm ?? "--"} bpm live`
+            : hr.status === "connecting"
+              ? "Pairing…"
+              : "Connect strap"}
+        </button>
+        <div>
+          <p className="text-sm text-muted">Tools</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => void hr.startCamera()}
+              className="min-h-11 rounded-full bg-white/8 px-3 text-sm"
+            >
+              {hr.status === "camera" ? `${hr.bpm ?? "--"} bpm camera` : "Camera pulse"}
+            </button>
+            <button
+              type="button"
+              onClick={() => hr.startPractice()}
+              className="min-h-11 rounded-full bg-white/8 px-3 text-sm"
+            >
+              {hr.status === "practice" ? `${hr.bpm ?? "--"} demo pulse` : "Demo pulse"}
+            </button>
+          </div>
         </div>
         <label htmlFor="gps-toggle" className="flex min-h-11 items-center gap-2 text-sm text-muted">
           <input
@@ -485,13 +495,10 @@ export function LiveTracker() {
       <p className="font-display mt-8 text-center text-6xl leading-none tracking-tight sm:text-7xl lg:text-8xl">
         {formatClock(elapsedMs)}
       </p>
-      <p className="mt-3 text-center">
-        <span className="font-display text-5xl" style={{ color: zone != null ? ZONE_COLORS[zone] : "#f4efe6" }}>
-          {hr.bpm ?? "—"}
-        </span>
-        <span className="ml-2 text-sm text-muted">bpm</span>
-      </p>
-      <p className="mt-1 text-center text-xs uppercase tracking-widest text-muted">
+      <div className="mt-4">
+        <LiveHrDial bpm={hr.bpm} maxHr={maxHr} />
+      </div>
+      <p className="mt-1 text-center text-xs uppercase tracking-widest text-muted" aria-hidden="true">
         {zone != null ? `Zone ${zone}` : "No HR yet"} · HRmax {Math.round(maxHr)} · rest {restHr}
         {block?.targetZone != null ? ` · target Z${block.targetZone}` : ""}
       </p>

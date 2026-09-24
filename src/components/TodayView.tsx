@@ -213,7 +213,7 @@ export function TodayView() {
                 ? "Listening…"
                 : `${Math.round(recovery.score.hrv_rmssd_milli)} ms`
             }
-            note={fromBand ? "from your WHOOP" : "sample"}
+            note={fromBand ? "from your strap" : "sample"}
           />
           <Mini
             label="Resting HR"
@@ -222,7 +222,7 @@ export function TodayView() {
                 ? "Sit still…"
                 : `${recovery.score.resting_heart_rate} bpm`
             }
-            note={fromBand ? "from your WHOOP" : "sample"}
+            note={fromBand ? "from your strap" : "sample"}
           />
           <Mini
             label="SpO2"
@@ -235,8 +235,8 @@ export function TodayView() {
               hr.spo2 != null
                 ? "standard pulse-ox GATT"
                 : data.connected
-                  ? "WHOOP overnight"
-                  : "WHOOP private radio — not on public Bluetooth"
+                  ? "Strap overnight"
+                  : "Private radio — not on public Bluetooth"
             }
           />
           <Mini
@@ -251,8 +251,8 @@ export function TodayView() {
               hr.skinTempC != null
                 ? "standard thermometer GATT"
                 : data.connected
-                  ? "WHOOP overnight"
-                  : "WHOOP private radio — not on public Bluetooth"
+                  ? "Strap overnight"
+                  : "Private radio — not on public Bluetooth"
             }
           />
         </div>
@@ -276,8 +276,8 @@ export function TodayView() {
           {overnightSleep ? (
             <p className="mb-3 text-xs text-muted">
               {restWake
-                ? "Rest vs wake from your WHOOP’s public heart rate. Leave Aether connected overnight for Aether sleep."
-                : "Aether sleep from public heart rate and HRV. Not WHOOP REM / light / deep."}
+                ? "Rest vs wake from your strap’s public heart rate. Leave Aether connected overnight for Aether sleep."
+                : "Aether sleep from public heart rate and HRV. Not a clinical sleep stage."}
             </p>
           ) : null}
           <SleepStages

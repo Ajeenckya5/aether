@@ -1,7 +1,12 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 const COUNT = Number(process.env.PERSONA_COUNT || 1200);
+if (!process.env.CI && COUNT >= 1200) {
+  console.error("The 1,200-persona simulation runs in GitHub Actions.");
+  process.exit(1);
+}
 const NIGHTS = 14;
 const MARKERS = 6;
 const LOCALES = ["en-US", "de-DE", "pt-BR", "ja-JP", "fr-FR", "es-MX"];
@@ -123,7 +128,9 @@ document.getElementById("q").addEventListener("input", (event) => {
 </script>
 </body></html>`;
 
-const out = path.join(path.dirname(new URL(import.meta.url).pathname), "report.html");
+const out = process.env.CI
+  ? path.join(path.dirname(new URL(import.meta.url).pathname), "report.html")
+  : path.join(os.tmpdir(), "aether-persona-report.html");
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, html);
 console.log(JSON.stringify(report, null, 2));

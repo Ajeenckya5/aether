@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bodyMassIndex,
   cmToFeetInches,
+  cycleDayFromStart,
   DEFAULT_ATHLETE,
   feetInchesToCm,
   greetingName,
@@ -65,6 +66,17 @@ describe("personal body details stay on-device", () => {
     expect(bad.weightKg).toBeNull();
     expect(bad.age).toBe(16);
     expect(bad.cycleDay).toBeNull();
+  });
+
+  it("counts the cycle from a start date instead of a typed day number", () => {
+    expect(cycleDayFromStart("2026-09-01", new Date("2026-09-15T15:00:00"))).toBe(15);
+    expect(cycleDayFromStart("2026-09-24", new Date("2026-09-23T15:00:00"))).toBeNull();
+    const tracked = sanitizeAthlete({ cycleTracking: true, cycleStart: "2026-09-01" });
+    expect(tracked.cycleTracking).toBe(true);
+    expect(tracked.cycleStart).toBe("2026-09-01");
+    expect(tracked.cycleDay).toBeGreaterThanOrEqual(1);
+    expect(tracked.cycleDay).toBeLessThanOrEqual(28);
+    expect(sanitizeAthlete({ cycleTracking: false, cycleDay: 10 }).cycleDay).toBeNull();
   });
 
   it("keeps optional systolic empty until typed, and drops impossible values", () => {

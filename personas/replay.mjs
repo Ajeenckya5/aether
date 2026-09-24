@@ -1,9 +1,14 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 
 const COUNT = Number(process.env.PERSONA_COUNT || 300);
+if (!process.env.CI && COUNT >= 1200) {
+  console.error("The 1,200-persona simulation runs in GitHub Actions.");
+  process.exit(1);
+}
 const BASE = "http://127.0.0.1:4173/aether";
 const LOCALES = ["en-US", "de-DE", "pt-BR", "ja-JP", "fr-FR", "es-MX"];
 const ZONES = ["America/New_York", "Europe/Berlin", "America/Sao_Paulo", "Asia/Tokyo", "Pacific/Auckland", "Pacific/Honolulu"];
@@ -76,7 +81,9 @@ function writeReport(stats) {
 <table id="t"><thead><tr><th>Id</th><th>Locale</th><th>Zone</th><th>Wearable</th><th>Issues</th></tr></thead><tbody>${rows}</tbody></table>
 <script>document.getElementById("q").addEventListener("input",(event)=>{const q=event.target.value.toLowerCase();for(const row of document.querySelectorAll("#t tbody tr")) row.hidden=q&&!row.textContent.toLowerCase().includes(q);});</script>
 </body></html>`;
-  const out = path.join(path.dirname(new URL(import.meta.url).pathname), "report.html");
+  const out = process.env.CI
+    ? path.join(path.dirname(new URL(import.meta.url).pathname), "report.html")
+    : path.join(os.tmpdir(), "aether-persona-replay.html");
   fs.writeFileSync(out, html);
   console.log(JSON.stringify(stats, null, 2));
   console.log(out);
@@ -85,7 +92,7 @@ function writeReport(stats) {
 let browser;
 try {
   await waitForSite();
-  browser = await chromium.launch();
+  browser = await chromium.launch(process.env.CI ? {} : { channel: "chrome" });
   const context = await browser.newContext();
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 43.07, longitude: -89.4 });

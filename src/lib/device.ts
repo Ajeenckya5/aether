@@ -70,18 +70,18 @@ export function describeHrSupport(
 ): string {
   if (device.nativeShell || device.browser === "aether") {
     if (!device.ios) {
-      return "This Aether Android app pairs your WHOOP with native Bluetooth. Chrome is not the Bluetooth stack. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
+      return "This Aether Android app pairs a heart-rate strap with native Bluetooth. Chrome is not the Bluetooth stack. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
     }
-    return "This Aether iPhone app pairs your WHOOP with Core Bluetooth. Safari is not involved. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
+    return "This Aether iPhone app pairs a heart-rate strap with Core Bluetooth. Safari is not involved. Public Heart Rate service only: live bpm, R-R/HRV, battery if exposed.";
   }
   if (device.ios && device.bluetooth) {
-    return "This iPhone browser can pair Bluetooth. Tap Connect WHOOP, pick the band, keep this screen open. Live bpm and R-R/HRV use the public Heart Rate service.";
+    return "This iPhone browser can pair Bluetooth. Tap Connect a heart-rate strap, pick the band, keep this screen open. Live bpm and R-R/HRV use the public Heart Rate service.";
   }
   if (device.bluetooth) {
-    return "Pair your WHOOP or a Polar/Garmin-class strap in this browser (Chrome or Edge on Android or a laptop). Live bpm uses the public Bluetooth Heart Rate service.";
+    return "Pair a heart-rate strap in this browser (Chrome or Edge on Android or a laptop). Live bpm uses the public Bluetooth Heart Rate service.";
   }
   if (device.ios) {
-    return "Safari and Chrome on iPhone cannot pair a WHOOP. Install the Aether iPhone app from GitHub (Xcode on a Mac) so Bluetooth runs in our app, not Safari. Bluefy is the no-Mac fallback. Camera pulse also works.";
+    return "Safari and Chrome on iPhone cannot pair a heart-rate strap. Install the Aether iPhone app from GitHub (Xcode on a Mac) so Bluetooth runs in our app, not Safari. Bluefy is the no-Mac fallback. Camera pulse also works.";
   }
   if (device.browser === "safari") {
     return "This Android Safari-like browser has no Web Bluetooth. Apple does not ship Safari on Android. Use Chrome or Edge on Android, or Camera pulse.";

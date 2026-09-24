@@ -3,7 +3,8 @@
  * Below 80°F the index is the air temperature.
  */
 export function heatIndexC(tempC: number, rh: number): number {
-  if (!Number.isFinite(tempC) || !Number.isFinite(rh)) return Number.NaN;
+  if (!Number.isFinite(tempC)) return 0;
+  if (!Number.isFinite(rh)) return tempC;
   const t = tempC * (9 / 5) + 32;
   const r = Math.max(0, Math.min(100, rh));
   if (t < 80) return tempC;
@@ -76,7 +77,8 @@ export function bestTrainingWindow<T extends TrainingWindowHour>(
  * Output °C.
  */
 export function bomWbgtC(tempC: number, rh: number): number {
-  if (!Number.isFinite(tempC) || !Number.isFinite(rh)) return Number.NaN;
+  if (!Number.isFinite(tempC)) return 0;
+  if (!Number.isFinite(rh)) return tempC;
   const e =
     (Math.max(0, rh) / 100) * 6.105 * Math.exp((17.27 * tempC) / (237.7 + tempC));
   return 0.567 * tempC + 0.393 * e + 3.94;

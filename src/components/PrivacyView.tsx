@@ -39,15 +39,14 @@ export function PrivacyView() {
         <ul className="mt-3 list-disc space-y-2 pl-4 text-muted">
           <li>
             <strong className="font-medium text-paper">Bluetooth</strong> — live
-            heart-rate stays on this phone. Live WHOOP bpm uses the public Heart
-            Rate Bluetooth service. The iPhone app uses Core Bluetooth on this
+            heart-rate stays on this phone. Aether reads the public Heart Rate
+            Bluetooth service. The iPhone app uses Core Bluetooth on this
             device; the Android APK uses native GATT — still public Heart Rate
-            only, never WHOOP’s private radio.
+            only.
             Aether also asks for standard pulse-oximeter and thermometer GATT.
-            Overnight Aether sleep (wake, quiet, deep rest, active rest) is
-            scored on this phone from that public HR stream. WHOOP’s private
-            overnight packets never leave the band except through the official
-            WHOOP app.
+            Overnight Aether sleep is scored on this phone from that public
+            heart-rate stream. A strap’s private overnight packets stay on the
+            strap’s own radio.
           </li>
           <li>
             <strong className="font-medium text-paper">Weather</strong> — this browser talks to Open-Meteo with a rounded lat/lon (~1 km). GitHub never sees the pin. City search sends only the letters you type.
@@ -67,7 +66,7 @@ export function PrivacyView() {
         <ul className="mt-3 list-disc space-y-2 pl-4">
           <li>No advertising SDKs, analytics pixels, or crash reporters.</li>
           <li>No selling or sharing journal, GPS, or heart-rate logs.</li>
-          <li>No WHOOP cloud tokens. Live WHOOP bpm uses public Heart Rate GATT only — not WHOOP’s private radio.</li>
+          <li>No cloud tokens for a strap account. Live bpm uses public Heart Rate GATT only.</li>
         </ul>
         <Link href="/settings" className="mt-4 inline-block text-sm text-lime">
           Erase private data in Settings

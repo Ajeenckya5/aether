@@ -84,7 +84,7 @@ describe("Web Bluetooth chooser", () => {
 
   it("explains missing Web Bluetooth without refusing WHOOP by name", () => {
     expect(explainBleError(null, false)).toMatch(/Bluefy/);
-    expect(explainBleError({ name: "NotFoundError" }, true)).toMatch(/WHOOP band/);
+    expect(explainBleError({ name: "NotFoundError" }, true)).toMatch(/heart-rate strap/);
     expect(explainBleError(new Error(WHOOP_NO_PUBLIC_HR), true)).toBe(WHOOP_NO_PUBLIC_HR);
   });
 

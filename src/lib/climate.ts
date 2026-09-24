@@ -41,6 +41,13 @@ export function uvBand(uv: number): { label: string; who: string } {
 
 export type OutdoorLevel = "go" | "caution" | "indoor";
 
+/** Higher means more heat or air risk. Used only to notice when the level steps up. */
+export function outdoorRank(level: OutdoorLevel): number {
+  if (level === "indoor") return 2;
+  if (level === "caution") return 1;
+  return 0;
+}
+
 export function outdoorCall(input: {
   wbgt: number | null;
   usAqi: number | null;

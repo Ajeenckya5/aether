@@ -16,6 +16,18 @@
 /personas/report.html
 /.serve
 /.playwright
+/.lighthouseci
+/coverage
+/dist
+
+# signing material
+*.p12
+*.jks
+*.keystore
+
+# rebuilt by scripts/build-pages.mjs
+/public/hr-ring.js
+/public/live-layer.js
 
 # next.js
 /.next/

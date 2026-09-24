@@ -17,8 +17,8 @@ export function BandActions() {
           {live
             ? `${hr.bpm ?? "--"} bpm · stays connected`
             : hr.status === "connecting"
-              ? "Keeping WHOOP connected…"
-              : "Connect WHOOP over Bluetooth"}
+              ? "Keeping the strap connected…"
+              : "Connect a heart-rate strap"}
         </button>
         <button
           type="button"

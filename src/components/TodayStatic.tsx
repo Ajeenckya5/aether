@@ -5,7 +5,7 @@ import { ArcMeter } from "./ArcMeter";
 import { CallCard } from "./CallCard";
 import { SleepStages, isRestWakeStages } from "./SleepStages";
 import { WorkoutCard } from "./WorkoutCard";
-import { DEFAULT_ATHLETE } from "@/lib/athlete";
+import { DEFAULT_ATHLETE, resolvedMaxHr } from "@/lib/athlete";
 import { estimateBioAge } from "@/lib/bio-age";
 import { formatHours, isSameDay, kcalFromKj, recoveryTone } from "@/lib/format";
 import { analyzeDashboard } from "@/lib/intelligence";
@@ -15,6 +15,21 @@ import { isAetherOvernightSleep, scoredSleepMs } from "@/lib/overnight";
 import { appPath, siteHref } from "@/lib/site";
 
 const greetingScript = `(function(){var h=new Date().getHours();var g=h<5?"Good night":h<12?"Good morning":h<17?"Good afternoon":"Good evening";var el=document.getElementById("aether-greeting");if(el){var name="";try{var raw=JSON.parse(localStorage.getItem("aether-athlete-v1")||"{}");var personal=(raw.displayName||"").trim().split(/\\s+/)[0];if(personal)name=personal;}catch(e){}el.textContent=name?g+"\\n"+name+".":g;}var d=document.getElementById("aether-date");if(d)d.textContent=new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});var prompt=document.getElementById("aether-body-prompt");if(prompt){try{var body=JSON.parse(localStorage.getItem("aether-athlete-v1")||"{}");var hCm=body.heightCm,wKg=body.weightKg;if(typeof hCm==="number"&&hCm>=120&&hCm<=230&&typeof wKg==="number"&&wKg>=30&&wKg<=250)prompt.hidden=true;}catch(e){}}})();`;
+
+const layerScript = `(function(){var hr=document.getElementById("aether-hr");try{var athlete=JSON.parse(localStorage.getItem("aether-athlete-v1")||"{}");var max=athlete.maxHrOverride;if(hr&&typeof max==="number"&&max>=120&&max<=230)hr.dataset.maxHr=String(Math.round(max));}catch(e){}function loadLayer(){if(document.getElementById("aether-live-layer"))return;var s=document.createElement("script");s.id="aether-live-layer";s.src=${JSON.stringify(appPath("/live-layer.js"))};document.body.appendChild(s);}document.addEventListener("click",function(event){var button=event.target&&event.target.closest?event.target.closest("[data-chip]"):null;if(!button)return;window.__aetherChip=button.getAttribute("data-chip");if(typeof window.aetherBoot==="function"){window.aetherBoot();return;}loadLayer();});addEventListener("load",function(){var ring=document.createElement("script");ring.src=${JSON.stringify(appPath("/hr-ring.js"))};ring.defer=true;document.body.appendChild(ring);try{var saved=localStorage.getItem("aether-journal-v1");if(saved&&saved!=="{}")loadLayer();}catch(e){}});})();`;
+
+const HR_RING = 2 * Math.PI * 42;
+const ZONE_BAR = ["#5b564c", "#7ad7ff", "#d6ff4b", "#f0c14b", "#ff5c2a", "#ff2d55"];
+const CONTEXT_CHIPS = [
+  ["alcohol", "Alcohol"],
+  ["lateCaffeine", "Late caffeine"],
+  ["travel", "Travel"],
+  ["illness", "Sick"],
+  ["sore-0", "Fresh"],
+  ["sore-1", "Sore 1"],
+  ["sore-2", "Sore 2"],
+  ["sore-3", "Sore 3"],
+] as const;
 
 function recoveryColor(score: number) {
   const tone = recoveryTone(score);
@@ -141,15 +156,15 @@ export function TodayStatic() {
 
       <div className="mb-4">
         <section id="whoop-connect" className="rounded-[28px] border border-lime/30 bg-lime/10 p-5">
-          <p className="text-xs uppercase tracking-widest text-lime">WHOOP</p>
+          <p className="text-xs uppercase tracking-widest text-lime">Heart-rate strap</p>
           <h2 className="font-display mt-1 text-xl text-paper">Connect your band</h2>
           <p
             className="mt-2 text-sm text-paper/80"
             style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
           >
-            Pair a heart-rate strap over the public Bluetooth Heart Rate service. iPhone Safari
+            Pair any heart-rate strap over the public Bluetooth Heart Rate service. iPhone Safari
             cannot pair the band — install the Aether iPhone app (Xcode on a Mac) or use Bluefy.
-            Camera pulse is optical bpm from this phone, not the WHOOP.
+            Camera pulse is optical bpm from this phone.
           </p>
           <div className="no-ble mt-4 grid gap-2">
             <a
@@ -165,7 +180,7 @@ export function TodayStatic() {
               No Mac? Use Bluefy (free) instead
             </a>
             <a href={siteHref("/download#ios-native")} className="mt-1 block text-xs text-lime">
-              iPhone WHOOP steps →
+              iPhone strap steps →
             </a>
           </div>
           <div className="ble-only mt-4 gap-2">
@@ -173,7 +188,7 @@ export function TodayStatic() {
               href={siteHref("/settings#bluetooth")}
               className="rounded-full bg-lime px-4 py-3 text-center text-sm font-medium text-ink"
             >
-              Connect WHOOP over Bluetooth
+              Connect a heart-rate strap
             </a>
           </div>
         </section>
@@ -185,26 +200,67 @@ export function TodayStatic() {
         <div>
           {report ? (
             <div className="mt-6">
-              <CallCard report={report} sample />
+              <div
+                id="aether-hr"
+                className="aether-hr mb-4"
+                hidden
+                data-max-hr={Math.round(resolvedMaxHr(DEFAULT_ATHLETE))}
+              >
+                <svg viewBox="0 0 100 100" className="mx-auto h-36 w-36" aria-hidden="true">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+                  <circle
+                    id="aether-hr-ring"
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    fill="none"
+                    stroke="var(--lime)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={HR_RING}
+                    strokeDashoffset={HR_RING}
+                    transform="rotate(-90 50 50)"
+                  />
+                </svg>
+                <p className="-mt-24 mb-16 text-center" aria-hidden="true">
+                  <span id="aether-hr-bpm" className="font-display text-4xl text-paper">
+                    —
+                  </span>
+                  <span className="ml-1 text-sm text-muted">bpm</span>
+                </p>
+                <div className="relative h-2.5 rounded-full bg-white/5" aria-hidden="true">
+                  <div className="absolute inset-0 flex overflow-hidden rounded-full">
+                    {ZONE_BAR.map((color) => (
+                      <span key={color} className="h-full flex-1" style={{ background: color }} />
+                    ))}
+                  </div>
+                  <div
+                    id="aether-hr-marker"
+                    className="absolute top-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper"
+                    style={{ left: "0%" }}
+                  />
+                </div>
+                <p id="aether-hr-live" className="sr-only" aria-live="polite" />
+              </div>
+              <CallCard report={report} sample live />
               <div className="mt-4">
                 <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-muted">
-                  Today&apos;s context — log it in Lab
+                  Today&apos;s context
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Alcohol", "Late caffeine", "Travel", "Sick", "Fresh", "Sore 1", "Sore 2", "Sore 3"].map(
-                    (label) => (
-                      <a
-                        key={label}
-                        href={siteHref("/lab")}
-                        className={`rounded-full px-3 py-1.5 text-xs ${
-                          label === "Fresh" ? "bg-ember text-ink" : "bg-white/6 text-paper"
-                        }`}
-                      >
-                        {label}
-                      </a>
-                    ),
-                  )}
+                <div id="aether-chips" className="flex flex-wrap gap-2">
+                  {CONTEXT_CHIPS.map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      data-chip={key}
+                      aria-pressed={key === "sore-0"}
+                      className={`min-h-11 rounded-full px-3 text-xs ${key === "sore-0" ? "is-on" : ""}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
+                <script dangerouslySetInnerHTML={{ __html: layerScript }} />
               </div>
             </div>
           ) : null}
@@ -278,7 +334,7 @@ export function TodayStatic() {
                     ? `${recovery.score.spo2_percentage.toFixed(1)}%`
                     : "—"
                 }
-                note="WHOOP private radio — not on public Bluetooth"
+                note="Private radio — not on public Bluetooth"
               />
               <Mini
                 label="Skin temp"
@@ -287,7 +343,7 @@ export function TodayStatic() {
                     ? `${recovery.score.skin_temp_celsius.toFixed(1)}°C`
                     : "—"
                 }
-                note="WHOOP private radio — not on public Bluetooth"
+                note="Private radio — not on public Bluetooth"
               />
             </div>
           )}

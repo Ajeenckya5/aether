@@ -346,7 +346,7 @@ export function analyzeDashboard(
   else if (hrvTrend < -0.004 || rhrTrend > 0.08) vitalSlope = "slipping";
   const vitalNote =
     vitalSlope === "improving"
-      ? "HRV is drifting up and resting HR down across three weeks — that's the open vital slope WHOOP 5.0 wraps into Healthspan."
+      ? "HRV is drifting up and resting heart rate is drifting down across three weeks."
       : vitalSlope === "slipping"
         ? "Cardio markers are sliding. That's usually load, alcohol, or illness — not 'getting older' this week."
         : "Vital trajectory is flat. Hold the line on sleep timing before you add intensity.";

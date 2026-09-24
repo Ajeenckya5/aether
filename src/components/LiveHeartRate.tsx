@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { publishLiveBpm } from "@/lib/hr-broadcast";
 import Link from "next/link";
 import { Bluetooth, BluetoothOff } from "lucide-react";
 import {
@@ -67,6 +68,9 @@ const LIVE_COPY =
 
 export function HeartRateProvider({ children }: { children: React.ReactNode }) {
   const [bpm, setBpm] = useState<number | null>(null);
+  useEffect(() => {
+    publishLiveBpm(bpm);
+  }, [bpm]);
   const [rmssd, setRmssd] = useState<number | null>(null);
   const [sdnn, setSdnn] = useState<number | null>(null);
   const [restHr, setRestHr] = useState<number | null>(null);
@@ -197,6 +201,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       if (now - lastSaveRef.current < 1200 && patch.overnight == null) return;
       lastSaveRef.current = now;
       const current = loadBandLive();
+      const overnight = patch.overnight ?? overnightRef.current ?? current?.overnight ?? null;
       saveBandLive({
         rmssd: patch.rmssd ?? current?.rmssd ?? null,
         sdnn: patch.sdnn ?? current?.sdnn ?? null,
@@ -207,9 +212,10 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
         deviceName: patch.deviceName ?? deviceRef.current?.name ?? current?.deviceName ?? null,
         spo2: patch.spo2 ?? spo2Ref.current ?? current?.spo2 ?? null,
         skinTempC: patch.skinTempC ?? skinTempRef.current ?? current?.skinTempC ?? null,
-        overnight: patch.overnight ?? overnightRef.current ?? current?.overnight ?? null,
+        overnight,
         at: now,
       });
+      if (overnight) void import("@/lib/history-store").then((mod) => mod.rememberNight(overnight));
     },
     [],
   );
@@ -349,7 +355,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
     const delay = reconnectDelayMs(retriesRef.current);
     retriesRef.current += 1;
     setStatus("connecting");
-    const label = deviceRef.current?.name || loadBlePair()?.name || "WHOOP";
+    const label = deviceRef.current?.name || loadBlePair()?.name || "strap";
     setMessage(`${reason} Keeping ${label} connected…`);
     reconnectTimerRef.current = window.setTimeout(() => {
       void bindRef.current(deviceRef.current);
@@ -371,7 +377,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
           if (!nav.bluetooth?.getDevices) {
             setStatus("connecting");
             setMessage(
-              "Tap Connect WHOOP over Bluetooth once more to resume the saved band. After that, Aether keeps it linked.",
+              "Tap Connect a heart-rate strap once more to resume the saved band. After that, Aether keeps it linked.",
             );
             return false;
           }
@@ -533,7 +539,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       wantLiveRef.current = true;
       setDeviceName(saved.name || "HR strap");
       setStatus("connecting");
-      setMessage(`Reconnecting ${saved.name || "your WHOOP"}…`);
+      setMessage(`Reconnecting ${saved.name || "your strap"}…`);
       void bindRef.current(null);
     }
     const resume = () => {
@@ -628,7 +634,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       if (!ctx) throw new Error("No canvas");
       const samples: PpgSample[] = [];
       setStatus("camera");
-      setMessage("Hold still with a fingertip over the back camera. This is optical pulse, not the WHOOP.");
+      setMessage("Hold still with a fingertip over the back camera. This is optical pulse from the phone.");
       const loop = () => {
         if (!cameraRef.current.stream) return;
         canvas.width = 32;
@@ -674,7 +680,7 @@ export function HeartRateProvider({ children }: { children: React.ReactNode }) {
       setBpm(Math.round(138 + 18 * Math.sin(t / 9) + 4 * Math.sin(t / 3)));
     };
     setStatus("practice");
-    setMessage("Demo pulse — not your WHOOP and not the camera. Use Bluefy on iPhone to pair the band.");
+    setMessage("Demo pulse — not your strap and not the camera. Use Bluefy on iPhone to pair a strap.");
     tick();
     simRef.current = window.setInterval(tick, 250);
   }, [clearReconnectTimer, detachDevice, resetLiveStats, stopCamera, stopPractice]);
@@ -837,7 +843,7 @@ function LiveStats({ hr }: { hr: HrValue }) {
           · Aether {hr.overnight.recovery}
           <span className="block text-xs text-muted">
             {hr.overnight.staged
-              ? "Aether sleep from public heart rate and HRV. Not WHOOP REM / deep."
+              ? "Aether sleep from public heart rate and HRV."
               : "Quiet vs active heart rate so far. Leave Aether connected for a full night to score Aether sleep."}
           </span>
         </p>
@@ -903,8 +909,8 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
             {live
               ? `${hr.bpm ?? "--"} bpm · stays connected`
               : hr.status === "connecting"
-                ? "Keeping WHOOP connected…"
-                : "Connect WHOOP over Bluetooth"}
+                ? "Keeping the strap connected…"
+                : "Connect a heart-rate strap"}
           </button>
           <button
             type="button"
@@ -952,7 +958,7 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
         id="whoop-connect"
         className="rounded-[28px] border border-lime/30 bg-lime/10 p-5"
       >
-        <p className="text-xs uppercase tracking-widest text-lime">WHOOP</p>
+        <p className="text-xs uppercase tracking-widest text-lime">Heart-rate strap</p>
         <h2 className="font-display mt-1 text-xl text-paper">Connect your band</h2>
         <p className="mt-2 text-sm text-paper/80">
           {device.nativeShell
@@ -961,14 +967,14 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
               : "This is the Aether Android app. Tap Connect — native Bluetooth talks to the band. Chrome is not the Bluetooth stack. Leave the app open overnight to log Aether sleep from public heart rate."
             : canBle
             ? "Tap Connect once. Aether remembers the band and keeps it connected — including after you switch tabs or reopen the app. Leave this page open overnight for Aether sleep from public heart rate. SpO2 and skin temp appear only if the band exposes those standard Bluetooth services. If they stay blank, tap Connect once more so the browser can grant them."
-            : "Safari cannot pair the band. Install the Aether iPhone app (Xcode on a Mac) so Bluetooth runs in our app. Bluefy is the no-Mac fallback. Camera pulse is optical bpm from this phone, not the WHOOP."}
+            : "Safari cannot pair the band. Install the Aether iPhone app (Xcode on a Mac) so Bluetooth runs in our app. Bluefy is the no-Mac fallback. Camera pulse is optical bpm from this phone."}
         </p>
         <LiveStats hr={hr} />
         {hr.message && <p className="mt-3 text-xs text-muted">{hr.message}</p>}
         {actions}
         {!canBle && (
           <Link href={whoopGuideHref(device)} className="mt-3 block text-xs text-lime">
-            iPhone WHOOP steps →
+            iPhone strap steps →
           </Link>
         )}
       </section>
@@ -985,26 +991,25 @@ export function BluetoothPanel({ compact = false }: { compact?: boolean }) {
       <p className="mt-2 text-sm text-paper/80">
         Aether reads the public Bluetooth Heart Rate service: live bpm, R-R/HRV
         when the band sends it, and battery. It also asks for the standard
-        pulse-oximeter and thermometer services. Polar, Garmin, and Wahoo
-        straps use those profiles; WHOOP firmware usually does not. Leave this
-        page connected overnight and Aether scores its own sleep from quiet vs
-        active HR and HRV — wake, quiet, deep rest, active rest. Not WHOOP
-        REM/deep. WHOOP’s own recovery score, official stages, and private
-        SpO2/temp stay on their radio — this website cannot copy those packets.
+        pulse-oximeter and thermometer services. Some straps do not expose those.
+        Compatible devices are listed on the Download page. Leave this page
+        connected overnight and Aether scores its own sleep from quiet vs
+        active heart rate and HRV. A strap’s private recovery score stays on
+        its own radio.
       </p>
       <LiveStats hr={hr} />
       <ol className="mt-4 list-decimal space-y-1.5 pl-4 text-sm text-muted">
         {canBle ? (
           <>
-            <li>Wear the WHOOP. Wake it. Phone Bluetooth on. Disconnect the official WHOOP app first — the band talks to one phone at a time.</li>
-            <li>Tap Connect WHOOP over Bluetooth, pick WHOOP. Aether keeps that band connected until you tap Disconnect. Leave the page open overnight for Aether sleep.</li>
+            <li>Wear the strap. Wake it. Phone Bluetooth on. Disconnect the strap’s own app first — the band talks to one phone at a time.</li>
+            <li>Tap Connect a heart-rate strap and pick the band. Aether keeps it connected until you tap Disconnect. Leave the page open overnight for Aether sleep.</li>
             <li>If the strap is missing, tap Scan all devices.</li>
           </>
         ) : (
           <>
             <li>On a Mac, open native/ios/AetherBand in Xcode, plug in this iPhone, press Run. That installs our Bluetooth app.</li>
             <li>Or install Bluefy and open Aether there — Safari and Chrome cannot pair.</li>
-            <li>Disconnect the official WHOOP app, then Connect WHOOP over Bluetooth.</li>
+            <li>Disconnect the strap’s own app, then connect the heart-rate strap over Bluetooth.</li>
           </>
         )}
       </ol>

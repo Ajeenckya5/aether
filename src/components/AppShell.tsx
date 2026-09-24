@@ -10,6 +10,7 @@ import { InstallBanner, useDevice } from "./DeviceChrome";
 import { preferPhoneShell } from "@/lib/device";
 import { appPath } from "@/lib/site";
 import { startMonitoring } from "@/lib/monitor";
+import { enforceStorageBudget } from "@/lib/storage-budget";
 
 const NAV = [
   { href: "/", label: "Today", icon: House },
@@ -32,6 +33,7 @@ export function AppShell({
   useEffect(() => setReady(true), []);
   useEffect(() => {
     startMonitoring();
+    void enforceStorageBudget();
     if (navigator.storage?.persist) void navigator.storage.persist();
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
@@ -46,7 +48,7 @@ export function AppShell({
   return (
     <DataProvider>
       <HeartRateSlot active={pathname !== "/"}>
-        <div className={`min-h-dvh bg-[#070706] ${phoneApp ? "" : "lg:flex"}`}>
+        <div className={`min-h-dvh bg-ink ${phoneApp ? "" : "lg:flex"}`}>
           <aside
             className={`h-dvh w-60 shrink-0 flex-col border-r border-white/8 bg-ink px-4 py-6 sticky top-0 ${
               phoneApp ? "hidden" : "hidden lg:flex"
@@ -62,7 +64,7 @@ export function AppShell({
               ))}
             </nav>
             <div className="space-y-3 px-1">
-              <InstallBanner />
+              {pathname === "/settings" ? null : <InstallBanner />}
               <SideLink
                 item={{ href: "/download", label: "Download", icon: Download }}
                 pathname={pathname}
@@ -90,7 +92,7 @@ export function AppShell({
                 </Link>
               </div>
             )}
-            <div
+            <main
               tabIndex={0}
               aria-label="Page content"
               className={`relative flex-1 overflow-y-auto no-scrollbar ${
@@ -107,7 +109,7 @@ export function AppShell({
               >
                 {children}
               </div>
-            </div>
+            </main>
             {!hideMobileNav && (
               <nav
                 className={`absolute inset-x-0 bottom-0 z-20 border-t border-white/8 bg-ink/92 px-2 pt-1 backdrop-blur-xl ${

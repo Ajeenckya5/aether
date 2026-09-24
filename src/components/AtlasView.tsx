@@ -20,7 +20,7 @@ export function AtlasView() {
         Every formula this band, journal, and body stats can drive, with
         citations. Metrics that need ECG, GPS, power, or blood are listed as
         unavailable instead of guessed. Age, height, weight, and HRmax live in Settings.
-        Biological age is Klemera–Doubal from those plus the band — not WHOOP Healthspan.
+        Biological age uses those markers plus the strap. It is an estimate, not a medical age.
       </p>
       <div className="mt-6 space-y-4">
         <AgeCard report={bioAge} />

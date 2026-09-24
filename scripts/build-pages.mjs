@@ -2,8 +2,11 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { bundleLiveLayer } from "./bundle-live-layer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+await bundleLiveLayer();
 const api = path.join(root, "src/app/api");
 const backup = path.join(root, ".pages-api-backup");
 
@@ -27,7 +30,7 @@ fs.rmSync(path.join(root, ".next"), { recursive: true, force: true });
 
 let code = 0;
 try {
-  const result = spawnSync("npx", ["next", "build"], {
+  const result = spawnSync(process.execPath, ["node_modules/next/dist/bin/next", "build"], {
     cwd: root,
     stdio: "inherit",
     env: {

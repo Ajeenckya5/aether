@@ -13,10 +13,20 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Check the live site
         id: ping
         continue-on-error: true
-        run: curl --fail --silent --show-error --max-time 20 -o /dev/null https://ajeenckya5.github.io/aether/
+        env:
+          UPTIME_ORIGIN: https://ajeenckya5.github.io/aether
+        run: node scripts/uptime-smoke.mjs
       - name: Open an issue when the site is down
         if: steps.ping.outcome == 'failure'
         uses: actions/github-script@v7
@@ -35,7 +45,7 @@ jobs:
                 repo: context.repo.repo,
                 title,
                 labels: ["uptime"],
-                body: "The scheduled check could not load the GitHub Pages site.",
+                body: "The scheduled smoke test could not load Today, Lab, Sleep, and Strain without console errors, raw coordinates, or a confidence label on demo data.",
               });
             }
       - name: Close uptime issues when the site is back

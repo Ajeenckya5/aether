@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
 import { BASE_PATH, PUBLIC_SITE } from "@/lib/site";
+import { STORAGE_BOOT } from "@/lib/storage-budget";
+import { THEME_BOOT } from "@/lib/theme";
+import { WEATHER_BOOT } from "@/lib/weather-notice";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -66,13 +69,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${manrope.variable} ${syne.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#070706] text-paper">
+      <body className="min-h-full bg-ink text-paper">
         <script
           dangerouslySetInnerHTML={{
             __html:
               'if("bluetooth"in navigator){var s=document.createElement("style");s.textContent=".no-ble{display:none}.ble-only{display:grid}";document.head.appendChild(s)}',
           }}
         />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+        <script dangerouslySetInnerHTML={{ __html: STORAGE_BOOT }} />
+        <script dangerouslySetInnerHTML={{ __html: WEATHER_BOOT }} />
         {children}
       </body>
     </html>

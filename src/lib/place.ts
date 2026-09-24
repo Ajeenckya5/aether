@@ -16,6 +16,25 @@ export const GEO_PERMISSION_DENIED = 1;
 export const GEO_POSITION_UNAVAILABLE = 2;
 export const GEO_TIMEOUT = 3;
 
+export function cityLabel(name: string): string {
+  const city = name.split(",")[0]?.trim();
+  return city || name;
+}
+
+const COORD_PART = /^-?\d{1,3}\.\d{2}$/;
+
+/** City and region, or a rounded pin when the name is missing. */
+export function placeDisplayName(place: { name: string; lat: number; lon: number }): string {
+  const parts = place.name.split(",").map((part) => part.trim()).filter(Boolean);
+  const city = parts[0] ?? "";
+  const region = parts[1] ?? "";
+  if (city && !city.startsWith("Near ") && !COORD_PART.test(city)) {
+    if (region && !COORD_PART.test(region)) return `${city}, ${region}`;
+    return city;
+  }
+  return `Near ${place.lat.toFixed(2)}, ${place.lon.toFixed(2)}`;
+}
+
 export function placeSourceLabel(source: PlaceSource): string {
   if (source === "gps") return "GPS · rounded ~1 km";
   if (source === "search") return "City search";

@@ -47,7 +47,7 @@ export function ExerciseLibrary({ intent }: { intent: TrainingCall | "build" }) 
       <h2 className="font-display mt-1 text-lg">wger movements</h2>
       <p className="text-xs text-muted">
         Free wger.de library by body region — cardio/core on recover days, lift
-        patterns on push. Not WHOOP classes.
+        patterns on push.
       </p>
       <ul className="mt-3 space-y-2">
         {rows.map((row) => {
