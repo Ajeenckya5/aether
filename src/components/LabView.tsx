@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "@/lib/hr-motion";
 import { MODEL_CARD } from "@/lib/model";
+import { countEvent, loadRemoteFlags } from "@/lib/remote-config";
+import { appPath } from "@/lib/site";
 import { AgeCard } from "./AgeCard";
 import { AtlasPanel } from "./AtlasPanel";
 import { CallCard } from "./CallCard";
+import { CallMotion } from "./CallMotion";
 import { EnvironmentCard } from "./EnvironmentCard";
 import { JournalChips } from "./JournalChips";
 import { SourceBanner } from "./SourceBanner";
@@ -14,10 +18,15 @@ import { useAtlas } from "./useAtlas";
 import { useLab } from "./useLab";
 
 export function LabView() {
-  const { report, journal, updateJournal, data, bioAge, athlete } = useLab();
+  const [days, setDays] = useState<7 | 28 | 90>(28);
+  const { report, journal, updateJournal, data, bioAge, athlete } = useLab(days);
   const atlas = useAtlas(data, journal, athlete);
   const { env } = useEnvironment();
   const [tab, setTab] = useState<"call" | "atlas">("call");
+  const [ranges, setRanges] = useState(true);
+  useEffect(() => {
+    void loadRemoteFlags(appPath("/remote-config.json")).then((flags) => setRanges(flags.trends));
+  }, []);
 
   const sleep = data.sleeps[0];
   const mid = sleep
@@ -29,9 +38,9 @@ export function LabView() {
   const outdoorNotes =
     env && env.outdoor.level !== "go" ? env.outdoor.notes : undefined;
 
-  const peak = report
-    ? Math.max(...report.series.ctl, ...report.series.atl, 1)
-    : 1;
+  const windowCtl = report ? report.series.ctl.slice(-days) : [];
+  const windowAtl = report ? report.series.atl.slice(-days) : [];
+  const peak = Math.max(...windowCtl, ...windowAtl, 1);
 
   return (
     <div className="px-5 pt-6 pb-8 lg:px-2">
@@ -42,11 +51,11 @@ export function LabView() {
       <h1 className="font-display mt-2 text-4xl">Lab</h1>
       <p className="mt-2 text-sm text-muted">
         Every published algorithm this band, journal, and body stats can
-        actually drive — with the formula and paper on each row. Methods the
-        WHOOP API cannot feed stay listed as unavailable instead of guessed.
+        actually drive — with the formula and paper on each row. Methods this
+        phone cannot measure stay listed as unavailable instead of guessed.
         {data.connected
           ? ""
-          : " Overnight WHOOP recovery/sleep here stay a sample. Pair the band to overlay live HRV, RHR, and Aether sleep from public heart rate."}
+          : " Overnight recovery and sleep here stay a sample. Pair a strap to overlay live HRV, resting heart rate, and Aether sleep from public heart rate."}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-2">
@@ -85,11 +94,13 @@ export function LabView() {
         <>
 
       <div className="mt-6">
-        <CallCard
-          report={report}
-          extraNotes={outdoorNotes}
-          sample={!data.connected}
-        />
+        <CallMotion signature={`${report.call}:${report.callWhy.join("|")}`}>
+          <CallCard
+            report={report}
+            extraNotes={outdoorNotes}
+            sample={!data.connected}
+          />
+        </CallMotion>
       </div>
 
       <div className="mt-4">
@@ -171,24 +182,31 @@ export function LabView() {
       <section className="mt-6 rounded-[28px] border border-white/8 p-4">
         <h2 className="font-display text-lg">Fitness / fatigue</h2>
         <p className="mt-1 text-xs text-muted">
-          Banister EMAs · CTL 42d fitness, ATL 7d fatigue. WHOOP never shows this
-          chart.
+          Banister EMAs · CTL 42d fitness, ATL 7d fatigue. Showing {windowCtl.length} days.
         </p>
+        {ranges && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {([7, 28, 90] as const).map((span) => (
+              <button
+                key={span}
+                type="button"
+                aria-pressed={days === span}
+                className={`min-h-11 rounded-full px-3 text-xs ${
+                  days === span ? "bg-lime text-ink" : "bg-white/8 text-paper"
+                }`}
+                onClick={() => {
+                  setDays(span);
+                  countEvent("range");
+                }}
+              >
+                {span} days
+              </button>
+            ))}
+          </div>
+        )}
         <svg viewBox="0 0 100 48" className="mt-4 h-28 w-full" preserveAspectRatio="none">
-          <path
-            d={linePath(report.series.ctl, peak)}
-            fill="none"
-            stroke="#d6ff4b"
-            strokeWidth="1.4"
-            vectorEffect="non-scaling-stroke"
-          />
-          <path
-            d={linePath(report.series.atl, peak)}
-            fill="none"
-            stroke="#ff5c2a"
-            strokeWidth="1.4"
-            vectorEffect="non-scaling-stroke"
-          />
+          <DrawPath d={linePath(windowCtl, peak)} stroke="#d6ff4b" />
+          <DrawPath d={linePath(windowAtl, peak)} stroke="#ff5c2a" />
         </svg>
         <div className="flex justify-between text-[11px] text-muted">
           <span className="text-lime">Fitness CTL {report.ctl.toFixed(0)}</span>
@@ -241,17 +259,16 @@ export function LabView() {
           Zone 2: {Math.round(report.zone2WeekMin)} / {report.zone2TargetMin} min
         </p>
         <p className="text-sm text-muted">
-          Lifting minutes this week: {Math.round(report.mechanicalWeek)} (WHOOP
-          strain undercounts mechanical work — we up-weight it).
+          Lifting minutes this week: {Math.round(report.mechanicalWeek)}. Strain
+          undercounts mechanical work, so lifting is weighted up.
         </p>
       </section>
 
       <section className="mt-4 rounded-[28px] border border-white/8 p-4 text-sm text-muted">
         <h2 className="font-display text-lg text-paper">Model card</h2>
         <p className="mt-2">
-          {MODEL_CARD.name} · {MODEL_CARD.samples.toLocaleString()} synthetic
-          athlete-days · RMSE {MODEL_CARD.rmse} · R² {MODEL_CARD.r2} · overreach
-          accuracy {Math.round(MODEL_CARD.riskAccuracy * 100)}%.
+          {MODEL_CARD.name}. The weights were fit on synthetic days from published
+          physiology. This page does not show a held-out accuracy number.
         </p>
         <p className="mt-2">
           Priors: Plews HRV, Banister fitness-fatigue, Gabbett ACWR, sleep
@@ -260,7 +277,7 @@ export function LabView() {
           with <code className="text-paper">python3 scripts/train_readiness.py</code>.
         </p>
         <Link href="/strain" className="mt-3 inline-block text-lime">
-          Raw WHOOP strain history →
+          Strain history →
         </Link>
       </section>
         </>
@@ -289,6 +306,56 @@ function Stat({
 
 function signed(n: number): string {
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}`;
+}
+
+function DrawPath({ d, stroke }: { d: string; stroke: string }) {
+  const ref = useRef<SVGPathElement>(null);
+  useEffect(() => {
+    const path = ref.current;
+    if (!path) return;
+    if (prefersReducedMotion()) {
+      path.style.transition = "none";
+      path.style.strokeDasharray = "";
+      path.style.strokeDashoffset = "0";
+      return;
+    }
+    const length = path.getTotalLength();
+    if (!Number.isFinite(length) || length <= 0) return;
+    path.style.transition = "none";
+    path.style.strokeDasharray = `${length}`;
+    path.style.strokeDashoffset = `${length}`;
+    let revealed = false;
+    const reveal = () => {
+      if (revealed) return;
+      revealed = true;
+      path.style.transition = "stroke-dashoffset 700ms ease";
+      path.style.strokeDashoffset = "0";
+    };
+    let inner = 0;
+    const frame = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(reveal);
+    });
+    const backup = window.setTimeout(reveal, 48);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(inner);
+      window.clearTimeout(backup);
+      if (!revealed) {
+        path.style.transition = "none";
+        path.style.strokeDashoffset = "0";
+      }
+    };
+  }, [d]);
+  return (
+    <path
+      ref={ref}
+      d={d}
+      fill="none"
+      stroke={stroke}
+      strokeWidth="1.4"
+      vectorEffect="non-scaling-stroke"
+    />
+  );
 }
 
 function linePath(values: number[], peak: number): string {

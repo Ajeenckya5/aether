@@ -73,7 +73,7 @@ export function LiveLogReview() {
         </svg>
       )}
       <p className="mt-3 text-xs text-muted">
-        Edwards TRIMP from %HRmax zones. WHOOP still records the band separately in their app.
+        Edwards TRIMP from percent-of-max heart-rate zones. The strap’s own app still records the session separately.
       </p>
       <div className="mt-6 grid gap-2">
         <Link href="/coach/live" className="rounded-full bg-ember py-3 text-center text-sm">

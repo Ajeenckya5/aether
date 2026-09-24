@@ -1,0 +1,9 @@
+name = "aether-config"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Free Workers plan. KV is the free namespace you create in the dashboard.
+# Do not attach a custom domain that bills, and do not enable logpush.
+[[kv_namespaces]]
+binding = "FLAGS"
+id = "replace-with-your-kv-namespace-id"

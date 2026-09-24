@@ -57,8 +57,8 @@ export function SleepDetailView({ id }: { id: string }) {
             {fromBand ? (
               <p className="mt-2 text-xs text-muted">
                 {restWake
-                  ? "Rest vs wake from public heart rate. Not WHOOP REM / light / deep."
-                  : "Aether sleep from public heart rate and HRV. Not WHOOP stages, not a clinical sleep study."}
+                  ? "Rest vs wake from public heart rate."
+                  : "Aether sleep from public heart rate and HRV. Not a clinical sleep study."}
               </p>
             ) : null}
           </div>

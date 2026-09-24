@@ -13,10 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
+          cache: pnpm
       - name: Deploy when a Cloudflare token is configured
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -26,6 +27,6 @@ jobs:
             echo "Cloudflare is not configured. GitHub Pages stays live."
             exit 0
           fi
-          npm ci
+          pnpm install --frozen-lockfile
           NEXT_PUBLIC_BASE_PATH= node scripts/build-pages.mjs
-          npx --yes wrangler pages deploy out --project-name=aether --branch=main
+          pnpm dlx wrangler pages deploy out --project-name=aether --branch=main

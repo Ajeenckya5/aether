@@ -39,7 +39,7 @@ export function SleepView() {
             <p className="mt-2 text-xs text-muted">
               {restWake
                 ? "Rest vs wake from public heart rate. Leave Aether connected longer for Aether sleep."
-                : "Aether sleep from public heart rate and HRV. Not WHOOP REM / light / deep, not a lab study."}
+                : "Aether sleep from public heart rate and HRV. Not a clinical sleep study."}
             </p>
           ) : null}
           <div className="mt-5">
@@ -62,7 +62,7 @@ export function SleepView() {
             ) : (
               <div>
                 <p className="text-muted">Source</p>
-                <p>{fromBand ? "Public HR" : "WHOOP"}</p>
+                <p>{fromBand ? "Public HR" : "Sample"}</p>
               </div>
             )}
             {latest.score.respiratory_rate > 0 ? (

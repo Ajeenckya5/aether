@@ -52,6 +52,7 @@ test.describe("static export", () => {
 
     for (const scheme of ["light", "dark"] as const) {
       test(`${route} has no serious axe violations in ${scheme} mode`, async ({ page }) => {
+        test.setTimeout(90_000);
         await page.emulateMedia({ colorScheme: scheme });
         await page.goto(pathFor(route));
         const results = await new AxeBuilder({ page }).analyze();
@@ -113,6 +114,7 @@ test.describe("static export", () => {
     await weight.fill("72,5");
     await weight.blur();
     await expect(weight).toHaveValue(/72[.,]5/);
+    await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
   });
 
   test("GPS shows a city", async ({ page, context }) => {
@@ -130,60 +132,166 @@ test.describe("static export", () => {
       }),
     );
     await page.goto(pathFor("/settings"));
-    await page.getByRole("button", { name: /Use GPS/ }).click();
+    await page.waitForFunction(() => {
+      const node = document.querySelector("[data-settings-layout]");
+      if (!node) return false;
+      const desktop = window.innerWidth >= 1024;
+      return (node.getAttribute("data-settings-layout") === "desktop") === desktop;
+    });
+    if (await page.locator("[data-settings-layout=desktop]").count()) {
+      await page.getByRole("button", { name: "Weather", exact: true }).click();
+    } else {
+      await page.getByRole("button", { name: /^Location/ }).click();
+    }
+    await page.getByRole("button", { name: "Use my location" }).click();
     await expect(page.getByText(/Madison/)).toBeVisible();
   });
 
-  test("reloads from the cache while offline", async ({ page, browserName }) => {
-    await page.goto(pathFor("/"));
-    await page.waitForFunction(async () => {
-      const ready = await navigator.serviceWorker.ready;
-      return Boolean(ready.active);
+  test("reloads every main route from the cache while offline", async ({ page, browserName }) => {
+    test.setTimeout(90_000);
+    const routes = ["/", "/lab", "/sleep", "/workouts", "/coach", "/strain", "/download", "/settings", "/privacy", "/atlas"];
+    for (const route of routes) {
+      await page.goto(pathFor(route));
+      await expect(page).toHaveTitle(/Aether/);
+    }
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "aether-place-v1",
+        JSON.stringify({
+          lat: 43.07,
+          lon: -89.4,
+          name: "Madison, Wisconsin",
+          timezone: "America/Chicago",
+          source: "search",
+        }),
+      );
+      localStorage.setItem(
+        "aether-env-cache-v1",
+        JSON.stringify({
+          fetchedAt: "2026-09-23T12:00:00.000Z",
+          lat: 43.07,
+          lon: -89.4,
+          timezone: "America/Chicago",
+          elevationM: 200,
+          weather: {
+            tempC: 18,
+            apparentC: 17,
+            humidity: 50,
+            windKph: 8,
+            gustKph: null,
+            precipMm: 0,
+            cloudPct: 10,
+            pressureHpa: 1015,
+            weatherCode: 1,
+            weatherText: "Clear",
+            isDay: true,
+          },
+          derived: { heatIndexC: 18, humidexC: 18, wetBulbC: 12, wbgtC: 16, altitudePenaltyPct: 0 },
+          air: {
+            usAqi: 30,
+            usAqiLabel: "Good",
+            europeanAqi: null,
+            pm25: 5,
+            pm10: null,
+            ozone: null,
+            no2: null,
+            pollenMax: null,
+            pollenLabel: null,
+          },
+          sun: {
+            sunrise: null,
+            sunset: null,
+            solarNoonHour: 12,
+            uvMax: 4,
+            uvLabel: "Moderate",
+            dayTempMax: 20,
+            dayTempMin: 10,
+          },
+          overnight: { minC: 12, meanC: 14 },
+          outdoor: { level: "go", title: "Outside", notes: [] },
+          bestWindow: null,
+        }),
+      );
     });
-    await page.reload();
+    await page.goto(pathFor("/lab"));
+    await page.waitForFunction(async () => {
+      const ready = await navigator.serviceWorker?.ready;
+      return Boolean(ready?.active);
+    });
+    for (const route of routes) {
+      await page.goto(pathFor(route));
+      await expect(page).toHaveTitle(/Aether/);
+    }
+    await page.goto(pathFor("/lab"));
     await page.waitForFunction(async () => {
       const names = await caches.keys();
       for (const name of names) {
         const cache = await caches.open(name);
-        if (await cache.match(location.href)) return true;
+        const response = await cache.match(location.href);
+        if (!response) continue;
+        const html = await response.text();
+        if (html.includes("aether-env-cache-v1")) return true;
       }
       return false;
     });
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, "onLine", { configurable: true, get: () => false });
+    });
     await page.context().setOffline(true);
-    if (browserName === "webkit") {
-      // Playwright's WebKit crashes on page.reload while a service worker is offline,
-      // and fetch() rejects even when the document is already in the Cache API.
-      const title = await page.evaluate(async () => {
-        const names = await caches.keys();
-        for (const name of names) {
-          const cache = await caches.open(name);
-          const response = await cache.match(location.href);
-          if (!response) continue;
-          const html = await response.text();
-          const found = /<title>([^<]+)/.exec(html)?.[1] ?? "";
-          if (found) return found;
-        }
-        return "";
-      });
-      expect(title).toMatch(/Aether|Offline/);
-      return;
+    for (const route of routes) {
+      if (browserName === "webkit") {
+        const target = new URL(pathFor(route), "http://127.0.0.1:4173/aether/").href;
+        const title = await page.evaluate(async (url) => {
+          const names = await caches.keys();
+          for (const name of names) {
+            const cache = await caches.open(name);
+            const keys = await cache.keys();
+            for (const request of keys) {
+              if (request.url !== url) continue;
+              const response = await cache.match(request);
+              if (!response) continue;
+              const html = await response.text();
+              const found = /<title>([^<]+)/.exec(html)?.[1] ?? "";
+              if (found) return found;
+            }
+          }
+          return "";
+        }, target);
+        expect(title).toMatch(/Aether|Offline/);
+        continue;
+      }
+      await page.goto(pathFor(route));
+      await expect(page).toHaveTitle(/Aether|Offline/);
     }
-    await page.reload();
-    await expect(page).toHaveTitle(/Aether|Offline/);
+    if (browserName !== "webkit") {
+      await page.goto(pathFor("/lab"));
+      await expect(page.getByText("Saved weather from this phone.")).toBeVisible();
+    }
   });
 
   test("exports and imports private JSON", async ({ page }) => {
     await page.goto(pathFor("/settings"));
     await page.getByLabel("Name").fill("Ada");
+    await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
+    const desktop = page.locator("[data-settings-layout=desktop]");
+    if (await desktop.count()) {
+      await page.getByRole("button", { name: "Data and privacy", exact: true }).click();
+    }
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Export JSON" }).click(),
+      page.getByRole("button", { name: "Export my data" }).click(),
     ]);
     const file = await download.path();
     expect(file).toBeTruthy();
     await page.evaluate(() => localStorage.clear());
     await page.reload();
-    await page.locator('input[aria-label="Import Aether JSON"]').setInputFiles(file!);
+    if (await desktop.count()) {
+      await page.getByRole("button", { name: "Data and privacy", exact: true }).click();
+    }
+    await page.locator('input[aria-label="Restore from backup"]').setInputFiles(file!);
+    if (await desktop.count()) {
+      await page.getByRole("button", { name: "Profile", exact: true }).click();
+    }
     await expect(page.getByLabel("Name")).toHaveValue("Ada", { timeout: 15_000 });
   });
 

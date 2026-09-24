@@ -27,8 +27,7 @@ export function WorkoutsView() {
       <SourceBanner />
       <h1 className="font-display mt-2 text-4xl">Workouts</h1>
       <p className="mt-2 text-sm text-muted">
-        Band-scored sessions when a WHOOP account is connected, plus anything
-        you tracked live in Aether. On this public app the list starts as a sample.
+        Sessions you track live on this phone. On this public app the list starts as a sample.
       </p>
 
       {local.length > 0 && (

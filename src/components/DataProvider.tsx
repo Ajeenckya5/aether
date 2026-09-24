@@ -9,8 +9,9 @@ import {
   useState,
 } from "react";
 import { buildDemoDashboard } from "@/lib/mock";
+import { loadSampleData, SAMPLE_DATA_EVENT } from "@/lib/sample-data";
 import { appPath, isStaticSite } from "@/lib/site";
-import type { Dashboard } from "@/lib/types";
+import { EMPTY_DASHBOARD, type Dashboard } from "@/lib/types";
 
 type DataContextValue = {
   data: Dashboard;
@@ -28,13 +29,17 @@ function demoOnly(): Dashboard {
   return demo;
 }
 
+function localDashboard(): Dashboard {
+  return loadSampleData() ? demoOnly() : { ...EMPTY_DASHBOARD };
+}
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<Dashboard>(demoOnly);
   const [loading, setLoading] = useState(!isStaticSite());
 
   const refresh = useCallback(async (opts?: { quiet?: boolean }) => {
     if (isStaticSite()) {
-      setData(demoOnly());
+      setData(localDashboard());
       return;
     }
     if (!opts?.quiet) setLoading(true);
@@ -44,12 +49,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setData((await res.json()) as Dashboard);
         return;
       }
-      setData(demoOnly());
+      setData(localDashboard());
     } catch {
-      setData(demoOnly());
+      setData(localDashboard());
     } finally {
       if (!opts?.quiet) setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const onSample = () => {
+      setData((current) => (current.connected ? current : localDashboard()));
+    };
+    window.addEventListener(SAMPLE_DATA_EVENT, onSample);
+    return () => window.removeEventListener(SAMPLE_DATA_EVENT, onSample);
   }, []);
 
   useEffect(() => {

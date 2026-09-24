@@ -13,6 +13,19 @@ export function appPath(path: string): string {
   return `${BASE_PATH}${path}`;
 }
 
+const SCRIPT_ESCAPES: Record<string, string> = {
+  "<": "\\u003C",
+  ">": "\\u003E",
+  "/": "\\u002F",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+/** A JavaScript string literal that cannot close an inline script tag. */
+export function scriptString(value: string): string {
+  return JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (char) => SCRIPT_ESCAPES[char] ?? char);
+}
+
 /** Anchor href with the base path and a trailing slash, for pages that are not Next links. */
 export function siteHref(path: string): string {
   const hashAt = path.indexOf("#");

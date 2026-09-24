@@ -1,9 +1,14 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 
 const COUNT = Number(process.env.PERSONA_COUNT || 300);
+if (!process.env.CI && COUNT >= 1200) {
+  console.error("The 1,200-persona simulation runs in GitHub Actions.");
+  process.exit(1);
+}
 const BASE = "http://127.0.0.1:4173/aether";
 const LOCALES = ["en-US", "de-DE", "pt-BR", "ja-JP", "fr-FR", "es-MX"];
 const ZONES = ["America/New_York", "Europe/Berlin", "America/Sao_Paulo", "Asia/Tokyo", "Pacific/Auckland", "Pacific/Honolulu"];
@@ -34,6 +39,20 @@ const people = Array.from({ length: COUNT }, (_, index) => ({
 
 function add(person, code, severity) {
   person.issues.push({ code, severity });
+}
+
+async function openLocation(page) {
+  await page.waitForFunction(() => {
+    const node = document.querySelector("[data-settings-layout]");
+    if (!node) return false;
+    const desktop = window.innerWidth >= 1024;
+    return (node.getAttribute("data-settings-layout") === "desktop") === desktop;
+  });
+  if (await page.locator("[data-settings-layout=desktop]").count()) {
+    await page.getByRole("button", { name: "Weather", exact: true }).click();
+    return;
+  }
+  await page.getByRole("button", { name: /^Location/ }).click();
 }
 
 const server = spawn("node", ["scripts/serve-export.mjs"], {
@@ -76,7 +95,9 @@ function writeReport(stats) {
 <table id="t"><thead><tr><th>Id</th><th>Locale</th><th>Zone</th><th>Wearable</th><th>Issues</th></tr></thead><tbody>${rows}</tbody></table>
 <script>document.getElementById("q").addEventListener("input",(event)=>{const q=event.target.value.toLowerCase();for(const row of document.querySelectorAll("#t tbody tr")) row.hidden=q&&!row.textContent.toLowerCase().includes(q);});</script>
 </body></html>`;
-  const out = path.join(path.dirname(new URL(import.meta.url).pathname), "report.html");
+  const out = process.env.CI
+    ? path.join(path.dirname(new URL(import.meta.url).pathname), "report.html")
+    : path.join(os.tmpdir(), "aether-persona-replay.html");
   fs.writeFileSync(out, html);
   console.log(JSON.stringify(stats, null, 2));
   console.log(out);
@@ -85,7 +106,7 @@ function writeReport(stats) {
 let browser;
 try {
   await waitForSite();
-  browser = await chromium.launch();
+  browser = await chromium.launch(process.env.CI ? {} : { channel: "chrome" });
   const context = await browser.newContext();
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 43.07, longitude: -89.4 });
@@ -150,8 +171,9 @@ try {
     if (person.allowGps && person.id % 25 === 0) {
       gpsChecked += 1;
       await page.goto(`${BASE}/settings/`, { waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: /Use GPS/ }).click();
       try {
+        await openLocation(page);
+        await page.getByRole("button", { name: "Use my location" }).click();
         await page.getByText(/Madison/).waitFor({ state: "visible", timeout: 8000 });
       } catch {
         gpsMiss += 1;
@@ -176,9 +198,10 @@ try {
   for (const city of ACCENTS) {
     const person = people[0];
     await page.goto(`${BASE}/settings/`, { waitUntil: "domcontentloaded" });
-    await page.getByLabel("Search city").fill(city);
     const choice = page.getByRole("button", { name: city });
     try {
+      await openLocation(page);
+      await page.getByLabel("Search city").fill(city);
       await choice.waitFor({ state: "visible", timeout: 8000 });
       await choice.click();
       try {

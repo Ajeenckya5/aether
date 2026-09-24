@@ -13,33 +13,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npx next typegen
-      - run: npx eslint src e2e playwright.config.ts --max-warnings 0
-      - run: npx tsc --noEmit
-      - run: npm test
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec next typegen
+      - run: pnpm exec eslint src e2e playwright.config.ts --max-warnings 0
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
       - run: node personas/check.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: persona-report
           path: personas/report.html
+          retention-days: 7
 
   e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium webkit
       - run: node scripts/build-pages.mjs
-      - run: npx playwright test
+      - run: node scripts/e2e.mjs
       - run: node personas/replay.mjs
         env:
           PERSONA_COUNT: "300"
@@ -48,4 +51,5 @@ jobs:
         with:
           name: persona-replay
           path: personas/report.html
+          retention-days: 7
 

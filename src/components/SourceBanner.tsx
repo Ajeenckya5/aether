@@ -17,7 +17,7 @@ export function SourceBanner() {
       .join(" · ");
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
-        {whoop ? "Live WHOOP · public Heart Rate" : "Live Bluetooth"}
+        {whoop ? "Live strap · public Heart Rate" : "Live Bluetooth"}
         {hr.deviceName ? ` · ${hr.deviceName}` : ""}
         {extras ? ` · ${extras}` : ""}
       </p>
@@ -26,21 +26,21 @@ export function SourceBanner() {
   if (hr.status === "camera") {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
-        Live camera pulse · not the WHOOP band
+        Live camera pulse · optical bpm from this phone
       </p>
     );
   }
   if (hr.overnight) {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
-        Aether overnight · Aether sleep from public HR · not WHOOP stages
+        Aether overnight · sleep scored from public heart rate
       </p>
     );
   }
   if (data.connected) {
     return (
       <p className="text-[11px] uppercase tracking-[0.18em] text-lime/80">
-        WHOOP account · overnight from the official API
+        Strap account · overnight from the official API
       </p>
     );
   }

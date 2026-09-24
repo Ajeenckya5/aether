@@ -1,7 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { outdoorRank, type OutdoorLevel } from "@/lib/climate";
+import { placeDisplayName } from "@/lib/place";
 import { solarAlignmentHours } from "@/lib/environment";
+import { countEvent } from "@/lib/remote-config";
 import { useEnvironment } from "./useEnvironment";
 
 export function EnvironmentCard({
@@ -9,7 +13,7 @@ export function EnvironmentCard({
 }: {
   midsleepHour?: number | null;
 }) {
-  const { place, env, loading, error } = useEnvironment();
+  const { place, env, stale, loading, error } = useEnvironment();
 
   if (!place) {
     return (
@@ -32,7 +36,7 @@ export function EnvironmentCard({
   if (loading && !env) {
     return (
       <section className="rounded-[28px] border border-white/8 px-4 py-4 text-sm text-muted">
-        Reading Open-Meteo for {place.name}…
+        Reading weather for {placeDisplayName(place)}…
       </section>
     );
   }
@@ -58,7 +62,8 @@ export function EnvironmentCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.18em] text-aqua">Field</p>
-          <p className="font-display mt-1 text-xl leading-tight">{place.name}</p>
+          <p className="font-display mt-1 text-xl leading-tight">{placeDisplayName(place)}</p>
+          {stale ? <p className="text-xs text-muted">Saved weather from this phone.</p> : null}
           <p className="text-xs text-muted">
             {env.weather.weatherText}
             {env.elevationM != null ? ` · ${Math.round(env.elevationM)} m` : ""}
@@ -99,6 +104,7 @@ export function EnvironmentCard({
           <li>
             Best window around {env.bestWindow.hourLabel}
             {env.bestWindow.tempC != null ? ` · ${Math.round(env.bestWindow.tempC)}°C` : ""}.
+            <WindowCountdown iso={env.bestWindow.iso} />
           </li>
         )}
         {env.derived.wbgtC != null && (
@@ -123,7 +129,64 @@ export function EnvironmentCard({
           </li>
         )}
       </ul>
+      <HeatBanner level={env.outdoor.level} title={env.outdoor.title} />
     </section>
+  );
+}
+
+function WindowCountdown({ iso }: { iso: string }) {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      const ms = new Date(iso).getTime() - Date.now();
+      if (!Number.isFinite(ms)) return;
+      if (ms <= 0) {
+        setLabel("Open now.");
+        return;
+      }
+      const total = Math.floor(ms / 1000);
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const seconds = total % 60;
+      const clock =
+        hours > 0
+          ? `${hours}h ${String(minutes).padStart(2, "0")}m`
+          : `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+      setLabel(`Starts in ${clock}.`);
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [iso]);
+  if (!label) return null;
+  return <span className="mt-1 block text-paper/80">{label}</span>;
+}
+
+function HeatBanner({ level, title }: { level: OutdoorLevel; title: string }) {
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    const rank = outdoorRank(level);
+    let previous: string | null = null;
+    try {
+      previous = sessionStorage.getItem("aether-outdoor");
+    } catch {
+      previous = null;
+    }
+    try {
+      sessionStorage.setItem("aether-outdoor", level);
+    } catch {
+      /* private mode */
+    }
+    if (previous !== "go" && previous !== "caution" && previous !== "indoor") return;
+    if (rank <= outdoorRank(previous)) return;
+    setMessage(`Heat risk is up — ${title}`);
+    countEvent("banner");
+  }, [level, title]);
+  if (!message) return null;
+  return (
+    <p className="aether-banner mt-3 rounded-2xl bg-ember/10 px-3 py-2 text-sm text-paper" role="status">
+      {message}
+    </p>
   );
 }
 

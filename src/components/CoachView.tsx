@@ -36,7 +36,7 @@ export function CoachView() {
       </div>
       <p className="mt-2 text-sm text-muted">
         Guided sessions, live tracking, and workouts you build. Play them here;
-        the WHOOP band still records in the official app.
+        the strap still records in its own app.
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2">

@@ -60,7 +60,7 @@ export function AtlasPanel({ atlas }: { atlas: AtlasReport }) {
     <div>
       <p className="text-sm text-muted">
         {tracked} computed from this band · {missing} known methods with no
-        input on the WHOOP API. Search by name, formula, or paper.{" "}
+        input this phone can see. Search by name, formula, or paper.{" "}
         <Link href="/settings" className="text-lime">
           Set height, weight, and age
         </Link>{" "}

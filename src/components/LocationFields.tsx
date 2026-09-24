@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   explainGeoError,
-  placeSourceLabel,
+  placeDisplayName,
   type Place,
 } from "@/lib/place";
 import { reversePlace, searchPlaces } from "@/lib/open-meteo";
@@ -127,37 +127,30 @@ export function LocationFields() {
     <div>
       {place ? (
         <p className="text-sm text-paper">
-          {place.name}
-          <span className="text-muted">
-            {" "}
-            · {place.lat.toFixed(2)}, {place.lon.toFixed(2)} · {placeSourceLabel(place.source)}
-          </span>
+          {placeDisplayName(place)}
         </p>
       ) : (
-        <p className="text-sm text-muted">No location yet. GPS or a city name — never your IP.</p>
+        <p className="text-sm text-muted">No city yet.</p>
       )}
 
       {probed && (gpsPerm === "denied" || !geoOk) && (
-        <p className="mt-2 text-xs text-muted">
-          This browser has GPS blocked (denied, or no prompt in a preview). City
-          search still works.
-        </p>
+        <p className="mt-2 text-xs text-muted">Location is blocked in this browser. Search for a city instead.</p>
       )}
 
       <button
         type="button"
         onClick={() => void locateFromGps()}
         disabled={busy != null}
-        className="mt-3 w-full rounded-full bg-lime px-3 py-2 text-sm text-ink disabled:opacity-40"
+        className="mt-3 min-h-11 w-full rounded-full bg-lime px-3 text-sm text-ink disabled:opacity-40"
       >
-        {busy === "gps" ? "Locating…" : "Use GPS (rounded, not a street pin)"}
+        {busy === "gps" ? "Locating…" : "Use my location"}
       </button>
 
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         aria-label="Search city"
-        placeholder="Search city — Open-Meteo geocoding"
+        placeholder="Search city"
         className="mt-3 w-full rounded-2xl border border-white/10 bg-ink px-3 py-2 text-sm text-paper outline-none placeholder:text-muted"
       />
       {hits.length > 0 && (

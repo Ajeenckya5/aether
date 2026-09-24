@@ -29,21 +29,31 @@ export function CallCard({
   report,
   extraNotes,
   sample = false,
+  live = false,
 }: {
   report: LabReport;
   extraNotes?: string[];
   sample?: boolean;
+  live?: boolean;
 }) {
   const tone = COPY[report.call];
   const notes = [...report.callWhy, ...(extraNotes ?? [])];
   return (
-    <section className={`rounded-[32px] p-5 ${tone.bg}`}>
+    <section
+      id={live ? "aether-call" : undefined}
+      data-call={report.call}
+      className={`aether-call rounded-[32px] p-5 ${tone.bg}`}
+    >
       <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: tone.color }}>
         {"Today's call"}
       </p>
-      <h2 className="font-display mt-2 text-5xl leading-none">{tone.title}</h2>
-      <p className="mt-2 text-sm text-paper/75">{tone.kicker}</p>
-      <ul className="mt-4 space-y-2 text-sm text-paper/80">
+      <h2 id={live ? "aether-call-title" : undefined} className="font-display mt-2 text-5xl leading-none">
+        {tone.title}
+      </h2>
+      <p id={live ? "aether-call-kicker" : undefined} className="mt-2 text-sm text-paper/75">
+        {tone.kicker}
+      </p>
+      <ul id={live ? "aether-call-why" : undefined} className="mt-4 space-y-2 text-sm text-paper/80">
         {notes.map((line) => (
           <li key={line}>{line}</li>
         ))}

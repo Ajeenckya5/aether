@@ -13,11 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: node scripts/build-pages.mjs
       - name: Serve the export
         run: node scripts/serve-export.mjs &
@@ -27,4 +28,11 @@ jobs:
         with:
           urls: http://127.0.0.1:4173/aether/
           configPath: .lighthouserc.json
-          uploadArtifacts: true
+          uploadArtifacts: false
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse
+          path: .lighthouseci
+          retention-days: 7
+          if-no-files-found: ignore
