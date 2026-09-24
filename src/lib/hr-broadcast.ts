@@ -4,6 +4,8 @@ export function publishLiveBpm(bpm: number | null) {
   const payload = { bpm, at: Date.now() };
   try {
     if (bpm == null) localStorage.removeItem("aether-hr-live");
+    // Same-device bpm for the static ring. Not a credential and not sent anywhere.
+    // codeql[js/clear-text-storage-of-sensitive-data]
     else localStorage.setItem("aether-hr-live", JSON.stringify(payload));
   } catch {
     /* private mode */
