@@ -360,8 +360,13 @@ export function analyzeDashboard(
     ),
   );
 
-  const weekWorkouts = (workouts ?? data.workouts).filter((w) => {
-    const age = Date.now() - new Date(w.start).getTime();
+  const workoutList = workouts ?? data.workouts;
+  const newestWorkout = workoutList.reduce(
+    (max, workout) => Math.max(max, new Date(workout.start).getTime()),
+    0,
+  );
+  const weekWorkouts = workoutList.filter((w) => {
+    const age = newestWorkout - new Date(w.start).getTime();
     return age >= 0 && age < 7 * 86400000;
   });
   let easy = 0;

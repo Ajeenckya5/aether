@@ -28,7 +28,7 @@ export function SleepView() {
           <p className="font-display mt-2 text-6xl leading-none">
             {latest.score.sleep_performance_percentage}%
           </p>
-          <p className="mt-2 text-sm text-paper/70">
+          <p className="mt-2 text-sm text-paper/70" suppressHydrationWarning>
             {formatHours(
               scoredSleepMs(latest.score.stage_summary, fromBand && !restWake),
             )}{" "}
@@ -92,7 +92,7 @@ export function SleepView() {
             >
               <div>
                 <p className="text-sm">
-                  {formatDate(sleep.end)}
+                  <span suppressHydrationWarning>{formatDate(sleep.end)}</span>
                   {sleep.nap ? " · Nap" : ""}
                   {isAetherOvernightSleep(sleep.id) ? " · Aether" : ""}
                 </p>
