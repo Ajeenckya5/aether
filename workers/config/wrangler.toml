@@ -1,9 +1,14 @@
 name = "aether-config"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
+workers_dev = true
 
-# Free Workers plan. KV is the free namespace you create in the dashboard.
-# Do not attach a custom domain that bills, and do not enable logpush.
-[[kv_namespaces]]
-binding = "FLAGS"
-id = "replace-with-your-kv-namespace-id"
+# Free plan. One SQLite Durable Object holds ciphertext blobs.
+# No KV, no custom domain, no logpush.
+[[durable_objects.bindings]]
+name = "BACKUP"
+class_name = "BackupStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BackupStore"]

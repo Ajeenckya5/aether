@@ -4,7 +4,7 @@ import path from "node:path";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "packages/engine/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "packages/engine/**/*.test.ts", "workers/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

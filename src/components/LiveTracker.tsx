@@ -32,6 +32,7 @@ import {
 import { DeviceStrip, useDevice } from "./DeviceChrome";
 import { useLab } from "./useLab";
 import { useLiveHeartRate } from "./heart-rate-context";
+import { StrapConnectionStatus, strapActionLabel, useStrapConnection } from "./StrapConnection";
 import { LiveHrDial } from "./LiveHrDial";
 import { ZoneBar } from "./ZoneBar";
 import { preferPhoneShell } from "@/lib/device";
@@ -96,6 +97,7 @@ export function LiveTracker() {
   const params = useSearchParams();
   const { data, athlete } = useLab();
   const hr = useLiveHeartRate();
+  const strap = useStrapConnection();
   const phoneApp = preferPhoneShell(useDevice());
   const kind = params.get("kind");
   const planId = params.get("id");
@@ -451,13 +453,10 @@ export function LiveTracker() {
         <button
           type="button"
           onClick={() => void hr.connect()}
+          data-strap-state={strap.state}
           className="min-h-12 w-full rounded-full bg-white/8 px-3 py-2 text-sm"
         >
-          {hr.status === "live"
-            ? `${hr.bpm ?? "--"} bpm live`
-            : hr.status === "connecting"
-              ? "Pairing…"
-              : "Connect strap"}
+          {strap.state === "idle" ? "Connect strap" : strapActionLabel(strap)}
         </button>
         <div>
           <p className="text-sm text-muted">Tools</p>
@@ -488,8 +487,8 @@ export function LiveTracker() {
           GPS distance
         </label>
         <DeviceStrip gps />
-        {hr.message && <p className="text-xs text-muted">{hr.message}</p>}
         {gpsNote && <p className="text-xs text-ember">{gpsNote}</p>}
+        <StrapConnectionStatus />
       </div>
 
       <p className="font-display mt-8 text-center text-6xl leading-none tracking-tight sm:text-7xl lg:text-8xl">

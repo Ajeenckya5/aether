@@ -1,14 +1,3 @@
-export function strapStatusLine(input: {
-  connected: boolean;
-  name: string | null;
-  batteryPct: number | null;
-}): string {
-  if (!input.connected) return "Not connected";
-  const name = input.name?.trim() || "Heart-rate strap";
-  if (input.batteryPct == null || !Number.isFinite(input.batteryPct)) return name;
-  return `${name}, ${Math.round(input.batteryPct)}% battery`;
-}
-
 export function strapTip(device: {
   ios: boolean;
   bluetooth: boolean;

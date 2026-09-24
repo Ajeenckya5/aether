@@ -1,0 +1,62 @@
+name: Backup worker
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  round-trip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Upload and restore ciphertext
+        run: pnpm exec vitest run workers/config/backup.test.ts
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    needs: round-trip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Deploy to workers.dev and prove a round trip
+        working-directory: workers/config
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Cloudflare secrets are not set. The worker stays source-only."
+            exit 0
+          fi
+          set -euo pipefail
+          OUT=$(pnpm dlx wrangler@4 deploy 2>&1)
+          echo "$OUT"
+          URL=$(printf '%s\n' "$OUT" | grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' | head -1)
+          if [ -z "$URL" ]; then
+            echo "Deploy did not print a workers.dev URL."
+            exit 1
+          fi
+          ID="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          BODY='{"v":1,"iv":"AAAAAAAAAAAAAAAA","ct":"BBBBBBBBBBBB"}'
+          curl -fsS -X PUT "$URL/blob/$ID" -H 'content-type: application/json' -d "$BODY" >/dev/null
+          GOT=$(curl -fsS "$URL/blob/$ID")
+          printf '%s\n' "$GOT"
+          printf '%s\n' "$GOT" | grep -q '"ct":"BBBBBBBBBBBB"'
+          curl -fsS -X DELETE "$URL/blob/$ID" >/dev/null
+          echo "Round trip ok at $URL"
