@@ -42,6 +42,12 @@ function add(person, code, severity) {
 }
 
 async function openLocation(page) {
+  await page.waitForFunction(() => {
+    const node = document.querySelector("[data-settings-layout]");
+    if (!node) return false;
+    const desktop = window.innerWidth >= 1024;
+    return (node.getAttribute("data-settings-layout") === "desktop") === desktop;
+  });
   if (await page.locator("[data-settings-layout=desktop]").count()) {
     await page.getByRole("button", { name: "Weather", exact: true }).click();
     return;
@@ -192,10 +198,10 @@ try {
   for (const city of ACCENTS) {
     const person = people[0];
     await page.goto(`${BASE}/settings/`, { waitUntil: "domcontentloaded" });
-    await openLocation(page);
-    await page.getByLabel("Search city").fill(city);
     const choice = page.getByRole("button", { name: city });
     try {
+      await openLocation(page);
+      await page.getByLabel("Search city").fill(city);
       await choice.waitFor({ state: "visible", timeout: 8000 });
       await choice.click();
       try {
