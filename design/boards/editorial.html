@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-default-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Editorial — Aether direction</title>
+<!-- Dev-only board. The production site is the Next static export in out/. This file is not a route. -->
+<script>
+const screens = ["today", "call", "live", "sleep", "lab", "settings", "empty", "error"];
+const q = new URLSearchParams(location.search);
+const screen = screens.includes(q.get("screen")) ? q.get("screen") : "today";
+const asked = q.get("theme");
+const theme = asked === "light" || asked === "dark" ? asked : document.documentElement.dataset.defaultTheme;
+document.documentElement.dataset.theme = theme;
+document.documentElement.dataset.screen = screen;
+if (q.get("shot") === "1") document.documentElement.dataset.shot = "1";
+</script>
+<style>
+  html[data-theme="light"] {
+    --bg: #f4efe6;
+    --panel: #faf6ef;
+    --line: #ddd4c6;
+    --text: #241c16;
+    --muted: #6f6256;
+    --accent: #3e5346;
+    --danger: #8d3b30;
+    --ok: #3e5346;
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    --bg: #17140f;
+    --panel: #211c16;
+    --line: #3a322a;
+    --text: #f3eadf;
+    --muted: #b5a696;
+    --accent: #d9c4a3;
+    --danger: #e7a090;
+    --ok: #d9c4a3;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body { font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif; font-size: 17px; line-height: 1.45; }
+  button, input { font: inherit; color: inherit; background: transparent; border: 0; }
+  main { display: none; height: 100%; overflow: hidden; }
+  html[data-screen="today"] main[data-screen="today"],
+  html[data-screen="call"] main[data-screen="call"],
+  html[data-screen="live"] main[data-screen="live"],
+  html[data-screen="sleep"] main[data-screen="sleep"],
+  html[data-screen="lab"] main[data-screen="lab"],
+  html[data-screen="settings"] main[data-screen="settings"],
+  html[data-screen="empty"] main[data-screen="empty"],
+  html[data-screen="error"] main[data-screen="error"] {
+    display: flex;
+    flex-direction: column;
+    padding: 28px 22px 22px;
+    max-width: 720px;
+  }
+  html[data-screen="settings"] main[data-screen="settings"] { padding: 14px 16px 10px; max-width: none; }
+  .running { margin: 0; font-family: "SF Pro Text", "Helvetica Neue", sans-serif; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .kicker { margin: 22px 0 0; font-style: italic; color: var(--muted); }
+  h1 { margin: 6px 0 0; font-weight: 500; font-size: 64px; letter-spacing: -0.03em; line-height: 0.92; }
+  h1 em { font-style: italic; }
+  .rule { width: 48px; height: 1px; background: var(--accent); border: 0; margin: 18px 0; }
+  p { margin: 0; }
+  .letter { margin-top: 4px; }
+  .letter p + p { margin-top: 12px; }
+  .sheet { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .footnote { margin-top: auto; padding-top: 16px; color: var(--muted); font-size: 14px; font-style: italic; }
+  .pull { margin-top: 20px; padding-left: 16px; border-left: 1px solid var(--accent); }
+  .pull b { display: block; font-weight: 500; font-size: 28px; }
+  .meta { color: var(--muted); font-style: italic; }
+  .quiet { margin-top: 18px; font-size: 15px; color: var(--muted); }
+  .chart { width: 100%; height: 120px; margin-top: 16px; }
+  .ranges { margin-top: 14px; font-style: italic; color: var(--muted); }
+  .ranges strong { color: var(--text); font-style: normal; font-weight: 500; }
+  .actions { margin-top: 18px; display: flex; gap: 18px; }
+  .actions button { text-decoration: underline; text-underline-offset: 4px; padding: 0; min-height: 32px; color: var(--accent); }
+  .center { margin: auto 0; max-width: 28rem; }
+  .phone h2 { margin: 7px 0 0; font-size: 15px; font-weight: 500; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 1px 0; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+  .row span:last-child, .row i { color: var(--muted); font-style: italic; }
+  .hint { margin: 2px 0 4px; color: var(--muted); font-size: 13px; font-style: italic; }
+  .danger { color: var(--danger); font-style: italic; }
+  .confirm { width: 100%; border-bottom: 1px solid var(--line); padding: 4px 0; font-size: 15px; }
+  .desk { display: none; }
+  .dev { position: fixed; z-index: 2; left: 0; right: 0; top: 0; display: flex; gap: 8px; flex-wrap: wrap; padding: 6px 8px; background: var(--panel); font-family: "SF Pro Text", "Helvetica Neue", sans-serif; font-size: 12px; }
+  .dev a { color: var(--accent); }
+  html:not([data-shot="1"]) body { padding-top: 36px; }
+  html[data-shot="1"] .dev { display: none; }
+  @media (min-width: 1000px) {
+    main { padding: 64px 80px !important; max-width: none; }
+    .sheet { max-width: 680px; width: 100%; margin-inline: auto; }
+    h1 { font-size: 92px; }
+    .live-grid, .sleep-grid, .lab-grid { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; flex: 1; max-width: 680px; width: 100%; margin-inline: auto; }
+    .desk { width: min(100%, 1004px); margin-inline: auto; }
+    .chart { height: 220px; }
+    .phone { display: none; }
+    .desk { display: grid; grid-template-columns: 220px minmax(0, 720px); gap: 64px; }
+    .nav button { display: block; width: 100%; text-align: left; padding: 8px 0; font-size: 22px; }
+    .nav button[aria-current="page"] { border-bottom: 1px solid var(--accent); }
+    .pane .row { padding: 10px 0; font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<main data-screen="today">
+  <div class="sheet">
+    <p class="running">Aether · Thursday</p>
+    <p class="kicker">A sample day</p>
+    <h1>Push.</h1>
+    <hr class="rule">
+    <div class="letter">
+      <p>Quality intensity is on the table. You are fresh: HRV is at or above baseline and chronic load can absorb a hard day.</p>
+      <p>Keep the hard work quality — don’t dump junk volume on a green day.</p>
+    </div>
+    <p class="footnote">Readiness sits at 72. Recovery age stays hidden, 0 of 14 nights. Pair a heart-rate strap before this number is yours.</p>
+  </div>
+</main>
+
+<main data-screen="call">
+  <div class="sheet">
+    <p class="running">Today’s call · Sample</p>
+    <p class="kicker">Thursday</p>
+    <h1>Push.</h1>
+    <hr class="rule">
+    <p>Quality intensity is on the table.</p>
+    <div class="pull">
+      <b>Iron Circuit</b>
+      <span class="meta">Twenty-eight minutes of strength.</span>
+    </div>
+    <div class="letter" style="margin-top: 18px">
+      <p>You are fresh: HRV is at or above baseline and chronic load can absorb a hard day.</p>
+      <p>Keep the hard work quality — don’t dump junk volume on a green day.</p>
+    </div>
+    <p class="footnote">Sample day. Pair a heart-rate strap before this call is yours.</p>
+  </div>
+</main>
+
+<main data-screen="live">
+  <div class="live-grid">
+    <div>
+      <p class="running">Live</p>
+      <p class="kicker">Hill repeats</p>
+      <h1>Twenty-<br>four<br>minutes.</h1>
+    </div>
+    <div>
+      <p>Heart rate is 142, in zone 4, from the strap.</p>
+      <p class="quiet">The clock reads 24:18. Pause when you need the descent. Stop when the set is done.</p>
+      <div class="actions">
+        <button type="button">Pause</button>
+        <button type="button">Stop</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<main data-screen="sleep">
+  <div class="sleep-grid">
+    <div>
+      <p class="running">Sleep · Sample night</p>
+      <p class="kicker">Last night, in bed</p>
+      <h1>Seven hours, twenty-four minutes.</h1>
+    </div>
+    <div>
+      <p>Quiet for most of it, a quarter deep, the rest active.</p>
+      <p class="quiet">Leave a strap connected overnight for Aether sleep. This page is a sample, not last night’s reading.</p>
+    </div>
+  </div>
+</main>
+
+<main data-screen="lab">
+  <div class="lab-grid">
+    <div>
+      <p class="running">Lab · Sample</p>
+      <p class="kicker">Twenty-eight days</p>
+      <h1>A quiet rise.</h1>
+      <hr class="rule">
+      <p>Readiness ends at 72. The line is a sample. It is not a measured accuracy.</p>
+      <p class="ranges"><span>7</span> · <strong>28</strong> · <span>90</span></p>
+    </div>
+    <div>
+      <svg class="chart" viewBox="0 0 320 100" role="img" aria-label="Sample readiness over 28 days">
+        <polyline fill="none" stroke="var(--accent)" stroke-width="1.25" points="0,62 12,58 24,66 36,48 48,50 60,42 72,52 84,34 96,38 108,44 120,36 132,30 144,40 156,32 168,34 180,26 192,32 204,34 216,28 228,24 240,30 252,26 264,32 276,30 288,24 300,28 312,20 320,28"/>
+      </svg>
+      <p class="quiet">Recovery age stays hidden. 0 of 14 nights, and 0 of 6 markers.</p>
+    </div>
+  </div>
+</main>
+
+<main data-screen="settings">
+  <p class="running phone">Settings</p>
+  <div class="phone">
+    <h2>Profile</h2>
+    <div class="row"><span>Name</span><i>Sample</i></div>
+    <div class="row"><span>Units</span><i>cm, kg</i></div>
+    <div class="row"><span>Age</span><i>32</i></div>
+    <div class="row"><span>Sex</span><i>Prefer not to say</i></div>
+    <div class="row"><span>Height</span><i>178 cm</i></div>
+    <div class="row"><span>Weight</span><i>72 kg</i></div>
+    <h2>Devices</h2>
+    <div class="row"><span>Heart-rate strap</span><i>Not connected</i></div>
+    <h2>Weather</h2>
+    <div class="row"><span>Location</span><i>Madison, Wisconsin</i></div>
+    <h2>Advanced</h2>
+    <div class="row"><span>Resting heart rate</span><i>—</i></div>
+    <p class="hint">Leave blank to measure from your strap.</p>
+    <div class="row"><span>Max heart rate</span><i>—</i></div>
+    <p class="hint">Leave blank to estimate from age.</p>
+    <div class="row"><span>Cycle</span><i>On · Sep 1</i></div>
+    <div class="row"><span>Blood pressure</span><i>—</i></div>
+    <p class="hint">A home reading can sharpen the age estimate. It stays on this phone.</p>
+    <h2>Data and privacy</h2>
+    <div class="row"><span>Export my data</span></div>
+    <div class="row"><span>Restore from backup</span></div>
+    <div class="row"><span>Sample data</span><i>On</i></div>
+    <div class="row"><span>Storage on this device</span><i>1.2 MB</i></div>
+    <div class="row"><span>How your data stays private</span></div>
+    <h2>App</h2>
+    <div class="row"><span>Install on this phone</span></div>
+    <div class="row"><span>Theme</span><i>System</i></div>
+    <div class="row"><span>About and methods</span></div>
+    <h2>Danger zone</h2>
+    <div class="row"><span class="danger">Erase all data on this device</span></div>
+    <p class="hint">Type erase to confirm</p>
+    <input class="confirm" aria-label="Type erase to confirm">
+  </div>
+  <div class="desk">
+    <nav class="nav" aria-label="Settings sections">
+      <button type="button" aria-current="page">Profile</button>
+      <button type="button">Devices</button>
+      <button type="button">Weather</button>
+      <button type="button">Advanced</button>
+      <button type="button">Data and privacy</button>
+      <button type="button">App</button>
+      <button type="button">Danger zone</button>
+    </nav>
+    <section class="pane">
+      <p class="kicker">Profile</p>
+      <h1 style="font-size: 56px">Yours.</h1>
+      <hr class="rule">
+      <div class="row"><span>Name</span><i>Sample</i></div>
+      <div class="row"><span>Units</span><i>cm, kg</i></div>
+      <div class="row"><span>Age</span><i>32</i></div>
+      <div class="row"><span>Sex</span><i>Prefer not to say</i></div>
+      <div class="row"><span>Height</span><i>178 cm</i></div>
+      <div class="row"><span>Weight</span><i>72 kg</i></div>
+      <p class="quiet">Saved on this phone.</p>
+    </section>
+  </div>
+</main>
+
+<main data-screen="empty">
+  <div class="center">
+    <p class="running">Today</p>
+    <h1>Nothing on the page yet.</h1>
+    <hr class="rule">
+    <p>No sessions yet today. Track a live session, or build a workout.</p>
+    <div class="actions">
+      <button type="button">Track live</button>
+      <button type="button">Build a workout</button>
+    </div>
+  </div>
+</main>
+
+<main data-screen="error">
+  <div class="center">
+    <p class="running">Lab</p>
+    <h1>The lab didn’t load.</h1>
+    <hr class="rule">
+    <p>Your nights are still on this phone.</p>
+    <div class="actions"><button type="button">Retry</button></div>
+  </div>
+</main>
+
+<nav class="dev" id="dev"></nav>
+<script>
+if (document.documentElement.dataset.shot !== "1") {
+  const nav = document.getElementById("dev");
+  const screens = ["today", "call", "live", "sleep", "lab", "settings", "empty", "error"];
+  const theme = document.documentElement.dataset.theme;
+  const other = theme === "dark" ? "light" : "dark";
+  const bits = screens.map((name) => `<a href="?screen=${name}&theme=${theme}">${name}</a>`);
+  bits.push(`<a href="?screen=${document.documentElement.dataset.screen}&theme=${other}">${other}</a>`);
+  bits.push(`<a href="index.html">boards</a>`);
+  nav.innerHTML = bits.join(" ");
+}
+</script>
+</body>
+</html>

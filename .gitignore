@@ -64,3 +64,6 @@ next-env.d.ts
 *.p12
 *.jks
 *.keystore
+
+# Direction screenshots are uploaded on the pull request, not stored in git.
+/design/boards/shots
