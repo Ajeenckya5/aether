@@ -132,10 +132,16 @@ test.describe("static export", () => {
       }),
     );
     await page.goto(pathFor("/settings"));
+    await page.waitForFunction(() => {
+      const node = document.querySelector("[data-settings-layout]");
+      if (!node) return false;
+      const desktop = window.innerWidth >= 1024;
+      return (node.getAttribute("data-settings-layout") === "desktop") === desktop;
+    });
     if (await page.locator("[data-settings-layout=desktop]").count()) {
       await page.getByRole("button", { name: "Weather", exact: true }).click();
     } else {
-      await page.getByRole("button", { name: /Location/ }).click();
+      await page.getByRole("button", { name: "Location", exact: true }).click();
     }
     await page.getByRole("button", { name: "Use my location" }).click();
     await expect(page.getByText(/Madison/)).toBeVisible();
