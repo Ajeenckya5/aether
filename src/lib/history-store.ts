@@ -11,11 +11,13 @@ import {
   type StoredWorkout,
 } from "./history";
 import { currentWorker } from "./remote-config";
+import { bytesToB64 as signBytesToB64, signBackupRequest } from "./backup-auth";
 
 const HOT_KEY = "aether-history-v1";
 const INDEX_KEY = "aether-history-index-v1";
 const QUEUE_KEY = "aether-history-queue-v1";
 const KEY_KEY = "aether-history-key-v1";
+const SIGN_KEY = "aether-history-sign-v1";
 
 type IndexRow = { id: string; at: number; kind: StoredRecord["kind"] };
 type Hot = { nights: StoredNight[]; workouts: StoredWorkout[] };
@@ -102,16 +104,55 @@ function newId(): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+async function deviceSigner(): Promise<{ privateKey: CryptoKey; publicKey: string }> {
+  const existing = localStorage.getItem(SIGN_KEY);
+  if (existing) {
+    const parsed = JSON.parse(existing) as { priv?: string; pub?: string };
+    if (parsed.priv && parsed.pub) {
+      const privateKey = await crypto.subtle.importKey(
+        "pkcs8",
+        b64ToBytes(parsed.priv),
+        { name: "Ed25519" },
+        false,
+        ["sign"],
+      );
+      return { privateKey, publicKey: parsed.pub };
+    }
+  }
+  const created = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const priv = new Uint8Array(await crypto.subtle.exportKey("pkcs8", created.privateKey));
+  const pub = new Uint8Array(await crypto.subtle.exportKey("raw", created.publicKey));
+  const stored = { priv: signBytesToB64(priv), pub: signBytesToB64(pub) };
+  localStorage.setItem(SIGN_KEY, JSON.stringify(stored));
+  return { privateKey: created.privateKey, publicKey: stored.pub };
+}
+
+async function signedBlob(method: "GET" | "PUT" | "DELETE", id: string, body?: Ciphertext): Promise<Response> {
+  const worker = currentWorker();
+  const signer = await deviceSigner();
+  const payload = body ? JSON.stringify(body) : "";
+  const bytes = new TextEncoder().encode(payload);
+  const headers = await signBackupRequest({
+    method,
+    path: `/blob/${id}`,
+    body: bytes,
+    privateKey: signer.privateKey,
+    publicKey: signer.publicKey,
+    now: Date.now(),
+  });
+  return fetch(`${worker}/blob/${id}`, {
+    method,
+    headers: body ? { "content-type": "application/json", ...headers } : headers,
+    body: body ? payload : undefined,
+    cache: "no-store",
+  });
+}
+
 async function putBlob(id: string, body: Ciphertext): Promise<boolean> {
   const worker = currentWorker();
   if (!worker || !blobId(id)) return false;
   try {
-    const response = await fetch(`${worker}/blob/${id}`, {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
+    const response = await signedBlob("PUT", id, body);
     return response.ok;
   } catch {
     return false;
@@ -124,7 +165,7 @@ async function getBlob(id: string): Promise<Ciphertext | null> {
   const worker = currentWorker();
   if (!worker) return null;
   try {
-    const response = await fetch(`${worker}/blob/${id}`, { cache: "no-store" });
+    const response = await signedBlob("GET", id);
     if (!response.ok) return null;
     return ciphertextBody(await response.json());
   } catch {
@@ -235,13 +276,12 @@ export async function deleteArchivedBlobs(): Promise<void> {
   const ids = indexRows().map((row) => row.id);
   if (worker) {
     await Promise.all(
-      ids.map((id) =>
-        fetch(`${worker}/blob/${id}`, { method: "DELETE", cache: "no-store" }).catch(() => undefined),
-      ),
+      ids.map((id) => signedBlob("DELETE", id).catch(() => undefined)),
     );
   }
   localStorage.removeItem(HOT_KEY);
   localStorage.removeItem(INDEX_KEY);
   localStorage.removeItem(QUEUE_KEY);
   localStorage.removeItem(KEY_KEY);
+  localStorage.removeItem(SIGN_KEY);
 }

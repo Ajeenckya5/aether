@@ -13,11 +13,11 @@ jobs:
   round-trip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Upload and restore ciphertext
@@ -28,11 +28,11 @@ jobs:
     needs: round-trip
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
           cache: pnpm
       - name: Deploy to workers.dev and prove a round trip
         working-directory: workers/config
@@ -45,18 +45,22 @@ jobs:
             exit 0
           fi
           set -euo pipefail
-          OUT=$(pnpm dlx wrangler@4 deploy 2>&1)
+          OUT=$(pnpm dlx wrangler@4 deploy 2>&1) || { echo "$OUT"; exit 1; }
           echo "$OUT"
           URL=$(printf '%s\n' "$OUT" | grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' | head -1)
           if [ -z "$URL" ]; then
             echo "Deploy did not print a workers.dev URL."
             exit 1
           fi
-          ID="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-          BODY='{"v":1,"iv":"AAAAAAAAAAAAAAAA","ct":"BBBBBBBBBBBB"}'
-          curl -fsS -X PUT "$URL/blob/$ID" -H 'content-type: application/json' -d "$BODY" >/dev/null
-          GOT=$(curl -fsS "$URL/blob/$ID")
-          printf '%s\n' "$GOT"
-          printf '%s\n' "$GOT" | grep -q '"ct":"BBBBBBBBBBBB"'
-          curl -fsS -X DELETE "$URL/blob/$ID" >/dev/null
-          echo "Round trip ok at $URL"
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if node round-trip.mjs "$URL"; then
+              echo "Round trip ok at $URL"
+              exit 0
+            fi
+            echo "Round trip attempt ${attempt} failed."
+            if [ "$attempt" -lt 10 ]; then
+              sleep 3
+            fi
+          done
+          echo "Round trip failed at $URL"
+          exit 1
