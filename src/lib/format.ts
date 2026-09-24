@@ -28,6 +28,7 @@ export function formatDate(iso: string, opts?: Intl.DateTimeFormatOptions): stri
     weekday: "short",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
     ...opts,
   });
 }
@@ -36,12 +37,13 @@ export function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 }
 
 export function dayKey(iso: string): string {
   const d = new Date(iso);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
 }
 
 export function isSameDay(iso: string, date = new Date()): boolean {

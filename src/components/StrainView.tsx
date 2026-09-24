@@ -61,8 +61,8 @@ export function StrainView() {
                     style={{ height }}
                   />
                 </div>
-                <span className="text-[9px] text-muted">
-                  {new Date(cycle.start).getDate()}
+                <span className="text-[9px] text-muted" suppressHydrationWarning>
+                  {new Date(cycle.start).getUTCDate()}
                 </span>
               </div>
             );
@@ -76,7 +76,9 @@ export function StrainView() {
             className="flex items-center justify-between rounded-2xl border border-white/8 px-4 py-3"
           >
             <div>
-              <p className="text-sm">{formatDate(cycle.start)}</p>
+              <p className="text-sm" suppressHydrationWarning>
+                {formatDate(cycle.start)}
+              </p>
               <p className="text-xs text-muted">
                 {cycle.score ? strainLabel(cycle.score.strain) : cycle.score_state}
               </p>

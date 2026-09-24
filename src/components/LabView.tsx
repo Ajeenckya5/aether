@@ -118,8 +118,8 @@ export function LabView() {
       <section className="mt-6 rounded-[28px] border border-white/8 bg-panel p-4">
         <h2 className="font-display text-lg">Why Aether disagrees</h2>
         <p className="mt-1 text-xs text-muted">
-          Feature contributions from the trained readiness model (ridge, 14k
-          athlete-days, R² {MODEL_CARD.r2}).
+          Feature contributions from the readiness model. The fit used synthetic
+          days, so these bars are not a measured accuracy.
         </p>
         <ul className="mt-4 space-y-3">
           {report.attributions.map((item) => {

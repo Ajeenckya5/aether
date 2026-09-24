@@ -9,10 +9,13 @@ import type {
   ZoneDurations,
 } from "./types";
 
+/** Fixed so the static export and every browser render the same sample days. */
+const SAMPLE_EPOCH = Date.UTC(2026, 8, 23, 12, 0, 0);
+
 function atDay(daysAgo: number, hour: number, minute = 0, second = 0): string {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  d.setHours(hour, minute, second, 0);
+  const d = new Date(SAMPLE_EPOCH);
+  d.setUTCDate(d.getUTCDate() - daysAgo);
+  d.setUTCHours(hour, minute, second, 0);
   return d.toISOString();
 }
 
