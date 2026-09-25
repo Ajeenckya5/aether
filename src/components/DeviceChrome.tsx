@@ -85,7 +85,7 @@ export function InstallBanner() {
     return (
       <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
         {installBannerCopy(device)}{" "}
-        <Link prefetch={false} href={installGuideHref(device)} className="text-lime">
+        <Link prefetch={false} href={installGuideHref(device)} className="text-lime underline underline-offset-2">
           Step by step
         </Link>
         <button type="button" className="ml-2 text-lime" onClick={() => setHidden(true)}>
@@ -98,7 +98,7 @@ export function InstallBanner() {
   return (
     <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
       {installBannerCopy(device)}{" "}
-      <Link prefetch={false} href={installGuideHref(device)} className="text-lime">
+      <Link prefetch={false} href={installGuideHref(device)} className="text-lime underline underline-offset-2">
         Put it on the phone
       </Link>
     </p>

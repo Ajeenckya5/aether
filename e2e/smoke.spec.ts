@@ -2,6 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 const ROUTES = ["/", "/lab", "/sleep", "/workouts", "/coach", "/strain", "/download", "/settings", "/privacy"];
+// Secondary screens get the same axe check. /coach/build and /coach/live once shipped unlabelled
+// inputs and icon-only buttons because only the main routes were scanned.
+const AXE_ONLY = ["/atlas", "/coach/build", "/coach/custom", "/coach/live", "/coach/sunrise-mobility", "/sleep/view", "/workouts/local", "/workouts/view"];
 
 function pathFor(route: string): string {
   return route === "/" ? "./" : `.${route}/`;
@@ -38,6 +41,21 @@ async function guard(page: Page) {
 }
 
 test.describe("static export", () => {
+  for (const route of AXE_ONLY) {
+    for (const scheme of ["light", "dark"] as const) {
+      test(`${route} has no serious axe violations in ${scheme} mode`, async ({ page }) => {
+        test.setTimeout(90_000);
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.goto(pathFor(route));
+        const results = await new AxeBuilder({ page }).analyze();
+        const bad = results.violations.filter(
+          (item) => item.impact === "serious" || item.impact === "critical",
+        );
+        expect(bad.map((item) => item.id)).toEqual([]);
+      });
+    }
+  }
+
   for (const route of ROUTES) {
     test(`${route} has a title and no horizontal overflow`, async ({ page }) => {
       const problems = await guard(page);

@@ -137,7 +137,7 @@ export function CoachPlayer({
         {liveHref && (
           <Link
             href={liveHref}
-            className="mb-4 inline-flex self-start rounded-full bg-ember/90 px-3 py-1.5 text-xs"
+            className="mb-4 inline-flex min-h-11 items-center self-start rounded-full bg-ember px-4 text-xs text-ink"
           >
             Track live instead
           </Link>

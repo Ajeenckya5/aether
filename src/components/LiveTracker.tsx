@@ -447,6 +447,7 @@ export function LiveTracker() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            aria-label="Session name"
             className="w-full rounded-2xl border border-white/10 bg-white/4 px-3 py-2 text-base outline-none"
           />
         )}
@@ -559,34 +560,38 @@ export function LiveTracker() {
           <button
             type="button"
             onClick={start}
-            className="grid h-16 w-16 place-items-center rounded-full bg-ember text-paper"
+            aria-label="Start"
+            className="grid h-16 w-16 place-items-center rounded-full bg-ember text-ink"
           >
-            <Play size={22} />
+            <Play size={22} aria-hidden />
           </button>
         ) : running ? (
           <button
             type="button"
             onClick={pause}
+            aria-label="Pause"
             className="grid h-16 w-16 place-items-center rounded-full bg-lime text-ink"
           >
-            <Pause size={22} />
+            <Pause size={22} aria-hidden />
           </button>
         ) : (
           <button
             type="button"
             onClick={resume}
+            aria-label="Resume"
             className="grid h-16 w-16 place-items-center rounded-full bg-lime text-ink"
           >
-            <Play size={22} />
+            <Play size={22} aria-hidden />
           </button>
         )}
         <button
           type="button"
           onClick={finish}
           disabled={elapsedMs < 1000}
+          aria-label="Finish and save"
           className="grid h-16 w-16 place-items-center rounded-full bg-white/10 disabled:opacity-30"
         >
-          <Square size={18} />
+          <Square size={18} aria-hidden />
         </button>
       </div>
       <p className="mt-3 text-center text-[11px] text-muted">

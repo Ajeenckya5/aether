@@ -298,11 +298,11 @@ export function TodayView() {
         {todayWorkouts.length === 0 ? (
           <p className="rounded-[24px] border border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted">
             No sessions yet today.{" "}
-            <Link href="/coach/live" className="text-lime">
+            <Link href="/coach/live" className="text-lime underline underline-offset-2">
               Track live
             </Link>{" "}
             or{" "}
-            <Link href="/coach/build" className="text-lime">
+            <Link href="/coach/build" className="text-lime underline underline-offset-2">
               build a workout
             </Link>
             .

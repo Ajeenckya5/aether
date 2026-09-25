@@ -61,7 +61,7 @@ export function AtlasPanel({ atlas }: { atlas: AtlasReport }) {
       <p className="text-sm text-muted">
         {tracked} computed from this band · {missing} known methods with no
         input this phone can see. Search by name, formula, or paper.{" "}
-        <Link href="/settings" className="text-lime">
+        <Link href="/settings" className="text-lime underline underline-offset-2">
           Set height, weight, and age
         </Link>{" "}
         — Tanaka, Karvonen, BMR, VO2, and Klemera–Doubal biological age use them.
