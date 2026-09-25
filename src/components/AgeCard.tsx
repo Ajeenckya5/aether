@@ -103,7 +103,7 @@ export function AgeCard({
           <a href={siteHref("/settings")} className="text-paper/80">
             Change actual age in Settings
           </a>
-          <a href={siteHref("/lab")} className="text-lime">
+          <a href={siteHref("/lab")} className="text-lime underline underline-offset-2">
             Open Lab for the breakdown →
           </a>
         </div>

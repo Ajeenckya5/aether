@@ -34,7 +34,7 @@ export function HomeFrame({ children }: { children: React.ReactNode }) {
           <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
             Install the Aether APK from GitHub (not Play Store) so Bluetooth can stay up overnight.
             Chrome Install app is the website-only fallback.{" "}
-            <a href={siteHref("/download#android-apk")} className="text-lime">
+            <a href={siteHref("/download#android-apk")} className="text-lime underline underline-offset-2">
               Put it on the phone
             </a>
           </p>

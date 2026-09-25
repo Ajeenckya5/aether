@@ -269,7 +269,7 @@ export function TodayStatic() {
             <p className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-muted">
               Install the Aether APK from GitHub (not Play Store) so Bluetooth can stay up overnight.
               Chrome Install app is the website-only fallback.{" "}
-              <a href={siteHref("/download#android-apk")} className="text-lime">
+              <a href={siteHref("/download#android-apk")} className="text-lime underline underline-offset-2">
                 Put it on the phone
               </a>
             </p>
@@ -394,11 +394,11 @@ export function TodayStatic() {
             {todayWorkouts.length === 0 ? (
               <p className="rounded-[24px] border border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted">
                 No sessions yet today.{" "}
-                <a href={siteHref("/coach/live")} className="text-lime">
+                <a href={siteHref("/coach/live")} className="text-lime underline underline-offset-2">
                   Track live
                 </a>{" "}
                 or{" "}
-                <a href={siteHref("/coach/build")} className="text-lime">
+                <a href={siteHref("/coach/build")} className="text-lime underline underline-offset-2">
                   build a workout
                 </a>
                 .

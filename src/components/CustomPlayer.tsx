@@ -26,7 +26,7 @@ export function CustomPlayer() {
     return (
       <div className="px-5 pt-16 text-sm text-muted">
         That custom workout is not on this device.{" "}
-        <Link href="/coach/build" className="text-lime">
+        <Link href="/coach/build" className="text-lime underline underline-offset-2">
           Build one
         </Link>
         .

@@ -25,7 +25,7 @@ export function LiveLogReview() {
     return (
       <div className="px-5 pt-16 text-sm text-muted">
         Session not on this device.{" "}
-        <Link href="/coach/live" className="text-lime">
+        <Link href="/coach/live" className="text-lime underline underline-offset-2">
           Track live
         </Link>
       </div>
@@ -76,7 +76,7 @@ export function LiveLogReview() {
         Edwards TRIMP from percent-of-max heart-rate zones. The strap’s own app still records the session separately.
       </p>
       <div className="mt-6 grid gap-2">
-        <Link href="/coach/live" className="rounded-full bg-ember py-3 text-center text-sm">
+        <Link href="/coach/live" className="rounded-full bg-ember py-3 text-center text-sm text-ink">
           Track another
         </Link>
         <button

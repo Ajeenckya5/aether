@@ -168,6 +168,7 @@ export function WorkoutBuilder() {
             </div>
             <input
               value={block.title}
+              aria-label={`Block ${i + 1} name`}
               onChange={(e) => patchBlock(block.id, { title: e.target.value })}
               className="mt-2 w-full rounded-xl border border-white/10 bg-ink px-3 py-2 text-sm outline-none"
             />
@@ -209,6 +210,7 @@ export function WorkoutBuilder() {
               value={block.cue}
               onChange={(e) => patchBlock(block.id, { cue: e.target.value })}
               placeholder="Cue"
+              aria-label={`Block ${i + 1} cue`}
               className="mt-2 w-full rounded-xl border border-white/10 bg-ink px-3 py-2 text-sm outline-none placeholder:text-muted"
             />
           </li>
@@ -240,7 +242,7 @@ export function WorkoutBuilder() {
             const workout = save();
             router.push(`/coach/live?kind=custom&id=${workout.id}`);
           }}
-          className="rounded-full bg-ember/90 py-3 text-sm font-medium text-paper"
+          className="rounded-full bg-ember py-3 text-sm font-medium text-ink"
         >
           Save and track live
         </button>
